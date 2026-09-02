@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "Vue.volar",
+    "esbenp.prettier-vscode",
+    "EditorConfig.EditorConfig",
+    "redhat.java",
+    "vmware.vscode-spring-boot",
+    "vscjava.vscode-gradle"
+  ]
+}

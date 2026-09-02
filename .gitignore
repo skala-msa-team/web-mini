@@ -1,0 +1,30 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Frontend
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+*.local
+
+# Backend
+.gradle/
+build/
+out/
+*.class
+
+# IDE and OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs and local data
+*.log
+logs/
