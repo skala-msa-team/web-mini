@@ -6,8 +6,7 @@
 
 - 기획, 일정, 회의록과 R&R의 최신 기준: Notion
 - 담당자, Priority, Iteration과 상태: GitHub Project
-- 실행 및 검증 방법: 루트 `README.md`
-- Git 및 코드 작성 규칙: 루트 `README.md`
+- 실행·검증 방법과 Git·코드 작성 규칙: 루트 `README.md`
 - 확정된 기술 계약의 버전 기록: `docs/`
 
 Architecture, ERD, API 명세, AI Prompt/JSON Schema와 QA 결과는 팀 Review로 내용이 확정된 뒤 별도 Issue에서 추가합니다. 빈 문서나 추정한 계약은 만들지 않습니다.

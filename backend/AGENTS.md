@@ -4,16 +4,17 @@ These instructions apply to `backend/` in addition to the repository-level `AGEN
 
 ## Current state
 
-- A minimal Java 21 Spring Boot Gradle project exists.
+- A minimal Java 21 Spring Boot Gradle project with Checkstyle exists.
 - Web, Validation, and WebSocket/STOMP dependencies are present without application configuration.
 - JPA, PostgreSQL, Database schema, WebSocket/STOMP endpoints, REST APIs, persistence code, and Docker configuration are not present yet.
 
 ## Change boundaries
 
-- Do not create build files, dependencies, containers, Entities, or migrations before their Task and design decision exist.
+- Do not add dependencies, containers, Entities, or migrations before their Task and design decision exist.
 - Do not define REST paths, status codes, WebSocket endpoints, STOMP destinations, or message payloads before interface review.
 - Do not implement Mock AI or provider adapters before Prompt and JSON Schema approval.
 - Keep Frontend files out of Backend Tasks and PRs.
+- Spring Boot does not load `.env` files automatically. Use OS environment variables or an explicitly approved configuration mechanism, and keep secrets out of tracked configuration.
 
 ## Commands
 

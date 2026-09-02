@@ -4,9 +4,8 @@ These instructions apply to `docs/` in addition to the repository-level `AGENTS.
 
 ## Document ownership
 
-- Keep planning, schedules, meetings, and R&R in Notion.
-- Keep assignees, priority, iteration, and status in GitHub Project.
-- Store only approved, versioned Architecture, ERD, API, Database, WebSocket/STOMP, AI contract, and QA documents in `docs/`.
+- Store only approved, versioned Architecture, ERD, API, Database, WebSocket/STOMP, AI contract, and QA documents in `docs/`. Planning, decisions, progress, and task state remain in the canonical tools listed in the root `AGENTS.md`.
+- Keep assets here only when an external document intentionally references their stable Repository URL.
 - Keep one responsibility per document and mark undecided content as `미정`.
 
 ## Change boundaries

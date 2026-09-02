@@ -2,13 +2,13 @@
 
 SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로젝트 저장소입니다.
 
-현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. 확정된 필수 Library는 의존성만 추가했으며 Database, Docker, Library 설정 및 기능 코드는 아직 추가하지 않았습니다.
+현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. 애플리케이션 Library는 의존성만 추가했으며 Database, Docker, Router/API/STOMP 설정 및 기능 코드는 아직 추가하지 않았습니다.
 
 ## 프로젝트 자료
 
 - [팀 Notion](https://confused-dietician-c17.notion.site/mini-Project-6-3cd7caa087bd808caf1bc28791f745e2?pvs=73)
 - [GitHub Repository](https://github.com/skala-msa-team/web-mini)
-- [GitHub Project](https://github.com/orgs/skala-msa-team/projects/3/views/1)
+- [GitHub Project 실행 순서 Board](https://github.com/orgs/skala-msa-team/projects/3/views/6)
 - [Google Stitch](https://stitch.withgoogle.com/projects/416001617538729018)
 - [Figma](https://www.figma.com/design/kcaV9To7uU5HQHXDcbssGL/Untitled?node-id=0-1&t=pc3itD8mLpulTZE0-1)
 
@@ -32,21 +32,22 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 
 ```text
 .
-├── frontend/
-│   ├── .env.example    # Frontend 환경변수 예시
-│   ├── AGENTS.md       # Frontend 작업 규칙
-│   └── ...             # Vue 3 + Vite 최소 프로젝트
-├── backend/
-│   ├── .env.example    # Backend 환경변수 예시
-│   ├── AGENTS.md       # Backend 작업 규칙
-│   └── ...             # Spring Boot 최소 프로젝트
-├── docs/
-│   ├── AGENTS.md       # 설계 문서 작업 규칙
-│   ├── README.md       # docs 책임과 자산 안내
-│   └── assets/         # Notion에서 사용하는 정적 자산
-├── .github/            # Issue 및 PR 템플릿
-├── .vscode/            # 팀 공통 VS Code 설정
-└── AGENTS.md           # 저장소 공통 작업 규칙
+├── .github/              # Issue 및 PR Template
+├── .vscode/              # 팀 공통 VS Code 설정
+├── docs/                 # 확정 문서와 Notion 연결 Asset
+├── frontend/             # Vue, Vite, ESLint 기본 프로젝트
+│   ├── AGENTS.md
+│   ├── README.md
+│   └── eslint.config.js
+├── backend/              # Spring Boot, Checkstyle 기본 프로젝트
+│   ├── AGENTS.md
+│   ├── README.md
+│   └── config/checkstyle/
+├── .editorconfig
+├── .gitattributes
+├── .gitignore
+├── AGENTS.md             # 저장소 공통 작업 규칙
+└── README.md
 ```
 
 ## 로컬 실행
@@ -94,7 +95,7 @@ cd backend
 4. 일반 작업 PR은 `dev`로 생성합니다.
 5. `dev` 대상 PR은 최소 1명의 승인을 받은 뒤 병합합니다.
 6. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
-7. Review와 검증 후 Squash and merge합니다.
+7. `dev` 대상 PR은 Review와 검증 후 Squash and merge합니다.
 
 ## 협업 컨벤션
 
@@ -198,5 +199,6 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - [x] 확정된 Frontend·Backend 필수 Library 의존성 추가
 - [x] Frontend·Backend 환경변수 예시 작성
 - [x] ESLint·Checkstyle 설정
-- [ ] Database와 Docker 구성
+- [ ] Database 연결
+- [ ] Docker 구성(선택)
 - [ ] API, WebSocket/STOMP, Mock AI와 기능 구현

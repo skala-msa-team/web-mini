@@ -4,7 +4,7 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 
 ## Current state
 
-- A minimal Vue 3 and Vite JavaScript project exists.
+- A minimal Vue 3 and Vite JavaScript project with ESLint exists.
 - Vue Router, Axios, and STOMP Client are installed as dependencies only; their application configuration is not implemented.
 - Do not choose or install state-management, test, or other optional libraries without an explicit decision or Issue.
 
@@ -12,6 +12,7 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 
 - Do not implement screens before the user flow and Google Stitch/Figma design are approved.
 - Do not define REST payloads or STOMP destinations before the shared interface is approved.
+- Treat every `VITE_` value as public because it is bundled into browser code; never put secrets or private API keys in it.
 - Keep Backend files out of Frontend Tasks and PRs.
 
 ## Commands
