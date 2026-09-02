@@ -19,6 +19,7 @@ These instructions apply to `backend/` in addition to the repository-level `AGEN
 
 - Run: `./gradlew bootRun`
 - Test: `./gradlew test`
+- Lint and test: `./gradlew check`
 
 ## Code review rules
 

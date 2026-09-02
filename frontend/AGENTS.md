@@ -18,6 +18,7 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 
 - Install: `npm install`
 - Develop: `npm run dev`
+- Lint: `npm run lint`
 - Build: `npm run build`
 
 ## Code review rules

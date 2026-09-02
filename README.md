@@ -24,6 +24,7 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 | Database | PostgreSQL |
 | AI | Mock AI 우선, 추후 Amazon Bedrock 연동 |
 | Design | Google Stitch, Figma |
+| Lint | ESLint, Checkstyle |
 
 미정인 Library와 Version, API Path, STOMP Destination, Database Schema와 AI JSON은 담당 Issue에서 설계가 확정된 후 추가합니다.
 
@@ -32,9 +33,11 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 ```text
 .
 ├── frontend/
+│   ├── .env.example    # Frontend 환경변수 예시
 │   ├── AGENTS.md       # Frontend 작업 규칙
 │   └── ...             # Vue 3 + Vite 최소 프로젝트
 ├── backend/
+│   ├── .env.example    # Backend 환경변수 예시
 │   ├── AGENTS.md       # Backend 작업 규칙
 │   └── ...             # Spring Boot 최소 프로젝트
 ├── docs/
@@ -54,6 +57,7 @@ Frontend:
 
 ```bash
 cd frontend
+cp .env.example .env
 npm install
 npm run dev
 ```
@@ -65,11 +69,21 @@ cd backend
 ./gradlew bootRun
 ```
 
+현재 환경변수:
+
+| 영역 | 변수 | 예시 | 용도 |
+| --- | --- | --- | --- |
+| Frontend | `VITE_API_BASE_URL` | `http://localhost:8080` | Backend 기본 URL |
+| Backend | `SERVER_PORT` | `8080` | Spring Boot 실행 Port |
+
+실제 비밀값은 `.env` 또는 로컬 실행 환경에만 저장합니다. 새로운 환경변수가 확정되면 영역별 `.env.example`에는 변수명과 비밀값이 아닌 예시만 추가합니다. Spring Boot는 `.env` 파일을 자동으로 읽지 않으므로 Backend 값은 실행 환경변수로 전달합니다.
+
 기본 검증:
 
 ```bash
+(cd frontend && npm run lint)
 (cd frontend && npm run build)
-(cd backend && ./gradlew test)
+(cd backend && ./gradlew check)
 ```
 
 ## 협업 흐름
@@ -179,5 +193,7 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - [x] Vue 3 + Vite 최소 Frontend 프로젝트 생성
 - [x] Java 21 + Spring Boot 최소 Backend 프로젝트 생성
 - [x] 확정된 Frontend·Backend 필수 Library 의존성 추가
+- [x] Frontend·Backend 환경변수 예시 작성
+- [x] ESLint·Checkstyle 설정
 - [ ] Database와 Docker 구성
 - [ ] API, WebSocket/STOMP, Mock AI와 기능 구현
