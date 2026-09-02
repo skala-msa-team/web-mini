@@ -45,6 +45,8 @@
 - Use `type(scope): 한국어 제목` for commits; scope is required.
 - Link one Issue to one Branch and one PR.
 - Open normal work PRs into `dev`; use `dev` to `main` only for final integration.
+- Require at least one approving review before merging a PR into `dev`.
+- `main` has no required-approval protection rule, but team convention allows only final promotion from `dev`, not direct work-branch merges.
 - Do not commit, push, merge, or edit Notion unless the user explicitly asks.
 
 ## Security

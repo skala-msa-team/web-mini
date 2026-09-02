@@ -92,8 +92,9 @@ cd backend
 2. Issue 하나에 Branch 하나와 PR 하나를 연결합니다.
 3. Frontend와 Backend 작업은 Task, Branch, Commit, PR을 분리합니다.
 4. 일반 작업 PR은 `dev`로 생성합니다.
-5. 최종 완료 후 `dev`에서 `main`으로 PR을 생성합니다.
-6. Review와 검증 후 Squash and merge합니다.
+5. `dev` 대상 PR은 최소 1명의 승인을 받은 뒤 병합합니다.
+6. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
+7. Review와 검증 후 Squash and merge합니다.
 
 ## 협업 컨벤션
 
@@ -144,7 +145,9 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 ### Pull Request
 
 - 일반 작업은 작업 Branch에서 `dev`로 PR을 생성합니다.
-- 최종 완료 후 `dev`에서 `main`으로 PR을 생성합니다.
+- `dev`는 작업 통합 Branch이며, GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
+- `main`은 최종 완성본 Branch이며, GitHub의 필수 승인 규칙은 적용하지 않습니다.
+- 작업 Branch에서 `main`으로 직접 병합하지 않고 최종 완료 시점에 `dev`의 검증된 내용을 `main`에 반영합니다.
 - `Closes #이슈번호`를 작성합니다.
 - Frontend와 Backend PR을 각각 병합한 뒤 별도 Integration Task와 PR로 연동합니다.
 - Review와 필요한 검증을 통과한 뒤 Squash and merge합니다.
