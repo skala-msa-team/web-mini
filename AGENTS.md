@@ -15,6 +15,22 @@
 - Use `README.md` for Git, naming, and collaboration conventions.
 - Use the closest nested `AGENTS.md` for directory-specific instructions.
 
+## Project resources
+
+- Repository: https://github.com/skala-msa-team/web-mini
+- GitHub Project: https://github.com/orgs/skala-msa-team/projects/3/views/1
+- Notion: https://confused-dietician-c17.notion.site/mini-Project-6-3cd7caa087bd808caf1bc28791f745e2?pvs=73
+- Google Stitch: https://stitch.withgoogle.com/projects/416001617538729018
+- Figma: https://www.figma.com/design/kcaV9To7uU5HQHXDcbssGL/Untitled?node-id=0-1
+
+## Tracking rules
+
+- Treat the links above as canonical resource locations, not copies of their live content.
+- Keep product requirements and decisions in Notion.
+- Keep Issue ownership, priority, iteration, and status in GitHub Project.
+- Keep approved screen designs in Google Stitch and Figma.
+- Do not duplicate live progress in `AGENTS.md`; update a link only when its canonical resource changes.
+
 ## Repository boundaries
 
 - Keep Frontend work in `frontend/`, Backend work in `backend/`, and approved design documents in `docs/`.
