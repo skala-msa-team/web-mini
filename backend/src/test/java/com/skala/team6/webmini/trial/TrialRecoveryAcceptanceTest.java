@@ -4,10 +4,14 @@ import com.skala.team6.webmini.common.model.RelationshipType;
 import com.skala.team6.webmini.common.model.TrialSide;
 import com.skala.team6.webmini.common.model.TrialStatus;
 import com.skala.team6.webmini.database.entity.PostEntity;
+import com.skala.team6.webmini.database.entity.ChatMessageEntity;
+import com.skala.team6.webmini.database.entity.TrialEventEntity;
 import com.skala.team6.webmini.database.entity.TrialEntity;
 import com.skala.team6.webmini.database.entity.TrialPartyEntity;
 import com.skala.team6.webmini.database.entity.UserEntity;
 import com.skala.team6.webmini.database.repository.PostRepository;
+import com.skala.team6.webmini.database.repository.ChatMessageRepository;
+import com.skala.team6.webmini.database.repository.TrialEventRepository;
 import com.skala.team6.webmini.database.repository.TrialPartyRepository;
 import com.skala.team6.webmini.database.repository.TrialRepository;
 import com.skala.team6.webmini.database.repository.UserRepository;
@@ -21,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+
+import com.skala.team6.webmini.common.model.TrialSpeaker;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -41,6 +47,10 @@ class TrialRecoveryAcceptanceTest {
     private TrialRepository trialRepository;
     @Autowired
     private TrialPartyRepository trialPartyRepository;
+    @Autowired
+    private TrialEventRepository trialEventRepository;
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
 
     @Test
     void listsOnlyPublicActiveTrialsWithPagingAndStatusFilter() throws Exception {
@@ -79,6 +89,32 @@ class TrialRecoveryAcceptanceTest {
                 .andExpect(jsonPath("$.data.status").value("A_ARGUMENT"))
                 .andExpect(jsonPath("$.data.aParty.side").value("A"))
                 .andExpect(jsonPath("$.data.bParty.side").value("B"));
+    }
+
+    @Test
+    void returnsSnapshotFromStoredStateAndLatestSequences() throws Exception {
+        TrialEntity trial = createTrial("스냅샷 재판", TrialStatus.VOTING);
+        OffsetDateTime scheduledEndAt = OffsetDateTime.now().plusMinutes(20);
+        trial.scheduleEnd(scheduledEndAt);
+        trialRepository.save(trial);
+        UserEntity sender = userRepository.save(
+                new UserEntity(UUID.randomUUID().toString(), "관전자"));
+        trialEventRepository.save(new TrialEventEntity(
+                trial, 1, "TRIAL_STARTED", TrialSpeaker.SYSTEM, null, "{}"));
+        trialEventRepository.save(new TrialEventEntity(
+                trial, 3, "VOTING_OPENED", TrialSpeaker.SYSTEM, null, "{}"));
+        chatMessageRepository.save(new ChatMessageEntity(trial, sender, 7, "메시지"));
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}/snapshot", trial.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("VOTING"))
+                .andExpect(jsonPath("$.data.phaseStartedAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.phaseEndsAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.scheduledEndAt").value(scheduledEndAt.toString()))
+                .andExpect(jsonPath("$.data.latestEventSequence").value(3))
+                .andExpect(jsonPath("$.data.latestMessageSequence").value(7))
+                .andExpect(jsonPath("$.data.voteOpen").value(true))
+                .andExpect(jsonPath("$.data.ended").value(false));
     }
 
     private TrialEntity createTrial(String title, TrialStatus status) {

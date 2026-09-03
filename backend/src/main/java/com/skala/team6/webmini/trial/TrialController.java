@@ -243,7 +243,19 @@ public class TrialController {
     public ResponseEntity<ApiResponse<TrialSnapshotResponse>> getSnapshot(
             @PathVariable @Min(1) Long trialId
     ) {
-        return ResponseEntity.ok(ApiResponse.of(sampleSnapshot(TrialStatus.INTRODUCTION)));
+        TrialQueryService.TrialSnapshot snapshot = trialQueryService.findSnapshot(trialId);
+        var trial = snapshot.trial();
+        TrialSnapshotResponse response = new TrialSnapshotResponse(
+                trial.getStatus(),
+                formatTime(trial.getPhaseStartedAt()),
+                formatTime(trial.getPhaseEndsAt()),
+                formatTime(trial.getScheduledEndAt()),
+                snapshot.latestEventSequence(),
+                snapshot.latestMessageSequence(),
+                trial.getStatus() == TrialStatus.VOTING,
+                trial.getStatus() == TrialStatus.ENDED
+        );
+        return ResponseEntity.ok(ApiResponse.of(response));
     }
 
     @Operation(summary = "재판 이벤트 조회")
@@ -334,5 +346,9 @@ public class TrialController {
                 true,
                 false
         );
+    }
+
+    private String formatTime(java.time.OffsetDateTime value) {
+        return value == null ? null : value.toString();
     }
 }

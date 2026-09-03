@@ -6,6 +6,8 @@ import com.skala.team6.webmini.database.entity.TrialEntity;
 import com.skala.team6.webmini.database.entity.TrialPartyEntity;
 import com.skala.team6.webmini.database.repository.TrialPartyRepository;
 import com.skala.team6.webmini.database.repository.TrialRepository;
+import com.skala.team6.webmini.database.repository.ChatMessageRepository;
+import com.skala.team6.webmini.database.repository.TrialEventRepository;
 import com.skala.team6.webmini.common.model.TrialSide;
 import com.skala.team6.webmini.common.model.TrialStatus;
 import com.skala.team6.webmini.common.model.Visibility;
@@ -31,11 +33,17 @@ public class TrialQueryService {
     );
     private final TrialRepository trialRepository;
     private final TrialPartyRepository trialPartyRepository;
+    private final TrialEventRepository trialEventRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     public TrialQueryService(TrialRepository trialRepository,
-                             TrialPartyRepository trialPartyRepository) {
+                             TrialPartyRepository trialPartyRepository,
+                             TrialEventRepository trialEventRepository,
+                             ChatMessageRepository chatMessageRepository) {
         this.trialRepository = trialRepository;
         this.trialPartyRepository = trialPartyRepository;
+        this.trialEventRepository = trialEventRepository;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +86,17 @@ public class TrialQueryService {
         return new TrialList(entries, page, size, trials.getTotalElements(), trials.getTotalPages());
     }
 
+    @Transactional(readOnly = true)
+    public TrialSnapshot findSnapshot(Long trialId) {
+        TrialEntity trial = trialRepository.findById(trialId)
+                .orElseThrow(() -> new ApiException(ErrorCode.TRIAL_NOT_FOUND));
+        return new TrialSnapshot(
+                trial,
+                trialEventRepository.findLatestSequenceByTrialId(trialId),
+                chatMessageRepository.findLatestSequenceByTrialId(trialId)
+        );
+    }
+
     private TrialListEntry toListEntry(
             TrialEntity trial,
             Map<TrialSide, TrialPartyEntity> parties
@@ -107,6 +126,13 @@ public class TrialQueryService {
             TrialEntity trial,
             String aDisplayName,
             String bDisplayName
+    ) {
+    }
+
+    public record TrialSnapshot(
+            TrialEntity trial,
+            long latestEventSequence,
+            long latestMessageSequence
     ) {
     }
 }
