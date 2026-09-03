@@ -1,0 +1,48 @@
+package com.skala.team6.webmini;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class ApiDocumentationSmokeTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void exposesOpenApiDocs() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/v1/posts']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/trials/{trialId}/parties/{side}/statement']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/mock-ai/judge/verdict']").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.demoUserHeader").exists());
+    }
+
+    @Test
+    void returnsDemoUserRequiredWhenHeaderMissing() throws Exception {
+        mockMvc.perform(put("/api/v1/trials/10/parties/A/statement")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "incidentTime": "어제 저녁",
+                                  "situation": "연락 문제로 다투었습니다.",
+                                  "counterpartAction": "답장이 늦었습니다.",
+                                  "ownAction": "반복해서 연락했습니다.",
+                                  "afterConversation": "감정이 상한 채 대화가 끝났습니다.",
+                                  "desiredResolution": "연락 기준을 합의하고 싶습니다."
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("DEMO_USER_REQUIRED"))
+                .andExpect(jsonPath("$.path").value("/api/v1/trials/10/parties/A/statement"));
+    }
+}
