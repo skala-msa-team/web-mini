@@ -2,6 +2,7 @@ package com.skala.team6.webmini.trial;
 
 import com.skala.team6.webmini.common.model.RelationshipType;
 import com.skala.team6.webmini.common.model.TrialSide;
+import com.skala.team6.webmini.common.model.TrialSpeaker;
 import com.skala.team6.webmini.common.model.TrialStatus;
 import com.skala.team6.webmini.common.model.Visibility;
 import jakarta.validation.Valid;
@@ -151,8 +152,12 @@ record TrialSnapshotResponse(
 }
 
 record TrialEventResponse(
+        Long eventId,
+        Long trialId,
         long sequence,
         String eventType,
+        TrialSpeaker speaker,
+        String content,
         String payload,
         String createdAt
 ) {

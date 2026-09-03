@@ -291,8 +291,12 @@ public class TrialController {
                 .findEventsAfter(trialId, afterSequence)
                 .stream()
                 .map(event -> new TrialEventResponse(
+                        event.getId(),
+                        event.getTrial().getId(),
                         event.getSequenceNo(),
                         event.getEventType(),
+                        event.getSpeaker(),
+                        event.getContent(),
                         event.getPayload(),
                         event.getCreatedAt().toString()
                 ))

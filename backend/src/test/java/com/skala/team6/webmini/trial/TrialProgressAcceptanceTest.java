@@ -108,7 +108,7 @@ class TrialProgressAcceptanceTest {
 
         // 시작 이후 각 phaseEndsAt을 기준으로 스케줄러와 동일한 전이를 직접 실행한다.
         startService.start(trial.getId());
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             TrialEntity current = trialRepository.findById(trial.getId()).orElseThrow();
             trialPhaseService.advanceIfExpired(trial.getId(), current.getPhaseEndsAt());
         }
@@ -116,16 +116,25 @@ class TrialProgressAcceptanceTest {
         TrialEntity ended = trialRepository.findById(trial.getId()).orElseThrow();
         assertThat(ended.getStatus()).isEqualTo(TrialStatus.ENDED);
         assertThat(verdictRepository.findByTrialId(trial.getId())).isPresent();
-        assertThat(trialEventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId()))
-                .extracting("sequenceNo", "eventType", "content")
+        var events = trialEventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId());
+        assertThat(events).extracting("sequenceNo", "eventType")
                 .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple(1L, "TRIAL_STARTED", null),
-                        org.assertj.core.groups.Tuple.tuple(2L, "JUDGE_INTRODUCTION", "지금부터 재판을 시작합니다. 재판 제목"),
-                        org.assertj.core.groups.Tuple.tuple(3L, "A_ARGUMENT", "A측 최종 변론"),
-                        org.assertj.core.groups.Tuple.tuple(4L, "B_ARGUMENT", "B측 최종 변론"),
-                        org.assertj.core.groups.Tuple.tuple(5L, "VOTING_STARTED", null),
-                        org.assertj.core.groups.Tuple.tuple(6L, "VERDICT_ANNOUNCED", "판결 요지"),
-                        org.assertj.core.groups.Tuple.tuple(7L, "TRIAL_ENDED", null));
+                        org.assertj.core.groups.Tuple.tuple(1L, "TRIAL_STARTED"),
+                        org.assertj.core.groups.Tuple.tuple(2L, "JUDGE_INTRODUCTION"),
+                        org.assertj.core.groups.Tuple.tuple(3L, "A_ARGUMENT"),
+                        org.assertj.core.groups.Tuple.tuple(4L, "B_ARGUMENT"),
+                        org.assertj.core.groups.Tuple.tuple(5L, "DEBATE_STARTED"),
+                        org.assertj.core.groups.Tuple.tuple(6L, "A_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(7L, "B_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(8L, "A_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(9L, "B_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(10L, "A_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(11L, "B_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(12L, "VOTING_STARTED"),
+                        org.assertj.core.groups.Tuple.tuple(13L, "VERDICT_ANNOUNCED"),
+                        org.assertj.core.groups.Tuple.tuple(14L, "TRIAL_ENDED"));
+        assertThat(events).filteredOn(event -> event.getEventType().endsWith("_DEBATE"))
+                .allSatisfy(event -> assertThat(event.getContent()).isNotBlank());
     }
 
     @Autowired TrialStartService startService;

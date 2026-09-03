@@ -8,6 +8,7 @@ import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
 import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
 import ArgumentTimeline from '@/features/trial/components/ArgumentTimeline.vue'
+import LawyerDebatePanel from '@/features/trial/components/LawyerDebatePanel.vue'
 import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
 import TrialStage from '@/features/trial/components/TrialStage.vue'
 import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
@@ -15,7 +16,7 @@ import {
   getTrialPhaseLabel,
   getTrialWaitingMessage,
 } from '@/features/trial/liveTrialPresentation.js'
-import { toTimelineEvents } from '@/utils/trialEvent.js'
+import { toLawyerDebateEvents, toTimelineEvents } from '@/utils/trialEvent.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,6 +36,7 @@ const trialParticipants = computed(() => liveTrialMock.participants.map((partici
 const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value))
 const waitingMessage = computed(() => getTrialWaitingMessage(session.status.value))
 const timelineEvents = computed(() => toTimelineEvents(session.events.value))
+const lawyerDebateEvents = computed(() => toLawyerDebateEvents(session.events.value))
 const phaseEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt)
 const { formattedRemainingTime } = useTrialCountdown(phaseEndsAt)
 const trialEnded = computed(
@@ -44,6 +46,7 @@ const chatAllowed = computed(() => [
   TRIAL_STATUS.INTRODUCTION,
   TRIAL_STATUS.A_ARGUMENT,
   TRIAL_STATUS.B_ARGUMENT,
+  TRIAL_STATUS.DEBATE,
   TRIAL_STATUS.VOTING,
   TRIAL_STATUS.VERDICT,
 ].includes(session.status.value))
@@ -121,7 +124,13 @@ watch(
       <div class="trial-layout">
         <div class="trial-main-column">
           <TrialStage :participants="trialParticipants" />
+          <LawyerDebatePanel
+            v-if="session.status.value === TRIAL_STATUS.DEBATE"
+            :events="lawyerDebateEvents"
+            :remaining-time="formattedRemainingTime"
+          />
           <ArgumentTimeline
+            v-else
             :phase="phaseLabel"
             :events="timelineEvents"
             :waiting-message="waitingMessage"

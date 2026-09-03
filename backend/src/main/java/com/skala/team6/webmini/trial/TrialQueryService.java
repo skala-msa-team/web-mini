@@ -29,6 +29,7 @@ public class TrialQueryService {
             TrialStatus.INTRODUCTION,
             TrialStatus.A_ARGUMENT,
             TrialStatus.B_ARGUMENT,
+            TrialStatus.DEBATE,
             TrialStatus.VOTING,
             TrialStatus.VERDICT
     );

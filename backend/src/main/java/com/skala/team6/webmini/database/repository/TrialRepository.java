@@ -39,6 +39,9 @@ public interface TrialRepository extends JpaRepository<TrialEntity, Long> {
     List<Long> findExpiredTrialIds(@Param("statuses") List<TrialStatus> statuses,
                                    @Param("now") OffsetDateTime now);
 
+    @Query("select trial.id from TrialEntity trial where trial.status = :status")
+    List<Long> findTrialIdsByStatus(@Param("status") TrialStatus status);
+
     @EntityGraph(attributePaths = "post")
     Page<TrialEntity> findByVisibilityAndStatusIn(
             Visibility visibility,

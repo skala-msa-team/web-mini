@@ -5,6 +5,7 @@ const WAITING_MESSAGE = Object.freeze({
   [TRIAL_STATUS.INTRODUCTION]: "AI 판사가 사건을 소개하고 있습니다.",
   [TRIAL_STATUS.A_ARGUMENT]: "A측 AI 변호사의 발언이 진행 중입니다.",
   [TRIAL_STATUS.B_ARGUMENT]: "B측 AI 변호사의 발언이 진행 중입니다.",
+  [TRIAL_STATUS.DEBATE]: "A측과 B측 AI 변호사가 상호 변론을 진행 중입니다.",
   [TRIAL_STATUS.VOTING]: "배심원 최종 투표가 진행 중입니다.",
   [TRIAL_STATUS.VERDICT]: "AI 판사가 최종 판결을 준비하고 있습니다.",
   [TRIAL_STATUS.ENDED]: "재판이 종료되었습니다.",

@@ -18,4 +18,6 @@ public interface TrialEventRepository extends JpaRepository<TrialEventEntity, Lo
     @Query("select coalesce(max(event.sequenceNo), 0) "
             + "from TrialEventEntity event where event.trial.id = :trialId")
     long findLatestSequenceByTrialId(@Param("trialId") Long trialId);
+
+    long countByTrialIdAndEventTypeIn(Long trialId, List<String> eventTypes);
 }
