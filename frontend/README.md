@@ -1,6 +1,6 @@
 # Frontend
 
-Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vue 사용 기반, Justice & Empathy 디자인 토큰, Vue Router가 설정되어 있습니다. STOMP와 도메인별 API·화면은 계약과 담당 Issue가 확정된 뒤 추가합니다. 상태 관리 Library는 미정입니다.
+Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vue 사용 기반, Justice & Empathy 디자인 토큰, Vue Router와 승인된 실시간 재판용 STOMP 연결 구성이 설정되어 있습니다. 상태 관리 Library와 HTTP Client는 미정입니다.
 
 ## 책임별 구조
 
@@ -34,27 +34,27 @@ npm run build
 
 ### 설정 위치
 
-| 파일 | 책임 |
-| --- | --- |
+| 파일                           | 책임                                                                |
+| ------------------------------ | ------------------------------------------------------------------- |
 | `src/assets/styles/tokens.css` | 원본 디자인 시스템의 색상, 글꼴, 크기, 간격, Radius, Elevation 토큰 |
-| `src/assets/styles/global.css` | Tailwind CSS 진입점, shadcn 의미 토큰 연결, 전역 기본 스타일 |
-| `src/assets/styles/fonts.css` | Plus Jakarta Sans, Be Vietnam Pro 웹 폰트 |
-| `components.json` | shadcn-vue CLI의 JavaScript, 경로, 스타일 설정 |
-| `src/lib/utils.js` | shadcn-vue 컴포넌트가 사용하는 `cn()` 클래스 병합 함수 |
-| `vite.config.js` | Tailwind CSS Vite Plugin과 `@` → `src` 경로 별칭 |
-| `jsconfig.json` | Editor가 `@/*` 경로 별칭을 해석하기 위한 설정 |
+| `src/assets/styles/global.css` | Tailwind CSS 진입점, shadcn 의미 토큰 연결, 전역 기본 스타일        |
+| `src/assets/styles/fonts.css`  | Plus Jakarta Sans, Be Vietnam Pro 웹 폰트                           |
+| `components.json`              | shadcn-vue CLI의 JavaScript, 경로, 스타일 설정                      |
+| `src/lib/utils.js`             | shadcn-vue 컴포넌트가 사용하는 `cn()` 클래스 병합 함수              |
+| `vite.config.js`               | Tailwind CSS Vite Plugin과 `@` → `src` 경로 별칭                    |
+| `jsconfig.json`                | Editor가 `@/*` 경로 별칭을 해석하기 위한 설정                       |
 
 제목은 Plus Jakarta Sans, 본문과 Label은 Be Vietnam Pro를 사용합니다. 웹 폰트는 `index.html`에서 불러오며 불러오지 못하면 지정된 sans-serif 또는 system font로 대체됩니다.
 
 shadcn의 의미 토큰은 다음 원칙으로 디자인 시스템에 연결되어 있습니다.
 
-| UI 의미 | 디자인 토큰 |
-| --- | --- |
-| 기본 배경과 글자 | `--ds-color-background`, `--ds-color-on-background` |
-| Card와 Popover | `--ds-color-surface-container-lowest`, `--ds-color-on-surface` |
-| Primary Action과 Focus Ring | `--ds-color-justice-blue` |
-| Error와 Destructive | `--ds-color-error`, `--ds-color-on-error` |
-| Border와 Input | `--ds-color-card-border` |
+| UI 의미                     | 디자인 토큰                                                    |
+| --------------------------- | -------------------------------------------------------------- |
+| 기본 배경과 글자            | `--ds-color-background`, `--ds-color-on-background`            |
+| Card와 Popover              | `--ds-color-surface-container-lowest`, `--ds-color-on-surface` |
+| Primary Action과 Focus Ring | `--ds-color-justice-blue`                                      |
+| Error와 Destructive         | `--ds-color-error`, `--ds-color-on-error`                      |
+| Border와 Input              | `--ds-color-card-border`                                       |
 
 구조화된 원본 색상은 `--ds-color-*` 이름으로 모두 보존했습니다. 원본 설명에 별도로 명시된 Verdict Blue, Justice Blue, Accent Red, Trust Mint도 이름이 있는 브랜드 토큰으로 분리했습니다. 디자인 변경 시 컴포넌트마다 색상을 직접 수정하지 말고 먼저 `tokens.css`와 `global.css`의 의미 연결을 확인합니다.
 
@@ -74,7 +74,7 @@ npx shadcn-vue@latest add button
 
 ```vue
 <script setup>
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 </script>
 
 <template>
