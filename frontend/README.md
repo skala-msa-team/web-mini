@@ -1,6 +1,6 @@
 # Frontend
 
-Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vue 사용 기반, Justice & Empathy 디자인 토큰, Vue Router와 승인된 실시간 재판용 STOMP 연결 구성이 설정되어 있습니다. 상태 관리 Library와 HTTP Client는 미정입니다.
+Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vue 사용 기반, Justice & Empathy 디자인 토큰, Vue Router, Axios REST Client와 승인된 실시간 재판용 STOMP 연결 구성이 설정되어 있습니다. 상태 관리 Library는 미정입니다.
 
 ## 책임별 구조
 
@@ -11,7 +11,7 @@ src/
 ├── components/       # ui(shadcn), common, layout
 ├── pages/            # Router에 연결되는 화면
 ├── features/         # 기능별 UI와 상태
-├── api/              # API 통신 인터페이스 뼈대(도메인 확정 후 추가)
+├── api/              # Axios 공통 Client, 오류 규약, 도메인별 REST API
 ├── realtime/         # WebSocket·STOMP
 ├── composables/      # 여러 기능이 공유하는 상태 로직
 ├── constants/        # 상태·이벤트 상수(계약 확정 후 정의)
@@ -19,7 +19,7 @@ src/
 └── utils/            # 도메인과 무관한 순수 유틸
 ```
 
-`components/ui`에는 shadcn-vue가 생성한 기본 UI만 두고, 여러 화면에서 조합하는 UI는 `components/common`, 특정 기능 전용 UI는 `features/*/components`에 둡니다. `pages`는 화면 조합과 라우팅에 집중합니다. REST 요청은 `api` 폴더에서 도메인 인터페이스 형태로 구성하고, 실제 HTTP 라이브러리는 계약이 확정된 시점에 맞춰 결정합니다.
+`components/ui`에는 shadcn-vue가 생성한 기본 UI만 두고, 여러 화면에서 조합하는 UI는 `components/common`, 특정 기능 전용 UI는 `features/*/components`에 둡니다. `pages`는 화면 조합과 라우팅에 집중합니다. REST 요청은 `api` 폴더의 Axios Client와 도메인 API를 통해 호출합니다.
 
 ## 실행과 검증
 
@@ -92,14 +92,50 @@ import { Button } from "@/components/ui/button";
 
 자세한 CLI 사용법은 [shadcn-vue 공식 CLI 문서](https://www.shadcn-vue.com/docs/cli)를 참고합니다.
 
-## API 통신 기초 설정
+## API 통신 규약
 
-현재는 기초 세팅 단계이므로 공통 HTTP 라이브러리/인터셉터는 미정 상태로 둡니다. 통신 인터페이스는 `api/` 내 도메인별 모듈을 계약 확정 후 추가합니다.
+로컬 실행 전 `.env.example`을 복사해 `VITE_API_BASE_URL`을 설정합니다. Demo REST Base URL에는 `/api/v1`을 포함합니다.
+
+```bash
+cp .env.example .env.local
+```
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+공통 규약:
+
+- `src/api/httpClient.js`의 Axios Instance만 사용합니다.
+- 공통 timeout은 15초이며 자동 재시도하지 않습니다.
+- 요청 인터셉터가 Browser Local Storage의 UUID를 `X-Demo-User-Id`에 자동으로 추가합니다.
+- 응답 인터셉터는 Axios 응답에서 Backend JSON Body를 추출합니다.
+- 도메인 API는 성공 Envelope의 `data`를 반환합니다.
+- Backend 오류는 `ApiError`로 변환하며 `status`, `code`, `message`, `fieldErrors`, `timestamp`, `path`를 제공합니다.
+- 서버 응답이 없는 timeout과 네트워크 오류는 각각 `REQUEST_TIMEOUT`, `NETWORK_ERROR` Code를 사용합니다.
+- 로딩 상태는 전역 인터셉터가 아니라 요청을 호출하는 Page 또는 Composable에서 관리합니다.
+
+```js
+import { trialApi } from '@/api/trialApi.js'
+
+const snapshot = await trialApi.getSnapshot(trialId)
+```
+
+화면은 `ApiError.code`를 기준으로 오류 상태를 분기합니다.
+
+```js
+try {
+  return await trialApi.getResults(trialId)
+} catch (error) {
+  if (error.code === 'RESULT_NOT_FOUND') {
+    // 결과 준비 중 화면 처리
+  }
+  throw error
+}
+```
 
 ```text
-Page → Feature → Domain API (예정)
+Page → Feature → Domain API → Axios Client
      → Backend
      → 화면 갱신
 ```
-
-도메인 API 파일(`postApi.js`, `trialApi.js` 등)의 URL과 payload는 Backend 계약 확정 전까지 만들지 않습니다.
