@@ -1,15 +1,41 @@
 <script setup>
+import { computed } from 'vue'
 import { Check, Clock3, Scale } from '@lucide/vue'
+import { VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
 
 const props = defineProps({
   choices: { type: Array, required: true },
   remainingTime: { type: String, required: true },
   selectedChoice: { type: String, default: null },
+  status: { type: String, default: VOTE_STATUS.WAITING },
   disabled: { type: Boolean, default: false },
   disabledMessage: { type: String, default: '현재 투표할 수 없습니다.' },
 })
 
-defineEmits(['select'])
+defineEmits(['select', 'submit'])
+
+const statusLabel = computed(() => {
+  if (props.status === VOTE_STATUS.OPEN) return '투표 진행 중'
+  if (props.status === VOTE_STATUS.SUBMITTED) return '제출 완료'
+  return '투표 대기'
+})
+const choicesDisabled = computed(
+  () => props.disabled || props.status !== VOTE_STATUS.OPEN,
+)
+const submitDisabled = computed(
+  () => choicesDisabled.value || !props.selectedChoice,
+)
+const helpMessage = computed(() => {
+  if (props.disabled) return props.disabledMessage
+  if (props.status === VOTE_STATUS.WAITING) {
+    return '현재 변론이 진행 중입니다. 투표 시작 알림을 기다려 주세요.'
+  }
+  if (props.status === VOTE_STATUS.SUBMITTED) {
+    return '투표가 정상적으로 제출되었습니다. 재판 종료 후 최종 결과가 공개됩니다.'
+  }
+  if (props.selectedChoice) return '선택한 승소 측을 확인한 뒤 투표를 제출해 주세요.'
+  return 'A측과 B측 중 승소해야 한다고 판단한 한 쪽을 선택해 주세요.'
+})
 </script>
 
 <template>
@@ -19,10 +45,15 @@ defineEmits(['select'])
         <span class="eyebrow"><Scale :size="15" /> 배심원 최종 판단</span>
         <h1 id="final-vote-title">최종 판결 투표</h1>
       </div>
-      <div class="countdown" aria-label="투표 마감까지 남은 시간">
-        <Clock3 :size="19" />
-        <span>남은 시간</span>
-        <strong>{{ remainingTime }}</strong>
+      <div class="vote-meta">
+        <span class="status-badge" :class="`status-${status.toLowerCase()}`">
+          {{ statusLabel }}
+        </span>
+        <div class="countdown" aria-label="투표 마감까지 남은 시간">
+          <Clock3 :size="19" />
+          <span>남은 시간</span>
+          <strong>{{ remainingTime }}</strong>
+        </div>
       </div>
     </header>
 
@@ -40,27 +71,39 @@ defineEmits(['select'])
         class="choice-card"
         :class="{ selected: selectedChoice === choice.id }"
         :aria-pressed="selectedChoice === choice.id"
-        :disabled="disabled"
+        :disabled="choicesDisabled"
         @click="$emit('select', choice.id)"
       >
         <span class="choice-side">{{ choice.side }}</span>
         <strong>{{ choice.title }}</strong>
         <small>{{ choice.description }}</small>
         <span v-if="selectedChoice === choice.id" class="selected-mark">
-          <Check :size="14" /> 선택됨
+          <Check :size="14" />
+          {{ status === VOTE_STATUS.SUBMITTED ? '제출 완료' : '선택됨' }}
         </span>
       </button>
     </div>
 
-    <p class="vote-help">
+    <p class="vote-help" aria-live="polite">{{ helpMessage }}</p>
+
+    <button
+      class="submit-vote"
+      :class="{ submitted: status === VOTE_STATUS.SUBMITTED }"
+      type="button"
+      :disabled="submitDisabled"
+      @click="$emit('submit')"
+    >
+      <Check v-if="status === VOTE_STATUS.SUBMITTED" :size="17" />
+      <Clock3 v-else-if="status === VOTE_STATUS.WAITING" :size="17" />
+      <Scale v-else :size="17" />
       {{
-        props.disabled
-          ? props.disabledMessage
-          : selectedChoice
-            ? '선택이 완료되었습니다. 투표 종료 전까지 변경할 수 있습니다.'
-            : '두 입장을 검토한 뒤 한 쪽을 선택해 주세요.'
+        status === VOTE_STATUS.SUBMITTED
+          ? '투표 제출 완료'
+          : status === VOTE_STATUS.WAITING
+            ? '투표 대기 중'
+            : '선택한 내용으로 투표하기'
       }}
-    </p>
+    </button>
   </section>
 </template>
 
@@ -114,6 +157,34 @@ h1 {
 .countdown strong {
   font-size: 0.84rem;
   letter-spacing: 0.04em;
+}
+
+.vote-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-badge {
+  min-height: 25px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--ds-radius-full);
+  background: #eef2f7;
+  color: #687486;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.status-open {
+  background: #e8f1ff;
+  color: var(--ds-color-justice-blue);
+}
+
+.status-submitted {
+  background: #e8f7ed;
+  color: #207443;
 }
 
 .choice-guide {
@@ -227,6 +298,38 @@ h1 {
   text-align: center;
 }
 
+.submit-vote {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: var(--ds-radius-default);
+  background: var(--ds-color-justice-blue);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submit-vote.submitted {
+  background: #207443;
+}
+
+.submit-vote:disabled {
+  background: #d9e0e9;
+  color: #7d8795;
+  cursor: not-allowed;
+}
+
+.submit-vote.submitted:disabled {
+  background: #e8f7ed;
+  color: #207443;
+}
+
 @media (max-width: 620px) {
   .final-vote {
     padding: 20px 16px;
@@ -234,6 +337,12 @@ h1 {
 
   .vote-heading {
     align-items: flex-start;
+  }
+
+  .vote-meta {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
   }
 
   .countdown span {
