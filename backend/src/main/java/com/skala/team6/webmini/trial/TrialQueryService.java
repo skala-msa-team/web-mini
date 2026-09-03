@@ -24,7 +24,7 @@ public class TrialQueryService {
 
     @Transactional(readOnly = true)
     public TrialDetail findDetail(Long trialId) {
-        TrialEntity trial = trialRepository.findById(trialId)
+        TrialEntity trial = trialRepository.findDetailById(trialId)
                 .orElseThrow(() -> new ApiException(ErrorCode.TRIAL_NOT_FOUND));
         List<TrialPartyEntity> parties = trialPartyRepository.findByTrialIdOrderBySideAsc(trialId);
         return new TrialDetail(trial, parties);
