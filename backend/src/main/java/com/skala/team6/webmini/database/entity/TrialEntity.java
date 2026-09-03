@@ -84,6 +84,10 @@ public class TrialEntity {
         return post;
     }
 
+    public UserEntity getCreator() {
+        return creator;
+    }
+
     public OffsetDateTime getPhaseStartedAt() {
         return phaseStartedAt;
     }

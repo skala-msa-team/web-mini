@@ -63,6 +63,7 @@ class TrialCreationAcceptanceTest {
                 .findFirst().orElseThrow();
         assertThat(trial.getStatus()).isEqualTo(TrialStatus.PREPARING);
         assertThat(trial.getVisibility().name()).isEqualTo("PUBLIC");
+        assertThat(trial.getCreator().getDemoKey()).isEqualTo(creatorId);
         assertThat(trialPartyRepository.findByTrialIdOrderBySideAsc(trial.getId()))
                 .extracting(party -> party.getSide(), party -> party.getDisplayName(), party -> party.isReady())
                 .containsExactly(
