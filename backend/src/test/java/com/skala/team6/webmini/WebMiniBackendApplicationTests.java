@@ -8,6 +8,8 @@ import com.skala.team6.webmini.database.repository.PostRepository;
 import com.skala.team6.webmini.database.repository.UserRepository;
 import com.skala.team6.webmini.database.repository.TrialPartyRepository;
 import com.skala.team6.webmini.database.repository.TrialRepository;
+import com.skala.team6.webmini.database.repository.AiGuideQuestionRepository;
+import com.skala.team6.webmini.database.repository.TrialStatementRepository;
 
 @SpringBootTest(properties = "spring.autoconfigure.exclude="
         + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
@@ -23,6 +25,10 @@ class WebMiniBackendApplicationTests {
     private TrialRepository trialRepository;
     @MockitoBean
     private TrialPartyRepository trialPartyRepository;
+    @MockitoBean
+    private AiGuideQuestionRepository aiGuideQuestionRepository;
+    @MockitoBean
+    private TrialStatementRepository trialStatementRepository;
 
     @Test
     void contextLoads() {

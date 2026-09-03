@@ -102,7 +102,8 @@ class TrialPreparationAcceptanceTest {
                         .header("X-Demo-User-Id", DEMO_USER_ID)
                         .contentType("application/json")
                         .content(statementRequest("상황")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_TRIAL_SIDE"));
 
         mockMvc.perform(put("/api/v1/trials/{trialId}/parties/A/statement", trial.getId())
                         .contentType("application/json")
@@ -224,6 +225,35 @@ class TrialPreparationAcceptanceTest {
                 .orElseThrow().isReady()).isTrue();
         assertThat(trialStatementRepository.findByTrialPartyId(bParty.getId())
                 .orElseThrow().getConfirmedAt()).isNotNull();
+    }
+
+    @Test
+    void rejectsInvalidPreparationRequests() throws Exception {
+        mockMvc.perform(put("/api/v1/trials/{trialId}/parties/A/guide-answers", trial.getId())
+                        .header("X-Demo-User-Id", DEMO_USER_ID)
+                        .contentType("application/json")
+                        .content("{\"answers\":[]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        mockMvc.perform(put("/api/v1/trials/{trialId}/parties/A/guide-answers", trial.getId())
+                        .contentType("application/json")
+                        .content("{\"answers\":[{\"questionId\":1,\"answer\":\"답변\"}]}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("DEMO_USER_REQUIRED"));
+
+        updateArgument(TrialSide.A, "요약", "변론")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ARGUMENT_DRAFT_REQUIRED"));
+
+        confirmArgument(TrialSide.A)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ARGUMENT_DRAFT_REQUIRED"));
+
+        mockMvc.perform(post("/api/v1/trials/{trialId}/start", Long.MAX_VALUE)
+                        .header("X-Demo-User-Id", DEMO_USER_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
     }
 
     private org.springframework.test.web.servlet.ResultActions saveStatement(

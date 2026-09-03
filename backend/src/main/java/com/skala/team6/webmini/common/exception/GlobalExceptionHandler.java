@@ -2,6 +2,7 @@ package com.skala.team6.webmini.common.exception;
 
 import com.skala.team6.webmini.common.api.ErrorResponse;
 import com.skala.team6.webmini.common.api.FieldErrorDetail;
+import com.skala.team6.webmini.common.model.TrialSide;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -85,6 +87,24 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(
                         ErrorCode.VALIDATION_ERROR.name(),
                         ErrorCode.VALIDATION_ERROR.message(),
+                        Collections.emptyList(),
+                        Instant.now().toString(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request
+    ) {
+        ErrorCode errorCode = exception.getRequiredType() == TrialSide.class
+                ? ErrorCode.INVALID_TRIAL_SIDE
+                : ErrorCode.VALIDATION_ERROR;
+        return ResponseEntity.status(errorCode.status())
+                .body(new ErrorResponse(
+                        errorCode.name(),
+                        errorCode.message(),
                         Collections.emptyList(),
                         Instant.now().toString(),
                         request.getRequestURI()
