@@ -52,6 +52,10 @@ public class TrialPartyEntity {
         this.ready = false;
     }
 
+    public Long getId() {
+        return id;
+    }
+
     public TrialSide getSide() {
         return side;
     }
@@ -62,5 +66,9 @@ public class TrialPartyEntity {
 
     public boolean isReady() {
         return ready;
+    }
+
+    public void markReady() {
+        this.ready = true;
     }
 }

@@ -32,9 +32,23 @@ import java.util.List;
 @RequestMapping("/api/v1/trials")
 public class TrialController {
     private final TrialQueryService trialQueryService;
+    private final TrialStatementService trialStatementService;
+    private final GuideAnswerService guideAnswerService;
+    private final TrialArgumentService trialArgumentService;
+    private final TrialStartService trialStartService;
 
-    public TrialController(TrialQueryService trialQueryService) {
+    public TrialController(
+            TrialQueryService trialQueryService,
+            TrialStatementService trialStatementService,
+            GuideAnswerService guideAnswerService,
+            TrialArgumentService trialArgumentService,
+            TrialStartService trialStartService
+    ) {
         this.trialQueryService = trialQueryService;
+        this.trialStatementService = trialStatementService;
+        this.guideAnswerService = guideAnswerService;
+        this.trialArgumentService = trialArgumentService;
+        this.trialStartService = trialStartService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -80,8 +94,14 @@ public class TrialController {
                 trial.getStatus(),
                 trial.getPhaseStartedAt() == null ? null : trial.getPhaseStartedAt().toString(),
                 trial.getPhaseEndsAt() == null ? null : trial.getPhaseEndsAt().toString(),
-                new TrialPartyInfo(parties.get(0).getSide(), parties.get(0).getDisplayName()),
-                new TrialPartyInfo(parties.get(1).getSide(), parties.get(1).getDisplayName())
+                new TrialPartyInfo(
+                        parties.get(0).getSide(),
+                        parties.get(0).getDisplayName(),
+                        parties.get(0).isReady()),
+                new TrialPartyInfo(
+                        parties.get(1).getSide(),
+                        parties.get(1).getDisplayName(),
+                        parties.get(1).isReady())
         );
         return ResponseEntity.ok(ApiResponse.of(response));
     }
@@ -100,7 +120,16 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody StatementRequest request
     ) {
-        return ResponseEntity.ok(ApiResponse.of(new StatementResponse(side, request)));
+        var statement = trialStatementService.save(trialId, side, request);
+        StatementRequest saved = new StatementRequest(
+                statement.getIncidentTime(),
+                statement.getSituation(),
+                statement.getCounterpartAction(),
+                statement.getOwnAction(),
+                statement.getAfterConversation(),
+                statement.getDesiredResolution()
+        );
+        return ResponseEntity.ok(ApiResponse.of(new StatementResponse(side, saved)));
     }
 
     @Operation(summary = "안내 질문 생성")
@@ -131,7 +160,8 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody GuideAnswersRequest request
     ) {
-        GuideAnswersResponse response = new GuideAnswersResponse(request.answers(), true);
+        GuideAnswerService.SavedGuideAnswers saved = guideAnswerService.save(trialId, side, request);
+        GuideAnswersResponse response = new GuideAnswersResponse(saved.answers(), saved.allAnswered());
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -162,11 +192,9 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody UpdateArgumentDraftRequest request
     ) {
+        var statement = trialArgumentService.updateDraft(trialId, side, request);
         return ResponseEntity.ok(ApiResponse.of(new ArgumentDraftResponse(
-                side,
-                request.factSummary(),
-                request.argumentText()
-        )));
+                side, statement.getFactSummary(), statement.getArgumentText())));
     }
 
     @Operation(summary = "변론문 최종 확인")
@@ -182,10 +210,12 @@ public class TrialController {
             )
             @DemoUserId DemoUserContext demoUser
     ) {
+        TrialArgumentService.ConfirmedArgument confirmed =
+                trialArgumentService.confirm(trialId, side);
         return ResponseEntity.ok(ApiResponse.of(new ConfirmArgumentResponse(
                 side,
-                "2026-09-03T03:20:00Z",
-                side == TrialSide.B
+                confirmed.statement().getConfirmedAt().toString(),
+                confirmed.bothConfirmed()
         )));
     }
 
@@ -201,6 +231,7 @@ public class TrialController {
             )
             @DemoUserId DemoUserContext demoUser
     ) {
+        trialStartService.validateReady(trialId);
         return ResponseEntity.ok(ApiResponse.of(sampleSnapshot(TrialStatus.INTRODUCTION)));
     }
 
