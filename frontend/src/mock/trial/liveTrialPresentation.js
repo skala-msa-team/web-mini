@@ -1,4 +1,4 @@
-import { TRIAL_STATUS, TRIAL_STATUS_LABEL } from "@/constants/trialStatus.js";
+import { TRIAL_STATUS, TRIAL_STATUS_LABEL } from "@/consts/trialStatus.js";
 
 const WAITING_MESSAGE = Object.freeze({
   [TRIAL_STATUS.PREPARING]: "재판 시작을 기다리고 있습니다.",

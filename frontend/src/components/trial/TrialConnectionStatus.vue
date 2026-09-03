@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { CircleAlert, Gavel, LoaderCircle, RefreshCw } from '@lucide/vue'
-import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
 
 const props = defineProps({
   connection: { type: Object, required: true },

@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { communityPosts } from '@/features/community/mock/communityData.js'
+import { communityPosts } from '@/mock/community/communityData.js'
 
 const relationshipLabels = Object.freeze({
   COUPLE: '연인',
