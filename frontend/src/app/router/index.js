@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import CommunityPage from '@/pages/community/CommunityPage.vue'
 import PostCreatePage from '@/pages/community/PostCreatePage.vue'
+import PostDetailPage from '@/pages/community/PostDetailPage.vue'
 import LiveTrialEntryPage from '@/pages/live-trial/LiveTrialEntryPage.vue'
 import TrialVotingPage from '@/pages/live-trial/TrialVotingPage.vue'
 import TrialPreparationPage from '@/pages/trial-preparation/TrialPreparationPage.vue'
@@ -14,6 +15,7 @@ const router = createRouter({
     { path: '/', name: 'home', component: CommunityPage },
     { path: '/community', redirect: '/' },
     { path: '/community/posts/new', name: 'post-create', component: PostCreatePage },
+    { path: '/community/posts/:postId', name: 'post-detail', component: PostDetailPage },
     { path: '/trials/new', name: 'trial-preparation', component: TrialPreparationPage },
 
     {

@@ -2,94 +2,43 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Eye } from '@lucide/vue'
-import { VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
-import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
+import { CONNECTION_STATUS, VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { TRIAL_STATUS } from '@/constants/trialStatus.js'
+import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
 import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
 import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
-import {
-  LIVE_TRIAL_MOCK_SCENARIO,
-  LIVE_TRIAL_TIMING,
-} from '@/features/trial/liveTrialStateMock.js'
 import FinalVerdictVote from '@/features/vote/components/FinalVerdictVote.vue'
 import { finalVoteMock } from '@/features/vote/finalVoteMock.js'
-import { recoverLiveTrial } from '@/realtime/liveTrialRecovery.js'
-import { mergeMessages } from '@/utils/messageMerge.js'
 
 const route = useRoute()
 const router = useRouter()
-const trialId = computed(() => route.params.trialId ?? '1')
-const liveMessages = ref([...finalVoteMock.messages])
-const realtimeSnapshot = ref(null)
-const realtimeEvents = ref([])
+const trialId = computed(() => route.params.trialId)
+const session = useLiveTrialSession(trialId)
 
-const {
-  state: trialState,
-  interactionDisabledMessage: stateInteractionDisabledMessage,
-} = useLiveTrialMockState(LIVE_TRIAL_MOCK_SCENARIO.VOTE_OPEN)
-
-function toChatMessage(payload) {
-  const sender = payload.sender || {}
-  return {
-    id: payload.messageId ?? payload.messageSequence,
-    avatar: (sender.nickname || '배').slice(0, 1),
-    nickname: sender.nickname || '관전자',
-    message: payload.content || '',
-    tone: 'blue',
-  }
-}
-
-function appendMessage(payload) {
-  liveMessages.value = mergeMessages(liveMessages.value, [toChatMessage(payload)])
-}
-
-function appendEvent(event) {
-  if (!realtimeEvents.value.some((savedEvent) => savedEvent.sequence === event.sequence)) {
-    realtimeEvents.value.push(event)
-  }
-}
-
-async function recoverConnection({ trialId: currentTrialId }) {
-  await recoverLiveTrial({
-    trialId: currentTrialId,
-    onSnapshot: (snapshot) => { realtimeSnapshot.value = snapshot },
-    onEvent: appendEvent,
-    onMessage: appendMessage,
-  })
-}
-
-const realtime = useLiveTrialRealtime(trialId, {
-  onConnected: recoverConnection,
-  onReconnect: recoverConnection,
-  onEvent: appendEvent,
-  onMessage: appendMessage,
-})
-const realtimeConnection = realtime.connection
-const realtimeErrors = realtime.userErrors
-const sendChat = realtime.sendChat
-const reconnect = realtime.reconnect
-
-const trialEndsAt = computed(() => {
-  const scheduledEndAt = (realtimeSnapshot.value || trialState.value.snapshot)?.scheduledEndAt
-  if (!scheduledEndAt) return null
-
-  const scheduledEndTimestamp = new Date(scheduledEndAt).getTime()
-  const directVoteEndTimestamp = Date.now() + LIVE_TRIAL_TIMING.VOTING_SECONDS * 1000
-  return new Date(Math.min(scheduledEndTimestamp, directVoteEndTimestamp)).toISOString()
-})
-const { formattedRemainingTime, isExpired } = useTrialCountdown(trialEndsAt)
-const trialEnded = computed(() => Boolean((realtimeSnapshot.value || trialState.value.snapshot)?.ended || isExpired.value))
+const trialEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt)
+const { formattedRemainingTime } = useTrialCountdown(trialEndsAt)
+const trialEnded = computed(
+  () => session.status.value === TRIAL_STATUS.ENDED || session.currentSnapshot.value?.ended,
+)
 const interactionsDisabled = computed(
-  () => realtime.connection.value.status !== CONNECTION_STATUS.CONNECTED || isExpired.value,
+  () => session.connection.value.status !== CONNECTION_STATUS.CONNECTED || trialEnded.value,
 )
-const interactionDisabledMessage = computed(() =>
-  isExpired.value ? '재판 시간이 종료되었습니다.' : stateInteractionDisabledMessage.value,
-)
+const interactionDisabledMessage = computed(() => {
+  if (trialEnded.value) return '재판이 종료되었습니다.'
+  if (session.connection.value.status !== CONNECTION_STATUS.CONNECTED) {
+    return '재판 연결을 복구한 뒤 다시 시도해 주세요.'
+  }
+  return ''
+})
 const submittedVote = ref(null)
-const selectedChoice = ref(toChoiceId(trialState.value.vote.selectedSide))
+const selectedChoice = ref(null)
 const voteStatus = computed(() =>
-  submittedVote.value ? VOTE_STATUS.SUBMITTED : trialState.value.vote.status,
+  submittedVote.value
+    ? VOTE_STATUS.SUBMITTED
+    : session.currentSnapshot.value?.voteOpen
+      ? VOTE_STATUS.OPEN
+      : VOTE_STATUS.WAITING,
 )
 const voteDisabled = computed(
   () => interactionsDisabled.value || voteStatus.value !== VOTE_STATUS.OPEN,
@@ -102,25 +51,21 @@ const voteDisabledMessage = computed(() => {
 })
 
 watch(
-  () => trialState.value.vote.selectedSide,
-  (selectedSide) => {
-    submittedVote.value = null
-    selectedChoice.value = toChoiceId(selectedSide)
-  },
-)
+  [() => session.status.value, () => session.restoring.value],
+  ([status, restoring]) => {
+    if (restoring) return
 
-watch(
-  isExpired,
-  (expired) => {
-    if (!expired || trialState.value.snapshot?.ended) return
-    router.replace({ name: 'trial-result', params: { trialId: route.params.trialId } })
+    if (status === TRIAL_STATUS.ENDED) {
+      router.replace({ name: 'trial-result', params: { trialId: route.params.trialId } })
+      return
+    }
+
+    if (status && ![TRIAL_STATUS.VOTING, TRIAL_STATUS.VERDICT].includes(status)) {
+      router.replace({ name: 'live-trial', params: { trialId: route.params.trialId } })
+    }
   },
   { immediate: true },
 )
-
-function toChoiceId(side) {
-  return side ? `SIDE_${side}` : null
-}
 
 function selectChoice(choiceId) {
   if (voteDisabled.value) return
@@ -141,13 +86,13 @@ function submitVote() {
   <div class="voting-page">
     <main class="voting-shell">
       <TrialConnectionStatus
-        :connection="realtimeConnection"
+        :connection="session.connection.value"
         :ended="trialEnded"
-        @retry="reconnect"
+        @retry="session.reconnect"
       />
 
-      <p v-if="realtimeErrors.length" class="realtime-error" role="alert">
-        {{ realtimeErrors.at(-1)?.message || '실시간 요청을 처리하지 못했습니다.' }}
+      <p v-if="session.chatError.value" class="realtime-error" role="alert">
+        {{ session.chatError.value?.message || '실시간 요청을 처리하지 못했습니다.' }}
       </p>
 
       <div class="voting-layout">
@@ -180,13 +125,14 @@ function submitVote() {
         </div>
 
         <TrialChatPanel
-          :initial-messages="liveMessages"
-          :messages="liveMessages"
+          :messages="session.messages.value"
           :audience-count="finalVoteMock.viewerCount"
           :header-label="trialEnded ? '종료' : '실시간'"
           :disabled="interactionsDisabled"
+          :loading="session.chatRestoring.value"
+          :sending="session.chatSending.value"
           :disabled-message="interactionDisabledMessage"
-          :on-send="sendChat"
+          :on-send="session.sendChat"
         />
       </div>
     </main>
