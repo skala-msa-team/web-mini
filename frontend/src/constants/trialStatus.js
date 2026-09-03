@@ -1,2 +1,19 @@
-// Domain values remain 미정 until the shared Backend contract is approved.
-export const TRIAL_STATUS = Object.freeze({})
+export const TRIAL_STATUS = Object.freeze({
+  PREPARING: 'PREPARING',
+  INTRODUCTION: 'INTRODUCTION',
+  A_ARGUMENT: 'A_ARGUMENT',
+  B_ARGUMENT: 'B_ARGUMENT',
+  VOTING: 'VOTING',
+  VERDICT: 'VERDICT',
+  ENDED: 'ENDED',
+})
+
+export const TRIAL_STATUS_LABEL = Object.freeze({
+  [TRIAL_STATUS.PREPARING]: '재판 준비',
+  [TRIAL_STATUS.INTRODUCTION]: '재판 시작',
+  [TRIAL_STATUS.A_ARGUMENT]: 'A측 변론',
+  [TRIAL_STATUS.B_ARGUMENT]: 'B측 변론',
+  [TRIAL_STATUS.VOTING]: '최종 투표',
+  [TRIAL_STATUS.VERDICT]: '판결 생성',
+  [TRIAL_STATUS.ENDED]: '재판 종료',
+})
