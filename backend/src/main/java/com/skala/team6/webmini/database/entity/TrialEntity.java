@@ -119,6 +119,8 @@ public class TrialEntity {
 
     public void complete(OffsetDateTime completedAt) {
         this.status = TrialStatus.ENDED;
+        this.phaseStartedAt = completedAt;
+        this.phaseEndsAt = completedAt;
         this.completedAt = completedAt;
     }
 
