@@ -1,7 +1,6 @@
 package com.skala.team6.webmini.trial;
 
 import com.skala.team6.webmini.common.api.ApiResponse;
-import com.skala.team6.webmini.common.model.RelationshipType;
 import com.skala.team6.webmini.common.model.TrialSide;
 import com.skala.team6.webmini.common.model.TrialStatus;
 import com.skala.team6.webmini.common.model.Visibility;
@@ -32,6 +31,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/trials")
 public class TrialController {
+    private final TrialQueryService trialQueryService;
+
+    public TrialController(TrialQueryService trialQueryService) {
+        this.trialQueryService = trialQueryService;
+    }
 
     @Operation(summary = "재판 목록 조회")
     @GetMapping
@@ -62,18 +66,22 @@ public class TrialController {
     public ResponseEntity<ApiResponse<TrialDetailResponse>> getTrial(
             @PathVariable @Min(1) Long trialId
     ) {
+        TrialQueryService.TrialDetail detail = trialQueryService.findDetail(trialId);
+        var trial = detail.trial();
+        var post = trial.getPost();
+        var parties = detail.parties();
         TrialDetailResponse response = new TrialDetailResponse(
-                trialId,
-                10L,
-                "연락 문제로 다툰 사연",
-                "연인이 답장이 늦어 갈등이 생겼습니다.",
-                RelationshipType.COUPLE,
-                Visibility.PUBLIC,
-                TrialStatus.PREPARING,
-                "2026-09-03T03:00:00Z",
-                "2026-09-03T03:10:00Z",
-                new TrialPartyInfo(TrialSide.A, "A측"),
-                new TrialPartyInfo(TrialSide.B, "B측")
+                trial.getId(),
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                post.getRelationshipType(),
+                trial.getVisibility(),
+                trial.getStatus(),
+                trial.getPhaseStartedAt() == null ? null : trial.getPhaseStartedAt().toString(),
+                trial.getPhaseEndsAt() == null ? null : trial.getPhaseEndsAt().toString(),
+                new TrialPartyInfo(parties.get(0).getSide(), parties.get(0).getDisplayName()),
+                new TrialPartyInfo(parties.get(1).getSide(), parties.get(1).getDisplayName())
         );
         return ResponseEntity.ok(ApiResponse.of(response));
     }

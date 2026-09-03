@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,6 +69,13 @@ class TrialCreationAcceptanceTest {
                         org.assertj.core.groups.Tuple.tuple(TrialSide.A, "A측", false),
                         org.assertj.core.groups.Tuple.tuple(TrialSide.B, "B측", false));
 
+        mockMvc.perform(get("/api/v1/trials/{trialId}", trial.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.postId").value(post.getId()))
+                .andExpect(jsonPath("$.data.status").value("PREPARING"))
+                .andExpect(jsonPath("$.data.aParty.side").value("A"))
+                .andExpect(jsonPath("$.data.bParty.side").value("B"));
+
         mockMvc.perform(post("/api/v1/posts/{postId}/trials", post.getId())
                         .header("X-Demo-User-Id", creatorId)
                         .contentType("application/json")
@@ -88,5 +96,9 @@ class TrialCreationAcceptanceTest {
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("POST_NOT_FOUND"));
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}", Long.MAX_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
     }
 }
