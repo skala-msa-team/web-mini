@@ -56,6 +56,10 @@ public class TrialPartyEntity {
         return id;
     }
 
+    public TrialEntity getTrial() {
+        return trial;
+    }
+
     public TrialSide getSide() {
         return side;
     }

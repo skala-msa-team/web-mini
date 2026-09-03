@@ -3,7 +3,6 @@ package com.skala.team6.webmini.trial;
 import com.skala.team6.webmini.common.api.ApiResponse;
 import com.skala.team6.webmini.common.model.TrialSide;
 import com.skala.team6.webmini.common.model.TrialStatus;
-import com.skala.team6.webmini.common.model.Visibility;
 import com.skala.team6.webmini.demo.DemoUserContext;
 import com.skala.team6.webmini.demo.DemoUserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,20 +57,24 @@ public class TrialController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
+        TrialQueryService.TrialList result =
+                trialQueryService.findPublicActiveTrials(status, page, size);
+        List<TrialListItem> items = result.entries().stream()
+                .map(entry -> new TrialListItem(
+                        entry.trial().getId(),
+                        entry.trial().getStatus(),
+                        entry.trial().getPost().getTitle(),
+                        entry.aDisplayName(),
+                        entry.bDisplayName(),
+                        entry.trial().getVisibility()
+                ))
+                .toList();
         TrialListResponse response = new TrialListResponse(
-                List.of(new TrialListItem(
-                        21L,
-                        status == null ? TrialStatus.PREPARING : status,
-                        "연락 문제로 다툰 사연",
-                        "A측",
-                        "B측",
-                        Visibility.PUBLIC
-                )),
-                page,
-                size,
-                1,
-                1
-        );
+                items,
+                result.page(),
+                result.size(),
+                result.totalElements(),
+                result.totalPages());
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 

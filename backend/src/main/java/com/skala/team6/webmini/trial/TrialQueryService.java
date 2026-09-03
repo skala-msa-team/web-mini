@@ -6,13 +6,29 @@ import com.skala.team6.webmini.database.entity.TrialEntity;
 import com.skala.team6.webmini.database.entity.TrialPartyEntity;
 import com.skala.team6.webmini.database.repository.TrialPartyRepository;
 import com.skala.team6.webmini.database.repository.TrialRepository;
+import com.skala.team6.webmini.common.model.TrialSide;
+import com.skala.team6.webmini.common.model.TrialStatus;
+import com.skala.team6.webmini.common.model.Visibility;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class TrialQueryService {
+    private static final List<TrialStatus> PUBLIC_ACTIVE_STATUSES = List.of(
+            TrialStatus.INTRODUCTION,
+            TrialStatus.A_ARGUMENT,
+            TrialStatus.B_ARGUMENT,
+            TrialStatus.VOTING,
+            TrialStatus.VERDICT
+    );
     private final TrialRepository trialRepository;
     private final TrialPartyRepository trialPartyRepository;
 
@@ -30,6 +46,67 @@ public class TrialQueryService {
         return new TrialDetail(trial, parties);
     }
 
+    @Transactional(readOnly = true)
+    public TrialList findPublicActiveTrials(
+            TrialStatus status,
+            int page,
+            int size
+    ) {
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<TrialEntity> trials;
+        if (status == null) {
+            trials = trialRepository.findByVisibilityAndStatusIn(
+                    Visibility.PUBLIC, PUBLIC_ACTIVE_STATUSES, pageable);
+        } else if (PUBLIC_ACTIVE_STATUSES.contains(status)) {
+            trials = trialRepository.findByVisibilityAndStatus(
+                    Visibility.PUBLIC, status, pageable);
+        } else {
+            trials = Page.empty(pageable);
+        }
+
+        List<Long> trialIds = trials.getContent().stream().map(TrialEntity::getId).toList();
+        Map<Long, Map<TrialSide, TrialPartyEntity>> partiesByTrial = trialIds.isEmpty()
+                ? Map.of()
+                : trialPartyRepository.findByTrialIdInOrderByTrialIdAscSideAsc(trialIds).stream()
+                        .collect(Collectors.groupingBy(
+                                party -> party.getTrial().getId(),
+                                Collectors.toMap(TrialPartyEntity::getSide, Function.identity())
+                        ));
+        List<TrialListEntry> entries = trials.getContent().stream()
+                .map(trial -> toListEntry(trial, partiesByTrial.getOrDefault(trial.getId(), Map.of())))
+                .toList();
+        return new TrialList(entries, page, size, trials.getTotalElements(), trials.getTotalPages());
+    }
+
+    private TrialListEntry toListEntry(
+            TrialEntity trial,
+            Map<TrialSide, TrialPartyEntity> parties
+    ) {
+        TrialPartyEntity aParty = parties.get(TrialSide.A);
+        TrialPartyEntity bParty = parties.get(TrialSide.B);
+        return new TrialListEntry(
+                trial,
+                aParty == null ? null : aParty.getDisplayName(),
+                bParty == null ? null : bParty.getDisplayName()
+        );
+    }
+
     public record TrialDetail(TrialEntity trial, List<TrialPartyEntity> parties) {
+    }
+
+    public record TrialList(
+            List<TrialListEntry> entries,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages
+    ) {
+    }
+
+    public record TrialListEntry(
+            TrialEntity trial,
+            String aDisplayName,
+            String bDisplayName
+    ) {
     }
 }

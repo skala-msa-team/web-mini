@@ -11,4 +11,6 @@ public interface TrialPartyRepository extends JpaRepository<TrialPartyEntity, Lo
     List<TrialPartyEntity> findByTrialIdOrderBySideAsc(Long trialId);
 
     Optional<TrialPartyEntity> findByTrialIdAndSide(Long trialId, TrialSide side);
+
+    List<TrialPartyEntity> findByTrialIdInOrderByTrialIdAscSideAsc(List<Long> trialIds);
 }
