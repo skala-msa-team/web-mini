@@ -50,6 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "app.trial.introduction-seconds=1",
         "app.trial.argument-seconds=1",
+        "app.trial.debate-seconds=1",
         "app.trial.voting-seconds=1",
         "app.trial.scheduler-enabled=false"
 })
@@ -129,20 +130,23 @@ class TrialEventWebSocketIntegrationTest {
         assertThat(subscribed.await(5, TimeUnit.SECONDS)).isTrue();
 
         startService.start(trial.getId());
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             TrialEntity current = trialRepository.findById(trial.getId()).orElseThrow();
             phaseService.advanceIfExpired(trial.getId(), current.getPhaseEndsAt());
         }
 
-        List<TrialEventMessage> receivedFirst = receiveSeven(firstEvents);
-        List<TrialEventMessage> receivedSecond = receiveSeven(secondEvents);
+        List<TrialEventMessage> receivedFirst = receiveEvents(firstEvents, 14);
+        List<TrialEventMessage> receivedSecond = receiveEvents(secondEvents, 14);
+        receivedFirst.sort((left, right) -> Long.compare(left.sequence(), right.sequence()));
+        receivedSecond.sort((left, right) -> Long.compare(left.sequence(), right.sequence()));
         assertThat(receivedSecond).isEqualTo(receivedFirst);
         assertThat(receivedFirst).extracting(TrialEventMessage::sequence)
-                .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L);
+                .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L);
         assertThat(receivedFirst).extracting(TrialEventMessage::type).containsExactly(
                 "TRIAL_STARTED", "JUDGE_INTRODUCTION", "A_ARGUMENT", "B_ARGUMENT",
-                "VOTING_STARTED", "VERDICT_ANNOUNCED", "TRIAL_ENDED");
-        assertThat(eventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId())).hasSize(7);
+                "DEBATE_STARTED", "A_DEBATE", "B_DEBATE", "A_DEBATE", "B_DEBATE",
+                "A_DEBATE", "B_DEBATE", "VOTING_STARTED", "VERDICT_ANNOUNCED", "TRIAL_ENDED");
+        assertThat(eventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId())).hasSize(14);
     }
 
     private void readyParty(TrialSide side, String argument) {
@@ -174,10 +178,10 @@ class TrialEventWebSocketIntegrationTest {
         return messages;
     }
 
-    private List<TrialEventMessage> receiveSeven(LinkedBlockingQueue<TrialEventMessage> queue)
+    private List<TrialEventMessage> receiveEvents(LinkedBlockingQueue<TrialEventMessage> queue, int count)
             throws InterruptedException {
         List<TrialEventMessage> events = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < count; i++) {
             TrialEventMessage event = queue.poll(8, TimeUnit.SECONDS);
             assertThat(event).isNotNull();
             events.add(event);
