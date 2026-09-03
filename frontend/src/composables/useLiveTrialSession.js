@@ -2,7 +2,13 @@ import { computed, ref } from 'vue'
 import { trialApi } from '@/api/trialApi.js'
 import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
 import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { recoverLiveTrialChat } from '@/realtime/liveTrialChatRecovery.js'
 import { recoverLiveTrial } from '@/realtime/liveTrialRecovery.js'
+import { getDemoUserId } from '@/composables/useDemoUser.js'
+import {
+  getLastContiguousMessageSequence,
+  mergeMessages,
+} from '@/utils/messageMerge.js'
 import {
   applyEventsToSnapshot,
   getLastContiguousEventSequence,
@@ -13,17 +19,49 @@ export function useLiveTrialSession(trialId, options = {}) {
   const detail = ref(null)
   const snapshot = ref(null)
   const events = ref([])
+  const messages = ref([])
   const restoring = ref(true)
+  const chatRestoring = ref(true)
+  const chatSending = ref(false)
+  const chatError = ref(null)
   const hasRecovered = ref(false)
+  const demoUserId = getDemoUserId()
+  let pendingChatContent = null
 
   function appendEvent(event) {
     events.value = mergeTrialEvents(events.value, [event])
     options.onEvent?.(event)
   }
 
+  function appendMessage(message) {
+    messages.value = mergeMessages(messages.value, [message])
+
+    if (
+      chatSending.value &&
+      message?.sender?.demoUserId === demoUserId &&
+      message?.content?.trim() === pendingChatContent
+    ) {
+      chatSending.value = false
+      pendingChatContent = null
+    }
+
+    options.onMessage?.(message)
+  }
+
+  function handleRealtimeError(error) {
+    chatSending.value = false
+    pendingChatContent = null
+    chatError.value = error
+    options.onError?.(error)
+  }
+
   async function recoverConnection({ trialId: currentTrialId }) {
     restoring.value = true
+    chatRestoring.value = true
+    chatSending.value = false
+    pendingChatContent = null
     const afterEventSequence = getLastContiguousEventSequence(events.value)
+    const afterMessageSequence = getLastContiguousMessageSequence(messages.value)
     const detailRequest = detail.value
       ? Promise.resolve(detail.value)
       : trialApi.getTrial(currentTrialId)
@@ -42,18 +80,50 @@ export function useLiveTrialSession(trialId, options = {}) {
       ])
 
       detail.value = nextDetail
+      const recoveredChat = await recoverLiveTrialChat({
+        trialId: currentTrialId,
+        afterMessageSequence,
+      })
+      messages.value = mergeMessages(messages.value, recoveredChat.messages)
+      chatError.value = null
       hasRecovered.value = true
     } finally {
+      chatRestoring.value = false
       restoring.value = false
     }
   }
 
+  async function handleConnected(context) {
+    await recoverConnection(context)
+    await options.onConnected?.(context)
+  }
+
+  async function handleReconnect(context) {
+    await recoverConnection(context)
+    await options.onReconnect?.(context)
+  }
+
   const realtime = useLiveTrialRealtime(trialId, {
     ...options,
-    onConnected: recoverConnection,
-    onReconnect: recoverConnection,
+    onConnected: handleConnected,
+    onReconnect: handleReconnect,
     onEvent: appendEvent,
+    onMessage: appendMessage,
+    onError: handleRealtimeError,
   })
+
+  function sendChat(rawContent) {
+    const content = rawContent?.trim() || ''
+    if (!content || content.length > 500 || chatSending.value) return false
+
+    chatError.value = null
+    const sent = realtime.sendChat(content)
+    if (!sent) return false
+
+    pendingChatContent = content
+    chatSending.value = true
+    return true
+  }
 
   const currentSnapshot = computed(() => applyEventsToSnapshot(snapshot.value, events.value))
   const status = computed(() => currentSnapshot.value?.status ?? null)
@@ -74,10 +144,15 @@ export function useLiveTrialSession(trialId, options = {}) {
     detail,
     snapshot,
     events,
+    messages,
     currentSnapshot,
     status,
     restoring,
+    chatRestoring,
+    chatSending,
+    chatError,
     ...realtime,
+    sendChat,
     connection,
   }
 }

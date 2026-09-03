@@ -25,18 +25,22 @@ export function useLiveTrialRealtime(trialId, options = {}) {
   function onConnected({ reconnected }) {
     const callback = reconnected ? options.onReconnect : options.onConnected
     Promise.resolve(callback?.({ client, trialId: currentTrialId() })).catch((error) => {
-      reportError(error)
+      reportConnectionError(error)
     })
   }
 
   function onError(frame) {
-    reportError(readMessage(frame))
+    reportUserError(readMessage(frame))
   }
 
-  function reportError(error) {
+  function reportUserError(error) {
     lastError.value = error
     userErrors.value.push(error)
     options.onError?.(error)
+  }
+
+  function reportConnectionError(error) {
+    reportUserError(error)
     connection.value = { status: CONNECTION_STATUS.ERROR, error }
   }
 
@@ -61,6 +65,9 @@ export function useLiveTrialRealtime(trialId, options = {}) {
   }
 
   async function reconnect() {
+    unsubscribeSubscriptions()
+    removeStatusListener()
+    removeConnectedListener()
     await client.deactivate()
     connect()
   }
