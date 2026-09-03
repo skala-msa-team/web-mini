@@ -40,4 +40,31 @@ public class AiGuideQuestionEntity {
 
     protected AiGuideQuestionEntity() {
     }
+
+    public AiGuideQuestionEntity(
+            TrialPartyEntity trialParty,
+            int sequenceNo,
+            String question
+    ) {
+        this.trialParty = trialParty;
+        this.sequenceNo = sequenceNo;
+        this.question = question;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getAnswer() {
+        return answer;
+    }
+
+    public OffsetDateTime getAnsweredAt() {
+        return answeredAt;
+    }
+
+    public void answer(String answer, OffsetDateTime answeredAt) {
+        this.answer = answer;
+        this.answeredAt = answeredAt;
+    }
 }

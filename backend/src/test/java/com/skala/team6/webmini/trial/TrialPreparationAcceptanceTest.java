@@ -3,10 +3,12 @@ package com.skala.team6.webmini.trial;
 import com.skala.team6.webmini.common.model.RelationshipType;
 import com.skala.team6.webmini.common.model.TrialSide;
 import com.skala.team6.webmini.database.entity.PostEntity;
+import com.skala.team6.webmini.database.entity.AiGuideQuestionEntity;
 import com.skala.team6.webmini.database.entity.TrialEntity;
 import com.skala.team6.webmini.database.entity.TrialPartyEntity;
 import com.skala.team6.webmini.database.entity.UserEntity;
 import com.skala.team6.webmini.database.repository.PostRepository;
+import com.skala.team6.webmini.database.repository.AiGuideQuestionRepository;
 import com.skala.team6.webmini.database.repository.TrialPartyRepository;
 import com.skala.team6.webmini.database.repository.TrialRepository;
 import com.skala.team6.webmini.database.repository.TrialStatementRepository;
@@ -47,6 +49,8 @@ class TrialPreparationAcceptanceTest {
     private TrialPartyRepository trialPartyRepository;
     @Autowired
     private TrialStatementRepository trialStatementRepository;
+    @Autowired
+    private AiGuideQuestionRepository questionRepository;
     @Autowired
     private EntityManager entityManager;
 
@@ -104,6 +108,43 @@ class TrialPreparationAcceptanceTest {
                 .andExpect(jsonPath("$.code").value("DEMO_USER_REQUIRED"));
     }
 
+    @Test
+    void savesOnlyOwnSideAnswersAndCalculatesCompletion() throws Exception {
+        AiGuideQuestionEntity aQuestion1 = questionRepository.save(
+                new AiGuideQuestionEntity(aParty, 1, "A측 질문 1"));
+        AiGuideQuestionEntity aQuestion2 = questionRepository.save(
+                new AiGuideQuestionEntity(aParty, 2, "A측 질문 2"));
+        AiGuideQuestionEntity bQuestion = questionRepository.save(
+                new AiGuideQuestionEntity(bParty, 1, "B측 질문"));
+
+        saveAnswers(TrialSide.A, """
+                [{"questionId":%d,"answer":"첫 답변"}]
+                """.formatted(aQuestion1.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.allAnswered").value(false));
+
+        saveAnswers(TrialSide.A, """
+                [{"questionId":%d,"answer":"둘째 답변"}]
+                """.formatted(aQuestion2.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.allAnswered").value(true));
+
+        entityManager.flush();
+        entityManager.clear();
+        assertThat(questionRepository.findById(aQuestion1.getId()).orElseThrow().getAnswer())
+                .isEqualTo("첫 답변");
+        assertThat(questionRepository.findById(aQuestion1.getId()).orElseThrow().getAnsweredAt())
+                .isNotNull();
+        assertThat(questionRepository.findById(bQuestion.getId()).orElseThrow().getAnswer())
+                .isNull();
+
+        saveAnswers(TrialSide.B, """
+                [{"questionId":%d,"answer":"잘못된 측 답변"}]
+                """.formatted(aQuestion1.getId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("GUIDE_QUESTION_NOT_FOUND"));
+    }
+
     private org.springframework.test.web.servlet.ResultActions saveStatement(
             TrialSide side,
             String situation
@@ -125,5 +166,15 @@ class TrialPreparationAcceptanceTest {
                   "desiredResolution": "원하는 해결"
                 }
                 """.formatted(situation);
+    }
+
+    private org.springframework.test.web.servlet.ResultActions saveAnswers(
+            TrialSide side,
+            String answers
+    ) throws Exception {
+        return mockMvc.perform(put("/api/v1/trials/{trialId}/parties/{side}/guide-answers", trial.getId(), side)
+                .header("X-Demo-User-Id", DEMO_USER_ID)
+                .contentType("application/json")
+                .content("{\"answers\":" + answers + "}"));
     }
 }

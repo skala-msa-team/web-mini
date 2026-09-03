@@ -33,13 +33,16 @@ import java.util.List;
 public class TrialController {
     private final TrialQueryService trialQueryService;
     private final TrialStatementService trialStatementService;
+    private final GuideAnswerService guideAnswerService;
 
     public TrialController(
             TrialQueryService trialQueryService,
-            TrialStatementService trialStatementService
+            TrialStatementService trialStatementService,
+            GuideAnswerService guideAnswerService
     ) {
         this.trialQueryService = trialQueryService;
         this.trialStatementService = trialStatementService;
+        this.guideAnswerService = guideAnswerService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -145,7 +148,8 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody GuideAnswersRequest request
     ) {
-        GuideAnswersResponse response = new GuideAnswersResponse(request.answers(), true);
+        GuideAnswerService.SavedGuideAnswers saved = guideAnswerService.save(trialId, side, request);
+        GuideAnswersResponse response = new GuideAnswersResponse(saved.answers(), saved.allAnswered());
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
