@@ -56,7 +56,7 @@ defineProps({
 
 .card-copy > span {
   color: var(--ds-color-justice-blue);
-  font-size: 0.68rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
@@ -64,13 +64,13 @@ defineProps({
 h2 {
   margin: 7px 0 5px;
   color: var(--ds-color-primary);
-  font-size: 1.16rem;
+  font-size: 1.45rem;
 }
 
 .card-copy p {
   margin: 0;
   color: #7d8796;
-  font-size: 0.72rem;
+  font-size: 1rem;
 }
 
 .ratio-bar {
@@ -81,7 +81,7 @@ h2 {
   background: #d9e7fb;
   box-shadow: inset 0 1px 2px rgb(0 32 69 / 12%);
   color: white;
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 700;
   overflow: hidden;
 }
@@ -122,7 +122,7 @@ h2 {
 
 .ratio-labels strong {
   color: var(--ds-color-justice-blue);
-  font-size: 0.72rem;
+  font-size: 1rem;
 }
 
 .ratio-labels div:last-child strong {
@@ -131,7 +131,7 @@ h2 {
 
 .ratio-labels span {
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.76rem;
+  font-size: 1.05rem;
 }
 
 @media (max-width: 620px) {
@@ -141,7 +141,7 @@ h2 {
   }
 
   .ratio-bar {
-    font-size: 0.65rem;
+    font-size: 0.85rem;
   }
 
   .ratio-bar span {

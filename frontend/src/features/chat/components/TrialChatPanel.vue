@@ -159,7 +159,7 @@ h2 {
   align-items: center;
   gap: 8px;
   color: var(--ds-color-primary);
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
 header > span {
@@ -167,7 +167,7 @@ header > span {
   align-items: center;
   gap: 6px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -188,7 +188,7 @@ header i {
 .chat-notice {
   margin: 28px 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   text-align: center;
 }
 
@@ -207,7 +207,7 @@ header i {
   border-radius: 50%;
   background: #e5edfa;
   color: #38608d;
-  font-size: 0.69rem;
+  font-size: 0.85rem;
 }
 
 .avatar.tone-violet {
@@ -234,7 +234,7 @@ header i {
   display: block;
   margin: 0 0 4px;
   color: #8c95a2;
-  font-size: 0.65rem;
+  font-size: 0.82rem;
 }
 
 .message-item small b {
@@ -255,8 +255,8 @@ header i {
   border-radius: 0 10px 10px 10px;
   background: #f7f9fc;
   color: var(--ds-color-on-surface);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .chat-form {
@@ -276,7 +276,7 @@ header i {
   border-radius: var(--ds-radius-default);
   background: white;
   color: var(--ds-color-on-surface);
-  font-size: 0.77rem;
+  font-size: 0.95rem;
   outline: none;
 }
 

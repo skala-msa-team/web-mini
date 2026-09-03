@@ -139,7 +139,7 @@ async function shareResult() {
   justify-content: center;
   gap: 7px;
   border-radius: var(--ds-radius-full);
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
@@ -160,20 +160,20 @@ async function shareResult() {
 .result-hero > p:first-of-type {
   margin: 14px 0 4px;
   color: #788395;
-  font-size: 0.68rem;
+  font-size: 0.95rem;
 }
 
 .result-hero h1 {
   margin: 0;
   color: var(--ds-color-primary);
-  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  font-size: clamp(2.25rem, 4vw, 3rem);
   letter-spacing: 0.02em;
 }
 
 .case-title {
   margin: 8px 0 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.88rem;
+  font-size: 1.15rem;
 }
 
 .winner-badge {
@@ -228,7 +228,7 @@ async function shareResult() {
   justify-content: center;
   gap: 8px;
   border-radius: var(--ds-radius-default);
-  font-size: 0.76rem;
+  font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -261,7 +261,7 @@ async function shareResult() {
 .legal-notice {
   margin: 18px 0 0;
   color: #8b95a4;
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   text-align: center;
 }
 

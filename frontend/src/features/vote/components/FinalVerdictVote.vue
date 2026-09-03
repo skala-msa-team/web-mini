@@ -131,14 +131,14 @@ const helpMessage = computed(() => {
   gap: 6px;
   margin-bottom: 5px;
   color: var(--ds-color-justice-blue);
-  font-size: 0.69rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 h1 {
   margin: 0;
   color: var(--ds-color-primary);
-  font-size: 1.22rem;
+  font-size: 1.5rem;
 }
 
 .countdown {
@@ -146,7 +146,7 @@ h1 {
   align-items: center;
   gap: 6px;
   color: var(--ds-color-justice-blue);
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
@@ -155,7 +155,7 @@ h1 {
 }
 
 .countdown strong {
-  font-size: 0.84rem;
+  font-size: 1.1rem;
   letter-spacing: 0.04em;
 }
 
@@ -173,7 +173,7 @@ h1 {
   border-radius: var(--ds-radius-full);
   background: #eef2f7;
   color: #687486;
-  font-size: 0.66rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -192,7 +192,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.68rem;
+  font-size: 0.95rem;
 }
 
 .vote-progress {
@@ -262,12 +262,12 @@ h1 {
 }
 
 .choice-card strong {
-  font-size: 0.98rem;
+  font-size: 1.2rem;
 }
 
 .choice-card small {
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.76rem;
+  font-size: 1rem;
 }
 
 .choice-side {
@@ -275,7 +275,7 @@ h1 {
   top: 10px;
   left: 12px;
   color: #728096;
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -287,14 +287,14 @@ h1 {
   align-items: center;
   gap: 3px;
   color: var(--ds-color-justice-blue);
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
 .vote-help {
   margin: 14px 0 0;
   color: #7f8998;
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   text-align: center;
 }
 
@@ -310,7 +310,7 @@ h1 {
   border-radius: var(--ds-radius-default);
   background: var(--ds-color-justice-blue);
   color: white;
-  font-size: 0.78rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
 }

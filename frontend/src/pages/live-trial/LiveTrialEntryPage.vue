@@ -184,7 +184,7 @@ watch(
   min-height: 24px;
   padding: 0 10px;
   border-radius: var(--ds-radius-full);
-  font-size: 0.69rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -213,7 +213,7 @@ watch(
 h1 {
   margin: 0;
   color: var(--ds-color-primary);
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
   line-height: 1.35;
 }
 
@@ -245,12 +245,12 @@ h1 {
 
 .stat-card small {
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.68rem;
+  font-size: 0.88rem;
 }
 
 .stat-card strong {
   color: var(--ds-color-primary);
-  font-size: 0.83rem;
+  font-size: 1.05rem;
 }
 
 .timer-card strong {

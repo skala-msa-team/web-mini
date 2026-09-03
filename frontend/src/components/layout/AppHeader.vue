@@ -98,7 +98,7 @@ const navigation = computed(() => [
   width: fit-content;
   color: var(--ds-color-verdict-blue);
   font-family: var(--ds-font-heading);
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 700;
   text-decoration: none;
 }
@@ -120,7 +120,7 @@ const navigation = computed(() => [
   align-items: center;
   padding: 0 12px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -190,7 +190,7 @@ const navigation = computed(() => [
   border-radius: var(--ds-radius-default);
   background: var(--ds-color-primary);
   color: white;
-  font-size: 0.84rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
