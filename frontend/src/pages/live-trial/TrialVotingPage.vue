@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Eye } from '@lucide/vue'
 import { CONNECTION_STATUS, VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
 import { TRIAL_STATUS } from '@/constants/trialStatus.js'
+import { trialApi } from '@/api/trialApi.js'
 import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
 import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
@@ -33,6 +34,9 @@ const interactionDisabledMessage = computed(() => {
 })
 const submittedVote = ref(null)
 const selectedChoice = ref(null)
+const votePending = ref(false)
+const voteError = ref('')
+const duplicateVote = ref(false)
 const voteStatus = computed(() =>
   submittedVote.value
     ? VOTE_STATUS.SUBMITTED
@@ -41,10 +45,16 @@ const voteStatus = computed(() =>
       : VOTE_STATUS.WAITING,
 )
 const voteDisabled = computed(
-  () => interactionsDisabled.value || voteStatus.value !== VOTE_STATUS.OPEN,
+  () =>
+    interactionsDisabled.value ||
+    votePending.value ||
+    duplicateVote.value ||
+    voteStatus.value !== VOTE_STATUS.OPEN,
 )
 const voteDisabledMessage = computed(() => {
   if (interactionsDisabled.value) return interactionDisabledMessage.value
+  if (duplicateVote.value) return '이 브라우저에서는 이미 투표를 제출했습니다.'
+  if (votePending.value) return '투표를 제출하고 있습니다.'
   if (voteStatus.value === VOTE_STATUS.WAITING) return '최종 투표가 아직 시작되지 않았습니다.'
   if (voteStatus.value === VOTE_STATUS.SUBMITTED) return '투표 제출이 완료되었습니다.'
   return ''
@@ -69,16 +79,29 @@ watch(
 
 function selectChoice(choiceId) {
   if (voteDisabled.value) return
+  voteError.value = ''
   selectedChoice.value = choiceId
 }
 
-function submitVote() {
+async function submitVote() {
   if (voteDisabled.value || !selectedChoice.value) return
 
-  submittedVote.value = Object.freeze({
-    selectedSide: selectedChoice.value.replace('SIDE_', ''),
-    votedAt: new Date().toISOString(),
-  })
+  votePending.value = true
+  voteError.value = ''
+
+  try {
+    submittedVote.value = Object.freeze(
+      await trialApi.submitVote(
+        trialId.value,
+        selectedChoice.value.replace('SIDE_', ''),
+      ),
+    )
+  } catch (error) {
+    duplicateVote.value = error?.code === 'ALREADY_VOTED'
+    voteError.value = error?.message || '투표를 제출하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+  } finally {
+    votePending.value = false
+  }
 }
 </script>
 
@@ -93,6 +116,10 @@ function submitVote() {
 
       <p v-if="session.chatError.value" class="realtime-error" role="alert">
         {{ session.chatError.value?.message || '실시간 요청을 처리하지 못했습니다.' }}
+      </p>
+
+      <p v-if="voteError" class="vote-request-error" role="alert">
+        {{ voteError }}
       </p>
 
       <div class="voting-layout">
@@ -117,7 +144,7 @@ function submitVote() {
             :remaining-time="formattedRemainingTime"
             :selected-choice="selectedChoice"
             :status="voteStatus"
-            :disabled="interactionsDisabled"
+            :disabled="interactionsDisabled || votePending || duplicateVote"
             :disabled-message="voteDisabledMessage"
             @select="selectChoice"
             @submit="submitVote"
@@ -158,6 +185,16 @@ function submitVote() {
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
   align-items: stretch;
   gap: 20px;
+}
+
+.vote-request-error {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ds-color-error);
+  border-radius: var(--ds-radius-default);
+  background: var(--ds-color-error-container);
+  color: var(--ds-color-on-error-container);
+  font-size: 0.78rem;
 }
 
 .voting-main {

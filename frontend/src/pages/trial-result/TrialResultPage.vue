@@ -1,17 +1,54 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ArrowLeft, Check, Share2 } from '@lucide/vue'
+import { trialApi } from '@/api/trialApi.js'
 import FaultRatioCard from '@/features/verdict/components/FaultRatioCard.vue'
 import JudgmentGrounds from '@/features/verdict/components/JudgmentGrounds.vue'
 import VerdictComparison from '@/features/verdict/components/VerdictComparison.vue'
 import { trialResultMock } from '@/features/verdict/trialResultMock.js'
 
 const shareCompleted = ref(false)
+const route = useRoute()
+const trialDetail = ref(null)
+const trialResult = ref(null)
+const resultPending = ref(true)
+const resultError = ref('')
+const caseTitle = computed(() => trialDetail.value?.title ?? trialResultMock.title)
+const juryResult = computed(() => {
+  const publicVote = trialResult.value?.publicVote
+  if (!publicVote) return null
+
+  const totalVotes = publicVote.totalVotes || 0
+  const sideAPercentage = totalVotes ? Math.round((publicVote.aVotes / totalVotes) * 100) : 0
+  return {
+    sideA: sideAPercentage,
+    sideB: totalVotes ? 100 - sideAPercentage : 0,
+    aVotes: publicVote.aVotes,
+    bVotes: publicVote.bVotes,
+    participantCount: totalVotes,
+  }
+})
+
+onMounted(async () => {
+  try {
+    const [detail, result] = await Promise.all([
+      trialApi.getTrial(route.params.trialId),
+      trialApi.getResults(route.params.trialId),
+    ])
+    trialDetail.value = detail
+    trialResult.value = result
+  } catch (error) {
+    resultError.value = error?.message || '대중 투표 결과를 불러오지 못했습니다.'
+  } finally {
+    resultPending.value = false
+  }
+})
 
 async function shareResult() {
   const shareData = {
     title: `사랑과 전쟁터 판결 ${trialResultMock.caseNumber}`,
-    text: trialResultMock.title,
+    text: caseTitle.value,
     url: window.location.href,
   }
 
@@ -35,7 +72,7 @@ async function shareResult() {
         <span class="final-badge"><i aria-hidden="true"></i>최종 판결</span>
         <p>AI 판사의 판결이 확정되었습니다</p>
         <h1 id="result-title">{{ trialResultMock.caseNumber }}</h1>
-        <p class="case-title">“{{ trialResultMock.title }}”</p>
+        <p class="case-title">“{{ caseTitle }}”</p>
         <div class="winner-badge"><Check :size="16" /> {{ trialResultMock.winner }} 승소</div>
       </section>
 
@@ -44,9 +81,12 @@ async function shareResult() {
         <JudgmentGrounds :grounds="trialResultMock.grounds" :judgment="trialResultMock.judgment" />
       </div>
 
+      <p v-if="resultPending" class="result-status" role="status">대중 투표 결과를 불러오는 중입니다.</p>
+      <p v-else-if="resultError" class="result-status result-status--error" role="alert">{{ resultError }}</p>
       <VerdictComparison
+        v-else-if="juryResult"
         :ai-result="trialResultMock.aiResult"
-        :jury-result="trialResultMock.juryResult"
+        :jury-result="juryResult"
       />
 
       <div class="result-actions">
@@ -161,6 +201,21 @@ async function shareResult() {
   align-items: center;
   justify-content: center;
   gap: 12px;
+}
+
+.result-status {
+  margin: 24px 0 0;
+  padding: 18px;
+  border-radius: var(--ds-radius-default);
+  background: white;
+  color: var(--ds-color-on-surface-variant);
+  text-align: center;
+}
+
+.result-status--error {
+  border: 1px solid var(--ds-color-error);
+  background: var(--ds-color-error-container);
+  color: var(--ds-color-on-error-container);
 }
 
 .share-button,

@@ -1,9 +1,16 @@
 <script setup>
+import { computed } from 'vue'
 import { Scale, UsersRound } from '@lucide/vue'
 
-defineProps({
+const props = defineProps({
   aiResult: { type: Object, required: true },
   juryResult: { type: Object, required: true },
+})
+
+const resultsAgree = computed(() => {
+  const aiWinner = props.aiResult.sideA >= props.aiResult.sideB ? 'A' : 'B'
+  const juryWinner = props.juryResult.sideA >= props.juryResult.sideB ? 'A' : 'B'
+  return aiWinner === juryWinner
 })
 </script>
 
@@ -14,7 +21,9 @@ defineProps({
         <span>두 판단을 독립적으로 확인하세요</span>
         <h2 id="comparison-title">판결 결과 비교 <small>(AI vs 배심원)</small></h2>
       </div>
-      <span class="comparison-badge">판단 불일치</span>
+      <span class="comparison-badge" :class="{ 'comparison-badge--agree': resultsAgree }">
+        {{ resultsAgree ? '판단 일치' : '판단 불일치' }}
+      </span>
     </header>
 
     <div class="comparison-grid">
@@ -33,11 +42,11 @@ defineProps({
       <article class="result-column jury-column">
         <h3><UsersRound :size="18" /> 배심원 투표 결과</h3>
         <div class="result-row">
-          <div><span>A측 승소</span><strong>{{ juryResult.sideA }}%</strong></div>
+          <div><span>A측 승소 <small v-if="juryResult.aVotes !== undefined">({{ juryResult.aVotes.toLocaleString('ko-KR') }}표)</small></span><strong>{{ juryResult.sideA }}%</strong></div>
           <div class="track"><span class="jury-side-a" :style="{ width: `${juryResult.sideA}%` }"></span></div>
         </div>
         <div class="result-row">
-          <div><span>B측 승소</span><strong>{{ juryResult.sideB }}%</strong></div>
+          <div><span>B측 승소 <small v-if="juryResult.bVotes !== undefined">({{ juryResult.bVotes.toLocaleString('ko-KR') }}표)</small></span><strong>{{ juryResult.sideB }}%</strong></div>
           <div class="track"><span class="jury-side-b" :style="{ width: `${juryResult.sideB}%` }"></span></div>
         </div>
         <p>총 참여 배심원 {{ juryResult.participantCount.toLocaleString('ko-KR') }}명</p>
@@ -87,6 +96,11 @@ h2 small {
   color: #b65020;
   font-size: 0.64rem;
   font-weight: 700;
+}
+
+.comparison-badge--agree {
+  background: #e8f7ed;
+  color: #207443;
 }
 
 .comparison-grid {
