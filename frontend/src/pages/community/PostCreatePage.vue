@@ -5,6 +5,8 @@ import { Bold, Image, Italic, Link, Scale } from "@lucide/vue";
 import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
 import { categoryTypes } from "@/features/community/mock/communityData.js";
 
+const TRIAL_DRAFT_STORAGE_KEY = "love-war:trial-draft";
+
 const category = ref("");
 const title = ref("");
 const content = ref("");
@@ -12,6 +14,18 @@ const requestTrial = ref(false);
 const canSubmit = computed(() =>
   Boolean(category.value && title.value.trim() && content.value.trim()),
 );
+
+function submitPost() {
+  if (!canSubmit.value || !requestTrial.value) return;
+
+  sessionStorage.setItem(
+    TRIAL_DRAFT_STORAGE_KEY,
+    JSON.stringify({
+      title: title.value.trim(),
+      content: content.value.trim(),
+    }),
+  );
+}
 </script>
 
 <template>
@@ -58,6 +72,7 @@ const canSubmit = computed(() =>
           class="button button--primary"
           type="button"
           :disabled="!canSubmit"
+          @click="submitPost"
         >
           등록하기
         </button>

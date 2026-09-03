@@ -73,7 +73,9 @@ function resetFilters() {
         <label class="conflict-filter">
           <span>관계 유형</span>
           <select v-model="selectedRelationship">
-            <option v-for="type in relationshipTypes" :key="type">{{ type }}</option>
+            <option v-for="type in relationshipTypes" :key="type">
+              {{ type }}
+            </option>
           </select>
         </label>
       </div>
