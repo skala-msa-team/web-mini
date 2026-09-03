@@ -1,14 +1,14 @@
-import { TRIAL_EVENT_TYPE } from '@/constants/trialEventType.js'
-import { TRIAL_STATUS } from '@/constants/trialStatus.js'
+import { TRIAL_EVENT_TYPE } from "@/constants/trialEventType.js";
+import { TRIAL_STATUS } from "@/constants/trialStatus.js";
 
 function parsePayload(payload) {
-  if (!payload) return {}
-  if (typeof payload === 'object') return payload
+  if (!payload) return {};
+  if (typeof payload === "object") return payload;
 
   try {
-    return JSON.parse(payload)
+    return JSON.parse(payload);
   } catch {
-    return {}
+    return {};
   }
 }
 
@@ -17,20 +17,20 @@ function inferSpeaker(type) {
     case TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION:
     case TRIAL_EVENT_TYPE.VERDICT_ANNOUNCED:
     case TRIAL_EVENT_TYPE.VERDICT_PUBLISHED:
-      return 'JUDGE'
+      return "JUDGE";
     case TRIAL_EVENT_TYPE.A_ARGUMENT:
-      return 'A_LAWYER'
+      return "A_LAWYER";
     case TRIAL_EVENT_TYPE.B_ARGUMENT:
-      return 'B_LAWYER'
+      return "B_LAWYER";
     default:
-      return 'SYSTEM'
+      return "SYSTEM";
   }
 }
 
 export function normalizeTrialEvent(event = {}) {
-  const sequence = Number(event.sequence ?? event.sequenceNo)
-  const type = event.type || event.eventType || ''
-  const payload = parsePayload(event.payload)
+  const sequence = Number(event.sequence ?? event.sequenceNo);
+  const type = event.type || event.eventType || "";
+  const payload = parsePayload(event.payload);
 
   return {
     eventId: event.eventId ?? payload.eventId ?? null,
@@ -38,16 +38,16 @@ export function normalizeTrialEvent(event = {}) {
     sequence: Number.isFinite(sequence) ? sequence : null,
     type,
     speaker: event.speaker || payload.speaker || inferSpeaker(type),
-    content: event.content || payload.content || '',
+    content: event.content || payload.content || "",
     occurredAt: event.occurredAt || event.createdAt || null,
     payload,
-  }
+  };
 }
 
 function eventKey(event) {
-  if (event.sequence !== null) return `sequence:${event.sequence}`
-  if (event.eventId !== null) return `id:${event.eventId}`
-  return null
+  if (event.sequence !== null) return `sequence:${event.sequence}`;
+  if (event.eventId !== null) return `id:${event.eventId}`;
+  return null;
 }
 
 function mergeEvent(previous, next) {
@@ -60,53 +60,55 @@ function mergeEvent(previous, next) {
     content: next.content || previous.content,
     occurredAt: next.occurredAt || previous.occurredAt,
     payload: { ...previous.payload, ...next.payload },
-  }
+  };
 }
 
 export function mergeTrialEvents(currentEvents = [], incomingEvents = []) {
-  const merged = new Map()
+  const merged = new Map();
 
   for (const rawEvent of [...currentEvents, ...incomingEvents]) {
-    const event = normalizeTrialEvent(rawEvent)
-    const key = eventKey(event)
-    if (!key) continue
+    const event = normalizeTrialEvent(rawEvent);
+    const key = eventKey(event);
+    if (!key) continue;
 
-    const previous = merged.get(key)
-    merged.set(key, previous ? mergeEvent(previous, event) : event)
+    const previous = merged.get(key);
+    merged.set(key, previous ? mergeEvent(previous, event) : event);
   }
 
   return [...merged.values()].sort((left, right) => {
-    if (left.sequence === null) return 1
-    if (right.sequence === null) return -1
-    return left.sequence - right.sequence
-  })
+    if (left.sequence === null) return 1;
+    if (right.sequence === null) return -1;
+    return left.sequence - right.sequence;
+  });
 }
 
 export function getLastContiguousEventSequence(events = []) {
-  let cursor = 0
+  let cursor = 0;
 
-  for (const event of [...events].sort((left, right) => left.sequence - right.sequence)) {
-    const sequence = Number(event.sequence) || 0
-    if (sequence <= cursor) continue
-    if (sequence !== cursor + 1) break
-    cursor = sequence
+  for (const event of [...events].sort(
+    (left, right) => left.sequence - right.sequence,
+  )) {
+    const sequence = Number(event.sequence) || 0;
+    if (sequence <= cursor) continue;
+    if (sequence !== cursor + 1) break;
+    cursor = sequence;
   }
 
-  return cursor
+  return cursor;
 }
 
 export function applyEventsToSnapshot(snapshot, events = []) {
-  if (!snapshot) return null
+  if (!snapshot) return null;
 
-  const snapshotSequence = Number(snapshot.latestEventSequence) || 0
+  const snapshotSequence = Number(snapshot.latestEventSequence) || 0;
   return events
     .filter((event) => (Number(event.sequence) || 0) > snapshotSequence)
     .reduce((current, event) => {
-      const status = event.payload.status || current.status
+      const status = event.payload.status || current.status;
       const phaseEndsAt =
         event.payload.phaseEndsAt ??
         event.payload.voteEndsAt ??
-        (status === TRIAL_STATUS.ENDED ? null : current.phaseEndsAt)
+        (status === TRIAL_STATUS.ENDED ? null : current.phaseEndsAt);
 
       return {
         ...current,
@@ -123,26 +125,26 @@ export function applyEventsToSnapshot(snapshot, events = []) {
         ),
         voteOpen: status === TRIAL_STATUS.VOTING,
         ended: status === TRIAL_STATUS.ENDED,
-      }
-    }, snapshot)
+      };
+    }, snapshot);
 }
 
 const SPEAKER_LABEL = Object.freeze({
-  JUDGE: 'AI 판사',
-  A_LAWYER: 'A측 AI 변호사',
-  B_LAWYER: 'B측 AI 변호사',
-  SYSTEM: '재판 시스템',
-})
+  JUDGE: "AI 판사",
+  A_LAWYER: "A측 AI 변호사",
+  B_LAWYER: "B측 AI 변호사",
+  SYSTEM: "재판 시스템",
+});
 
 const EVENT_LABEL = Object.freeze({
-  [TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION]: '사건 소개',
-  [TRIAL_EVENT_TYPE.A_ARGUMENT]: 'A측 변론',
-  [TRIAL_EVENT_TYPE.B_ARGUMENT]: 'B측 변론',
-  [TRIAL_EVENT_TYPE.VERDICT_ANNOUNCED]: '최종 판결',
-  [TRIAL_EVENT_TYPE.VERDICT_PUBLISHED]: '최종 판결',
-})
+  [TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION]: "사건 소개",
+  [TRIAL_EVENT_TYPE.A_ARGUMENT]: "A측 발언",
+  [TRIAL_EVENT_TYPE.B_ARGUMENT]: "B측 발언",
+  [TRIAL_EVENT_TYPE.VERDICT_ANNOUNCED]: "최종 판결",
+  [TRIAL_EVENT_TYPE.VERDICT_PUBLISHED]: "최종 판결",
+});
 
-const SPEECH_EVENT_TYPES = new Set(Object.keys(EVENT_LABEL))
+const SPEECH_EVENT_TYPES = new Set(Object.keys(EVENT_LABEL));
 
 export function toTimelineEvents(events = []) {
   return events
@@ -150,9 +152,11 @@ export function toTimelineEvents(events = []) {
     .map((event) => ({
       id: event.eventId ?? event.sequence,
       sequence: event.sequence,
-      speaker: SPEAKER_LABEL[event.speaker] || event.speaker || 'AI 재판',
+      speaker: SPEAKER_LABEL[event.speaker] || event.speaker || "AI 재판",
       label: EVENT_LABEL[event.type] || event.type,
-      content: event.content || '이 발언의 상세 내용은 서버 응답에 포함되지 않았습니다.',
+      content:
+        event.content ||
+        "이 발언의 상세 내용은 서버 응답에 포함되지 않았습니다.",
       occurredAt: event.occurredAt,
-    }))
+    }));
 }
