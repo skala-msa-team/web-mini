@@ -27,7 +27,7 @@ const presentation = computed(() => {
         visible: true,
         tone: 'loading',
         title: 'Live 재판에 연결하고 있습니다.',
-        description: '현재 재판 상태와 이전 채팅을 불러오는 중입니다.',
+        description: '현재 재판 상태와 이전 진행 내역을 불러오는 중입니다.',
         retryable: false,
       }
     case CONNECTION_STATUS.RECONNECTING:
