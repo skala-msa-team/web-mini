@@ -2,11 +2,11 @@ import { CHAT_STATUS, CONNECTION_STATUS, VOTE_STATUS } from '@/constants/liveTri
 import { TRIAL_STATUS } from '@/constants/trialStatus.js'
 
 export const LIVE_TRIAL_TIMING = Object.freeze({
-  INTRODUCTION_SECONDS: 10,
-  ARGUMENT_SECONDS: 15,
-  AGENT_DEBATE_SECONDS: 110,
-  VOTING_SECONDS: 30,
-  TOTAL_SECONDS: 10 + 15 + 15 + 110 + 30,
+  INTRODUCTION_SECONDS: 7,
+  ARGUMENT_SECONDS: 10,
+  AGENT_DEBATE_SECONDS: 138,
+  VOTING_SECONDS: 15,
+  TOTAL_SECONDS: 7 + 10 + 10 + 138 + 15,
 })
 
 export const LIVE_TRIAL_MOCK_SCENARIO = Object.freeze({

@@ -66,14 +66,14 @@ header {
 
 header > div > span {
   color: var(--ds-color-justice-blue);
-  font-size: 0.64rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
 h2 {
   margin: 1px 0 0;
   color: var(--ds-color-primary);
-  font-size: 1.08rem;
+  font-size: 1.4rem;
 }
 
 h2 small,
@@ -90,7 +90,7 @@ ol {
 li {
   padding-left: 4px;
   color: var(--ds-color-justice-blue);
-  font-size: 0.76rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -106,21 +106,21 @@ li div {
 
 li strong {
   color: var(--ds-color-primary);
-  font-size: 0.78rem;
+  font-size: 1.1rem;
 }
 
 li div span {
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.68rem;
+  font-size: 0.95rem;
   font-weight: 500;
 }
 
 li p {
   margin: 5px 0 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.72rem;
+  font-size: 1.05rem;
   font-weight: 400;
-  line-height: 1.55;
+  line-height: 1.75;
 }
 
 .judgment-box {
@@ -136,22 +136,22 @@ li p {
   top: 12px;
   right: 14px;
   color: #6680a1;
-  font-size: 0.6rem;
+  font-size: 0.85rem;
   font-weight: 700;
 }
 
 h3 {
   margin: 0 0 5px;
   color: var(--ds-color-primary);
-  font-size: 0.88rem;
+  font-size: 1.15rem;
 }
 
 .judgment-box p {
   margin: 0;
   padding-right: 40px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.7rem;
-  line-height: 1.55;
+  font-size: 1.05rem;
+  line-height: 1.75;
 }
 
 @media (max-width: 620px) {

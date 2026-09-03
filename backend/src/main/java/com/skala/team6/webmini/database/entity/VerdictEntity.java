@@ -70,4 +70,32 @@ public class VerdictEntity {
     public Long getId() {
         return id;
     }
+
+    public TrialSide getWinnerSide() {
+        return winnerSide;
+    }
+
+    public int getAFaultRatio() {
+        return aFaultRatio;
+    }
+
+    public int getBFaultRatio() {
+        return bFaultRatio;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public String getGrounds() {
+        return grounds;
+    }
+
+    public String getARecommendation() {
+        return aRecommendation;
+    }
+
+    public String getBRecommendation() {
+        return bRecommendation;
+    }
 }

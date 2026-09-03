@@ -3,11 +3,14 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { MessageSquare, Send } from '@lucide/vue'
 
 const props = defineProps({
-  initialMessages: { type: Array, required: true },
+  initialMessages: { type: Array, default: () => [] },
   messages: { type: Array, default: null },
+  currentUserId: { type: String, default: '' },
   audienceCount: { type: Number, required: true },
   headerLabel: { type: String, default: '' },
   disabled: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false },
+  sending: { type: Boolean, default: false },
   disabledMessage: { type: String, default: '현재 채팅을 사용할 수 없습니다.' },
   onSend: { type: Function, default: null },
 })
@@ -28,8 +31,44 @@ watch(
   { deep: true },
 )
 
+watch(
+  () => {
+    const lastMessage = messages.value.at(-1)
+    return lastMessage?.messageId ?? lastMessage?.messageSequence ?? lastMessage?.id ?? null
+  },
+  async () => {
+    await nextTick()
+    messageList.value?.lastElementChild?.scrollIntoView({ behavior: 'smooth' })
+  },
+  { immediate: true },
+)
+
+function messageKey(message) {
+  return message.messageId ?? message.id ?? message.messageSequence
+}
+
+function messageNickname(message) {
+  return message.sender?.nickname || message.nickname || '관전자'
+}
+
+function messageAvatar(message) {
+  return message.avatar || messageNickname(message).slice(0, 1)
+}
+
+function messageContent(message) {
+  return message.content ?? message.message ?? ''
+}
+
+function messageTone(message) {
+  return message.tone || 'sky'
+}
+
+function isOwnMessage(message) {
+  return Boolean(props.currentUserId) && message.sender?.demoUserId === props.currentUserId
+}
+
 async function submitMessage() {
-  if (props.disabled) return
+  if (props.disabled || props.sending) return
 
   const message = draft.value.trim()
   if (!message) return
@@ -59,15 +98,24 @@ async function submitMessage() {
       <span><i aria-hidden="true"></i>{{ displayedHeaderLabel }}</span>
     </header>
 
-    <div ref="messageList" class="message-list" aria-live="polite">
-      <article v-for="message in messages" :key="message.id" class="message-item">
-        <div class="avatar" :class="`tone-${message.tone}`">{{ message.avatar }}</div>
+    <div ref="messageList" class="message-list" aria-live="polite" :aria-busy="loading">
+      <p v-if="loading && !messages.length" class="chat-notice">이전 채팅을 불러오는 중입니다.</p>
+      <p v-else-if="!messages.length" class="chat-notice">아직 등록된 채팅이 없습니다.</p>
+      <article
+        v-for="message in messages"
+        :key="messageKey(message)"
+        class="message-item"
+        :class="{ 'message-item--own': isOwnMessage(message) }"
+      >
+        <div class="avatar" :class="`tone-${messageTone(message)}`">
+          {{ messageAvatar(message) }}
+        </div>
         <div>
           <small>
-            <b>{{ message.nickname }}</b>
+            <b>{{ messageNickname(message) }}</b>
             <span v-if="message.badge" class="message-badge">{{ message.badge }}</span>
           </small>
-          <p>{{ message.message }}</p>
+          <p>{{ messageContent(message) }}</p>
         </div>
       </article>
     </div>
@@ -78,10 +126,15 @@ async function submitMessage() {
         id="chat-message"
         v-model="draft"
         type="text"
+        maxlength="500"
         :placeholder="disabled ? disabledMessage : '의견을 남겨주세요...'"
         :disabled="disabled"
       />
-      <button type="submit" aria-label="메시지 보내기" :disabled="disabled || !draft.trim()">
+      <button
+        type="submit"
+        :aria-label="sending ? '메시지 전송 중' : '메시지 보내기'"
+        :disabled="disabled || sending || !draft.trim()"
+      >
         <Send :size="18" />
       </button>
     </form>
@@ -116,7 +169,7 @@ h2 {
   align-items: center;
   gap: 8px;
   color: var(--ds-color-primary);
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
 header > span {
@@ -124,7 +177,7 @@ header > span {
   align-items: center;
   gap: 6px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -142,11 +195,42 @@ header i {
   overflow-y: auto;
 }
 
+.chat-notice {
+  margin: 28px 0;
+  color: var(--ds-color-on-surface-variant);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
 .message-item {
   display: grid;
   grid-template-columns: 30px 1fr;
   gap: 9px;
   margin-bottom: 18px;
+}
+
+.message-item--own {
+  grid-template-columns: 1fr 30px;
+}
+
+.message-item--own .avatar {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.message-item--own > div:last-child {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
+}
+
+.message-item--own p {
+  margin-left: auto;
+  border-radius: 10px 0 10px 10px;
+  background: var(--ds-color-justice-blue);
+  color: white;
+  text-align: left;
 }
 
 .avatar {
@@ -157,7 +241,7 @@ header i {
   border-radius: 50%;
   background: #e5edfa;
   color: #38608d;
-  font-size: 0.69rem;
+  font-size: 0.85rem;
 }
 
 .avatar.tone-violet {
@@ -184,7 +268,7 @@ header i {
   display: block;
   margin: 0 0 4px;
   color: #8c95a2;
-  font-size: 0.65rem;
+  font-size: 0.82rem;
 }
 
 .message-item small b {
@@ -205,8 +289,8 @@ header i {
   border-radius: 0 10px 10px 10px;
   background: #f7f9fc;
   color: var(--ds-color-on-surface);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .chat-form {
@@ -226,7 +310,7 @@ header i {
   border-radius: var(--ds-radius-default);
   background: white;
   color: var(--ds-color-on-surface);
-  font-size: 0.77rem;
+  font-size: 0.95rem;
   outline: none;
 }
 

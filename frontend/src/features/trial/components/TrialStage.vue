@@ -98,7 +98,7 @@ defineProps({
   background: white;
   box-shadow: 0 3px 8px rgb(15 35 62 / 16%);
   color: var(--ds-color-primary);
-  font-size: 0.78rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -136,7 +136,7 @@ defineProps({
     width: 100%;
     padding: 7px 8px;
     text-align: center;
-    font-size: 0.67rem;
+    font-size: 0.85rem;
   }
 
   .participant-label small {

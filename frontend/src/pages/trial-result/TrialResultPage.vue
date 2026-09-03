@@ -1,17 +1,75 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ArrowLeft, Check, Share2 } from '@lucide/vue'
+import { trialApi } from '@/api/trialApi.js'
 import FaultRatioCard from '@/features/verdict/components/FaultRatioCard.vue'
 import JudgmentGrounds from '@/features/verdict/components/JudgmentGrounds.vue'
 import VerdictComparison from '@/features/verdict/components/VerdictComparison.vue'
-import { trialResultMock } from '@/features/verdict/trialResultMock.js'
 
 const shareCompleted = ref(false)
+const route = useRoute()
+const trialDetail = ref(null)
+const trialResult = ref(null)
+const resultPending = ref(true)
+const resultError = ref('')
+const caseTitle = computed(() => trialDetail.value?.title ?? '')
+const caseNumber = computed(() => `사건 #${route.params.trialId}`)
+const aiResult = computed(() => {
+  const verdict = trialResult.value?.verdict
+  if (!verdict) return null
+
+  return {
+    winnerSide: verdict.winnerSide,
+    sideA: verdict.aFaultRatio,
+    sideB: verdict.bFaultRatio,
+    judgment: verdict.summary,
+    grounds: (verdict.grounds || []).map((description, index) => ({
+      title: `주요 근거 ${index + 1}`,
+      side: '',
+      description,
+    })),
+    aRecommendation: verdict.aRecommendation,
+    bRecommendation: verdict.bRecommendation,
+  }
+})
+const juryResult = computed(() => {
+  const publicVote = trialResult.value?.publicVote
+  if (!publicVote) return null
+
+  const totalVotes = publicVote.totalVotes || 0
+  const sideAPercentage = totalVotes ? Math.round((publicVote.aVotes / totalVotes) * 100) : 0
+  return {
+    sideA: sideAPercentage,
+    sideB: totalVotes ? 100 - sideAPercentage : 0,
+    aVotes: publicVote.aVotes,
+    bVotes: publicVote.bVotes,
+    participantCount: totalVotes,
+    winnerSide: publicVote.aVotes === publicVote.bVotes
+      ? null
+      : publicVote.aVotes > publicVote.bVotes ? 'A' : 'B',
+  }
+})
+
+onMounted(async () => {
+  try {
+    const [detail, result] = await Promise.all([
+      trialApi.getTrial(route.params.trialId),
+      trialApi.getResults(route.params.trialId),
+    ])
+    trialDetail.value = detail
+    trialResult.value = result
+  } catch (error) {
+    resultError.value = error?.message || '대중 투표 결과를 불러오지 못했습니다.'
+  } finally {
+    resultPending.value = false
+  }
+})
 
 async function shareResult() {
   const shareData = {
-    title: `사랑과 전쟁터 판결 ${trialResultMock.caseNumber}`,
-    text: trialResultMock.title,
+    title: `사랑과 전쟁터 판결 ${caseNumber.value}`,
+    text: caseTitle.value,
     url: window.location.href,
   }
 
@@ -34,20 +92,28 @@ async function shareResult() {
       <section class="result-hero" aria-labelledby="result-title">
         <span class="final-badge"><i aria-hidden="true"></i>최종 판결</span>
         <p>AI 판사의 판결이 확정되었습니다</p>
-        <h1 id="result-title">{{ trialResultMock.caseNumber }}</h1>
-        <p class="case-title">“{{ trialResultMock.title }}”</p>
-        <div class="winner-badge"><Check :size="16" /> {{ trialResultMock.winner }} 승소</div>
+        <h1 id="result-title">{{ caseNumber }}</h1>
+        <p class="case-title">“{{ caseTitle }}”</p>
+        <div v-if="aiResult" class="winner-badge"><Check :size="16" /> {{ aiResult.winnerSide }}측 승소</div>
       </section>
 
-      <div class="judgment-grid">
-        <FaultRatioCard :ratio="trialResultMock.faultRatio" />
-        <JudgmentGrounds :grounds="trialResultMock.grounds" :judgment="trialResultMock.judgment" />
-      </div>
+      <p v-if="resultPending" class="result-status" role="status">저장된 AI 판결과 대중 투표 결과를 불러오는 중입니다.</p>
+      <p v-else-if="resultError" class="result-status result-status--error" role="alert">{{ resultError }}</p>
+      <p v-else-if="!aiResult" class="result-status" role="status">표시할 판결 결과가 없습니다.</p>
 
-      <VerdictComparison
-        :ai-result="trialResultMock.aiResult"
-        :jury-result="trialResultMock.juryResult"
-      />
+      <template v-else>
+        <div class="judgment-grid">
+          <FaultRatioCard :ratio="aiResult" />
+          <JudgmentGrounds :grounds="aiResult.grounds" :judgment="aiResult.judgment" />
+        </div>
+
+        <VerdictComparison
+          v-if="juryResult"
+          :ai-result="aiResult"
+          :jury-result="juryResult"
+        />
+        <p v-else class="result-status" role="status">대중 투표 결과가 없습니다.</p>
+      </template>
 
       <div class="result-actions">
         <button class="share-button" type="button" @click="shareResult">
@@ -99,7 +165,7 @@ async function shareResult() {
   justify-content: center;
   gap: 7px;
   border-radius: var(--ds-radius-full);
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
@@ -120,20 +186,20 @@ async function shareResult() {
 .result-hero > p:first-of-type {
   margin: 14px 0 4px;
   color: #788395;
-  font-size: 0.68rem;
+  font-size: 0.95rem;
 }
 
 .result-hero h1 {
   margin: 0;
   color: var(--ds-color-primary);
-  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  font-size: clamp(2.25rem, 4vw, 3rem);
   letter-spacing: 0.02em;
 }
 
 .case-title {
   margin: 8px 0 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.88rem;
+  font-size: 1.15rem;
 }
 
 .winner-badge {
@@ -163,6 +229,21 @@ async function shareResult() {
   gap: 12px;
 }
 
+.result-status {
+  margin: 24px 0 0;
+  padding: 18px;
+  border-radius: var(--ds-radius-default);
+  background: white;
+  color: var(--ds-color-on-surface-variant);
+  text-align: center;
+}
+
+.result-status--error {
+  border: 1px solid var(--ds-color-error);
+  background: var(--ds-color-error-container);
+  color: var(--ds-color-on-error-container);
+}
+
 .share-button,
 .list-button {
   min-width: 180px;
@@ -173,7 +254,7 @@ async function shareResult() {
   justify-content: center;
   gap: 8px;
   border-radius: var(--ds-radius-default);
-  font-size: 0.76rem;
+  font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -206,7 +287,7 @@ async function shareResult() {
 .legal-notice {
   margin: 18px 0 0;
   color: #8b95a4;
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   text-align: center;
 }
 

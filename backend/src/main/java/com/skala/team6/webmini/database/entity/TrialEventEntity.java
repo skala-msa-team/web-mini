@@ -64,6 +64,22 @@ public class TrialEventEntity {
         return sequenceNo;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public TrialEntity getTrial() {
+        return trial;
+    }
+
+    public TrialSpeaker getSpeaker() {
+        return speaker;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
     public String getEventType() {
         return eventType;
     }

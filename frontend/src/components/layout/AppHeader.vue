@@ -6,10 +6,19 @@ import { Bell, Scale, UserRound } from '@lucide/vue'
 const route = useRoute()
 const trialId = computed(() => route.params.trialId ?? '1')
 const liveTrialRouteNames = ['live-trial', 'trial-voting', 'trial-result']
+const communityRouteNames = ['home', 'post-create', 'post-detail']
 
 const navigation = computed(() => [
-  { label: '홈', to: { name: 'home' }, active: route.name === 'home' },
-  { label: '인기게시글', to: { name: 'home', hash: '#popular-posts' } },
+  {
+    label: '홈',
+    to: { name: 'home' },
+    active: communityRouteNames.includes(route.name) && !route.hash,
+  },
+  {
+    label: '인기게시글',
+    to: { name: 'home', hash: '#popular-posts' },
+    active: route.name === 'home' && route.hash === '#popular-posts',
+  },
   {
     label: 'Live 재판',
     to: { name: 'live-trial', params: { trialId: trialId.value } },
@@ -18,6 +27,7 @@ const navigation = computed(() => [
   {
     label: '커뮤니티 가이드라인',
     to: { name: 'home', hash: '#community-guidelines' },
+    active: route.name === 'home' && route.hash === '#community-guidelines',
   },
   { label: '마이페이지', href: '#my-page' },
 ])
@@ -88,7 +98,7 @@ const navigation = computed(() => [
   width: fit-content;
   color: var(--ds-color-verdict-blue);
   font-family: var(--ds-font-heading);
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 700;
   text-decoration: none;
 }
@@ -110,7 +120,7 @@ const navigation = computed(() => [
   align-items: center;
   padding: 0 12px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -180,7 +190,7 @@ const navigation = computed(() => [
   border-radius: var(--ds-radius-default);
   background: var(--ds-color-primary);
   color: white;
-  font-size: 0.84rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
