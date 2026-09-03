@@ -15,9 +15,15 @@ import com.skala.team6.webmini.trial.GuideAnswerService;
 import com.skala.team6.webmini.trial.TrialArgumentService;
 import com.skala.team6.webmini.trial.TrialStartService;
 import com.skala.team6.webmini.trial.TrialStatementService;
+import com.skala.team6.webmini.trial.TrialPreparationAiService;
 import com.skala.team6.webmini.trial.TrialChatQueryService;
 import com.skala.team6.webmini.trial.TrialChatService;
+import com.skala.team6.webmini.common.exception.ApiException;
+import com.skala.team6.webmini.common.exception.ErrorCode;
+import com.skala.team6.webmini.common.model.TrialSide;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,6 +53,8 @@ class ApiDocumentationSmokeTest {
     private TrialArgumentService trialArgumentService;
     @MockitoBean
     private TrialStartService trialStartService;
+    @MockitoBean
+    private TrialPreparationAiService trialPreparationAiService;
     @MockitoBean
     private TrialChatQueryService trialChatQueryService;
     @MockitoBean
@@ -84,5 +92,17 @@ class ApiDocumentationSmokeTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("DEMO_USER_REQUIRED"))
                 .andExpect(jsonPath("$.path").value("/api/v1/trials/10/parties/A/statement"));
+    }
+
+    @Test
+    void convertsMockAiFailureToCommonErrorResponse() throws Exception {
+        when(trialPreparationAiService.createGuideQuestions(10L, TrialSide.A))
+                .thenThrow(new ApiException(ErrorCode.MOCK_AI_RESPONSE_INVALID));
+
+        mockMvc.perform(post("/api/v1/trials/10/parties/A/guide-questions"))
+                .andExpect(status().is(422))
+                .andExpect(jsonPath("$.code").value("MOCK_AI_RESPONSE_INVALID"))
+                .andExpect(jsonPath("$.path")
+                        .value("/api/v1/trials/10/parties/A/guide-questions"));
     }
 }
