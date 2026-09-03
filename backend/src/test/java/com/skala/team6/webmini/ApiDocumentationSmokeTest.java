@@ -18,6 +18,8 @@ import com.skala.team6.webmini.trial.TrialStatementService;
 import com.skala.team6.webmini.trial.TrialPreparationAiService;
 import com.skala.team6.webmini.trial.TrialChatQueryService;
 import com.skala.team6.webmini.trial.TrialChatService;
+import com.skala.team6.webmini.trial.TrialEventWriter;
+import com.skala.team6.webmini.trial.TrialPhaseService;
 import com.skala.team6.webmini.common.exception.ApiException;
 import com.skala.team6.webmini.common.exception.ErrorCode;
 import com.skala.team6.webmini.common.model.TrialSide;
@@ -28,10 +30,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.autoconfigure.exclude="
+@SpringBootTest(properties = {"spring.autoconfigure.exclude="
         + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
         + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
-        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration")
+        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration",
+        "app.trial.scheduler-enabled=false"})
 @AutoConfigureMockMvc
 class ApiDocumentationSmokeTest {
 
@@ -59,6 +62,10 @@ class ApiDocumentationSmokeTest {
     private TrialChatQueryService trialChatQueryService;
     @MockitoBean
     private TrialChatService trialChatService;
+    @MockitoBean
+    private TrialEventWriter trialEventWriter;
+    @MockitoBean
+    private TrialPhaseService trialPhaseService;
 
     @Autowired
     private MockMvc mockMvc;
