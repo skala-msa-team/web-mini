@@ -1,24 +1,27 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { Search } from "@lucide/vue";
+import Button from "@/components/ui/Button.vue";
+import Input from "@/components/ui/Input.vue";
 
-import { trialApi } from "@/api/trialApi.js";
-import { TRIAL_STATUS_LABEL } from "@/constants/trialStatus.js";
-import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
-import EmptyPosts from "@/features/community/components/EmptyPosts.vue";
-import LiveTrialCard from "@/features/community/components/LiveTrialCard.vue";
-import PostCard from "@/features/community/components/PostCard.vue";
-import { useCommunityStore } from "@/features/community/stores/communityStore.js";
+import { getTrials } from "@/apis/trialApi.js";
+import { TRIAL_STATUS_LABEL } from "@/consts/trialStatus.js";
+import CommunityLayout from "@/components/community/CommunityLayout.vue";
+import EmptyPosts from "@/components/community/EmptyPosts.vue";
+import LiveTrialCard from "@/components/community/LiveTrialCard.vue";
+import PostCard from "@/components/community/PostCard.vue";
+import { useCommunityStore } from "@/stores/communityStore.js";
 import {
   categoryTypes,
   relationshipTypes,
-} from "@/features/community/mock/communityData.js";
+} from "@/mock/community/communityData.js";
+import { COMMUNITY_LIVE_TRIAL_PAGE_SIZE, COMMUNITY_POST_PAGE_SIZE } from "@/consts/api.js";
 
 const searchQuery = ref("");
 const selectedCategory = ref("전체");
 const selectedRelationship = ref("전체 관계");
 const currentPage = ref(1);
-const pageSize = 3;
+const pageSize = COMMUNITY_POST_PAGE_SIZE;
 const { state } = useCommunityStore();
 const liveTrials = ref([]);
 const liveTrialsLoading = ref(true);
@@ -29,7 +32,7 @@ async function loadLiveTrials() {
   liveTrialsError.value = "";
 
   try {
-    const response = await trialApi.getTrials({ page: 0, size: 3 });
+    const response = await getTrials({ page: 0, size: COMMUNITY_LIVE_TRIAL_PAGE_SIZE });
     liveTrials.value = (response.items || []).map((trial) => ({
       id: trial.trialId,
       title: trial.title,
@@ -83,36 +86,36 @@ function resetFilters() {
 
 <template>
   <CommunityLayout>
-    <section class="community-content">
-      <div class="community-tools">
-        <label class="search-field">
+    <section class="space-y-10">
+      <div class="flex flex-col gap-4 sm:flex-row">
+        <label class="flex h-11 max-w-xl flex-1 items-center gap-2 rounded-lg border border-input bg-card px-3 text-muted-foreground focus-within:ring-2 focus-within:ring-ring">
           <Search :size="17" aria-hidden="true" />
-          <input
+          <Input
             v-model="searchQuery"
             type="search"
             placeholder="궁금한 고민을 검색해보세요"
+            class="h-9 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
           />
         </label>
-        <RouterLink class="button button--primary" to="/community/posts/new"
-          >글쓰기</RouterLink
-        >
+        <Button as="RouterLink" :to="{ name: 'post-create' }" class="sm:ml-auto">글쓰기</Button>
       </div>
 
-      <div class="community-filters">
-        <div class="filter-chips" aria-label="카테고리 필터">
+      <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+        <div class="flex flex-wrap gap-2" aria-label="카테고리 필터">
           <button
             v-for="type in categoryTypes"
             :key="type"
             type="button"
-            :class="{ 'filter-chip--active': selectedCategory === type }"
+            class="rounded-full border px-4 py-2 text-sm font-semibold transition"
+            :class="selectedCategory === type ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground hover:bg-muted'"
             @click="selectedCategory = type"
           >
             {{ type }}
           </button>
         </div>
-        <label class="conflict-filter">
-          <span>관계 유형</span>
-          <select v-model="selectedRelationship">
+        <label class="flex items-center gap-2 text-sm text-muted-foreground sm:ml-auto">
+          <span class="font-semibold">관계 유형</span>
+          <select v-model="selectedRelationship" class="rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring">
             <option v-for="type in relationshipTypes" :key="type">
               {{ type }}
             </option>
@@ -120,14 +123,14 @@ function resetFilters() {
         </label>
       </div>
 
-      <section id="live-trials" class="live-trials">
-        <div class="section-title-row">
-          <h2>실시간 라이브 재판</h2>
-          <a href="#">전체보기</a>
+      <section id="live-trials">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold tracking-tight">실시간 라이브 재판</h2>
+          <a class="text-sm font-semibold text-primary" href="#">전체보기</a>
         </div>
-        <div class="live-trial-grid">
-          <p v-if="liveTrialsLoading" class="live-trial-feedback">Live 재판을 불러오는 중입니다.</p>
-          <p v-else-if="liveTrialsError" class="live-trial-feedback" role="alert">
+        <div class="mt-4 grid gap-3 md:grid-cols-3">
+          <p v-if="liveTrialsLoading" class="col-span-full rounded-xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">Live 재판을 불러오는 중입니다.</p>
+          <p v-else-if="liveTrialsError" class="col-span-full rounded-xl border border-red-200 bg-red-50 px-5 py-8 text-center text-sm text-red-700" role="alert">
             {{ liveTrialsError }}
           </p>
           <template v-else-if="liveTrials.length">
@@ -137,19 +140,19 @@ function resetFilters() {
               :trial="trial"
             />
           </template>
-          <p v-else class="live-trial-feedback">현재 진행 중인 공개 재판이 없습니다.</p>
+          <p v-else class="col-span-full rounded-xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">현재 진행 중인 공개 재판이 없습니다.</p>
         </div>
       </section>
 
       <section id="popular-posts">
-        <div class="section-title-row"><h2>인기게시글</h2></div>
-        <div v-if="paginatedPosts.length" class="post-list">
+        <div class="flex items-center justify-between"><h2 class="text-xl font-bold tracking-tight">인기게시글</h2></div>
+        <div v-if="paginatedPosts.length" class="mt-4 grid gap-3">
           <PostCard v-for="post in paginatedPosts" :key="post.id" :post="post" />
         </div>
         <EmptyPosts v-else @reset="resetFilters" />
       </section>
 
-      <nav class="pagination" aria-label="페이지 이동">
+      <nav class="flex justify-center gap-1.5" aria-label="페이지 이동">
         <button
           type="button"
           aria-label="이전 페이지"
@@ -162,7 +165,8 @@ function resetFilters() {
           v-for="page in pageCount"
           :key="page"
           type="button"
-          :class="{ pagination__active: currentPage === page }"
+          class="size-9 rounded-lg border border-border bg-card text-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+          :class="currentPage === page ? 'border-primary bg-primary text-primary-foreground' : ''"
           @click="currentPage = page"
         >
           {{ page }}
@@ -177,24 +181,10 @@ function resetFilters() {
         </button>
       </nav>
 
-      <section id="community-guidelines" class="community-guidelines">
-        <h2>커뮤니티 가이드라인</h2>
-        <p>서로의 고민을 존중하고, 비난보다 따뜻한 의견을 남겨주세요.</p>
+      <section id="community-guidelines" class="rounded-xl bg-primary p-6 text-primary-foreground shadow-sm">
+        <h2 class="text-lg font-bold">커뮤니티 가이드라인</h2>
+        <p class="mt-2 text-sm text-primary-foreground/75">서로의 고민을 존중하고, 비난보다 따뜻한 의견을 남겨주세요.</p>
       </section>
     </section>
   </CommunityLayout>
 </template>
-
-<style scoped>
-.live-trial-feedback {
-  grid-column: 1 / -1;
-  margin: 0;
-  padding: 30px 18px;
-  border: 1px solid var(--ds-color-card-border);
-  border-radius: var(--ds-radius-md);
-  background: var(--ds-color-surface-container-lowest);
-  color: var(--ds-color-on-surface-variant);
-  font-size: 0.82rem;
-  text-align: center;
-}
-</style>

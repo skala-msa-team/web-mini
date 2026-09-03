@@ -52,7 +52,9 @@ public class TrialStartService {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime phaseEndsAt = now.plusSeconds(timings.introductionSeconds());
         OffsetDateTime scheduledEndAt = phaseEndsAt
-                .plusSeconds(timings.argumentSeconds() * 2 + timings.votingSeconds());
+                .plusSeconds(timings.argumentSeconds() * 2
+                        + timings.debateSeconds()
+                        + timings.votingSeconds());
         trial.startPhase(TrialStatus.INTRODUCTION, now, phaseEndsAt);
         trial.scheduleEnd(scheduledEndAt);
 

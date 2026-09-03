@@ -2,20 +2,21 @@
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Clock3, Eye, UsersRound } from '@lucide/vue'
-import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { TRIAL_STATUS } from '@/constants/trialStatus.js'
+import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { TRIAL_STATUS } from '@/consts/trialStatus.js'
 import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
-import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
-import ArgumentTimeline from '@/features/trial/components/ArgumentTimeline.vue'
-import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
-import TrialStage from '@/features/trial/components/TrialStage.vue'
-import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
+import TrialChatPanel from '@/components/chat/TrialChatPanel.vue'
+import ArgumentTimeline from '@/components/trial/ArgumentTimeline.vue'
+import LawyerDebatePanel from '@/components/trial/LawyerDebatePanel.vue'
+import TrialConnectionStatus from '@/components/trial/TrialConnectionStatus.vue'
+import TrialStage from '@/components/trial/TrialStage.vue'
+import { liveTrialMock } from '@/mock/trial/liveTrialMock.js'
 import {
   getTrialPhaseLabel,
   getTrialWaitingMessage,
-} from '@/features/trial/liveTrialPresentation.js'
-import { toTimelineEvents } from '@/utils/trialEvent.js'
+} from '@/mock/trial/liveTrialPresentation.js'
+import { toLawyerDebateEvents, toTimelineEvents } from '@/utils/trialEvent.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,6 +36,7 @@ const trialParticipants = computed(() => liveTrialMock.participants.map((partici
 const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value))
 const waitingMessage = computed(() => getTrialWaitingMessage(session.status.value))
 const timelineEvents = computed(() => toTimelineEvents(session.events.value))
+const lawyerDebateEvents = computed(() => toLawyerDebateEvents(session.events.value))
 const phaseEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt)
 const { formattedRemainingTime } = useTrialCountdown(phaseEndsAt)
 const trialEnded = computed(
@@ -44,6 +46,7 @@ const chatAllowed = computed(() => [
   TRIAL_STATUS.INTRODUCTION,
   TRIAL_STATUS.A_ARGUMENT,
   TRIAL_STATUS.B_ARGUMENT,
+  TRIAL_STATUS.DEBATE,
   TRIAL_STATUS.VOTING,
   TRIAL_STATUS.VERDICT,
 ].includes(session.status.value))
@@ -121,7 +124,13 @@ watch(
       <div class="trial-layout">
         <div class="trial-main-column">
           <TrialStage :participants="trialParticipants" />
+          <LawyerDebatePanel
+            v-if="session.status.value === TRIAL_STATUS.DEBATE"
+            :events="lawyerDebateEvents"
+            :remaining-time="formattedRemainingTime"
+          />
           <ArgumentTimeline
+            v-else
             :phase="phaseLabel"
             :events="timelineEvents"
             :waiting-message="waitingMessage"
@@ -131,6 +140,7 @@ watch(
 
         <TrialChatPanel
           :messages="session.messages.value"
+          :current-user-id="session.demoUserId"
           :audience-count="liveTrialMock.audienceCount"
           :header-label="trialEnded ? '종료' : ''"
           :disabled="interactionsDisabled"
@@ -184,7 +194,7 @@ watch(
   min-height: 24px;
   padding: 0 10px;
   border-radius: var(--ds-radius-full);
-  font-size: 0.69rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -213,7 +223,7 @@ watch(
 h1 {
   margin: 0;
   color: var(--ds-color-primary);
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
   line-height: 1.35;
 }
 
@@ -245,12 +255,12 @@ h1 {
 
 .stat-card small {
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.68rem;
+  font-size: 0.88rem;
 }
 
 .stat-card strong {
   color: var(--ds-color-primary);
-  font-size: 0.83rem;
+  font-size: 1.05rem;
 }
 
 .timer-card strong {

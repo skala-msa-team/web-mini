@@ -67,6 +67,16 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: var(--ds-font-body);
   --font-heading: var(--ds-font-heading);
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.55;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.4;
   --text-heading-1: var(--ds-text-h1);
   --text-heading-1--line-height: var(--ds-text-h1-line-height);
   --text-heading-1--letter-spacing: var(--ds-text-h1-letter-spacing);

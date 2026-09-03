@@ -1,9 +1,8 @@
 import { computed, ref } from 'vue'
-import { trialApi } from '@/api/trialApi.js'
+import { getTrial } from '@/apis/trialApi.js'
 import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
-import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { recoverLiveTrialChat } from '@/realtime/liveTrialChatRecovery.js'
-import { recoverLiveTrial } from '@/realtime/liveTrialRecovery.js'
+import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { recoverLiveTrial, recoverLiveTrialChat } from '@/lib/realtime.js'
 import { getDemoUserId } from '@/composables/useDemoUser.js'
 import {
   getLastContiguousMessageSequence,
@@ -64,7 +63,7 @@ export function useLiveTrialSession(trialId, options = {}) {
     const afterMessageSequence = getLastContiguousMessageSequence(messages.value)
     const detailRequest = detail.value
       ? Promise.resolve(detail.value)
-      : trialApi.getTrial(currentTrialId)
+      : getTrial(currentTrialId)
 
     try {
       const [nextDetail] = await Promise.all([
@@ -141,6 +140,7 @@ export function useLiveTrialSession(trialId, options = {}) {
   })
 
   return {
+    demoUserId,
     detail,
     snapshot,
     events,

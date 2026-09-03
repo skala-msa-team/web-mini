@@ -22,6 +22,53 @@
 .comment-item p,.comment-reply p{line-height:1.65}
 .comment-actions{display:flex;align-items:center;gap:10px}
 .comment-actions button{padding:2px 0;display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:var(--ds-color-outline);font-size:12px;cursor:pointer}
+
+/* Presentation-friendly minimum typography for community pages. */
+.app-nav,
+.community-sidebar nav a,
+.post-body {
+  font-size: 1rem;
+}
+
+.user-avatar,
+.conflict-filter,
+.live-trial-card p,
+.post-card__meta,
+.post-card__stats,
+.app-footer__inner,
+.form-field,
+.breadcrumb,
+.post-author,
+.related-posts a,
+.trial-banner p,
+.comment-item,
+.comment-item time,
+.comment-reply time,
+.comment-item > button,
+.filter-label,
+.report-notice,
+.related-posts > p,
+.comment-actions button {
+  font-size: 0.9rem;
+}
+
+.live-badge {
+  font-size: 0.85rem;
+}
+
+.section-title-row a,
+.post-card__summary {
+  font-size: 0.95rem;
+}
+
+.live-trial-card h3 {
+  font-size: 1.05rem;
+}
+
+.post-card__title,
+.related-posts h2 {
+  font-size: 1.2rem;
+}
 .comment-actions button:hover{color:var(--ds-color-secondary)}
 .reply-form{margin:12px 0 0 28px;display:flex;gap:8px}
 .reply-form input{min-width:0;flex:1;padding:10px 12px;border:1px solid var(--ds-color-card-border);border-radius:var(--ds-radius-default)}
