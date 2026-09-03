@@ -13,6 +13,12 @@
 ## 실행
 
 ```bash
+docker compose up -d --build
+```
+
+전체 Compose를 사용하지 않고 Backend 통합 테스트만 실행할 때:
+
+```bash
 cd backend
 docker compose up -d postgres
 DB_INTEGRATION_TEST=true ./gradlew test
@@ -27,7 +33,7 @@ npm install
 npm run dev
 ```
 
-`http://localhost:5173/integration-spike`를 두 브라우저에서 열고, 각 브라우저에서 CONNECT·SUBSCRIBE한 뒤 한 브라우저에서 `저장 후 이벤트 전송`을 누른다. 두 브라우저에 같은 `content`와 `messageSequence`가 표시되어야 한다.
+전체 Compose에서는 `http://localhost:8081/integration-spike`, 개별 개발에서는 `http://localhost:5173/integration-spike`를 두 브라우저에서 연다. 각 브라우저에서 CONNECT·SUBSCRIBE한 뒤 한 브라우저에서 `저장 후 이벤트 전송`을 누른다. 두 브라우저에 같은 `content`와 `messageSequence`가 표시되어야 한다.
 
 ## 검증 결과
 
@@ -35,18 +41,21 @@ npm run dev
 
 - `DB_INTEGRATION_TEST=true ./gradlew clean test`: `BUILD SUCCESSFUL`
 - `./gradlew check`: `BUILD SUCCESSFUL`
-- `npm run lint` (이번 변경 파일 직접 실행): 통과
+- `npm run lint`: 통과
 - `npm run build`: 통과
+- 루트 `docker compose up -d --build`: PostgreSQL healthy, Backend·Frontend 실행 확인
+- `http://localhost:8081/`: `200 OK`
+- `http://localhost:8081/api/v1/trials`: `200 OK`
 - Mock AI `POST /api/v1/mock-ai/lawyer/questions`: 질문 3개, `schemaVersion=1.0` 확인
 - `/integration-spike` REST: 두 브라우저에서 Axios 응답 렌더링 확인
 - `/integration-spike` STOMP: 두 브라우저가 `CONNECTED` 후 같은 `Integration spike test event · sequence 1` 수신
 
-전체 `npm run lint`는 기존 `src/pages/live-trial/TrialVotingPage.vue:84`의 `CONNECTION_STATUS` 미정의 오류로 실패한다. 이번 변경과 무관한 기존 오류이며 별도 수정하지 않았다. `DB_INTEGRATION_TEST=true`가 없으면 PostgreSQL 의존 테스트는 의도적으로 skip되므로, skip을 성공으로 간주하지 않는다.
+`DB_INTEGRATION_TEST=true`가 없으면 PostgreSQL 의존 테스트는 의도적으로 skip되므로, skip을 성공으로 간주하지 않는다.
 
 ## 실패 시 확인
 
 - `Connection refused`: PostgreSQL 컨테이너가 healthy인지 `docker compose ps`로 확인한다.
 - `Flyway` 또는 schema 오류: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`가 compose 기본값과 일치하는지 확인한다.
-- REST `5xx`: Backend가 먼저 `8080`에서 실행 중인지 확인한다.
+- REST `5xx`: 전체 Compose에서는 `docker compose logs backend`, 개별 실행에서는 Backend가 `8080`에서 실행 중인지 확인한다.
 - STOMP 연결 실패: Backend의 `/ws`와 Frontend의 `VITE_API_BASE_URL` 및 CORS 허용 origin을 확인한다.
 - 메시지 미수신: 두 브라우저가 같은 Trial ID로 chat destination을 구독했는지 확인한다.
