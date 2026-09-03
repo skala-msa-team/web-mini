@@ -17,4 +17,10 @@ export default [
       },
     },
   },
+  {
+    files: ['src/components/ui/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
 ]
