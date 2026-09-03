@@ -35,17 +35,20 @@ public class TrialController {
     private final TrialStatementService trialStatementService;
     private final GuideAnswerService guideAnswerService;
     private final TrialArgumentService trialArgumentService;
+    private final TrialStartService trialStartService;
 
     public TrialController(
             TrialQueryService trialQueryService,
             TrialStatementService trialStatementService,
             GuideAnswerService guideAnswerService,
-            TrialArgumentService trialArgumentService
+            TrialArgumentService trialArgumentService,
+            TrialStartService trialStartService
     ) {
         this.trialQueryService = trialQueryService;
         this.trialStatementService = trialStatementService;
         this.guideAnswerService = guideAnswerService;
         this.trialArgumentService = trialArgumentService;
+        this.trialStartService = trialStartService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -228,6 +231,7 @@ public class TrialController {
             )
             @DemoUserId DemoUserContext demoUser
     ) {
+        trialStartService.validateReady(trialId);
         return ResponseEntity.ok(ApiResponse.of(sampleSnapshot(TrialStatus.INTRODUCTION)));
     }
 

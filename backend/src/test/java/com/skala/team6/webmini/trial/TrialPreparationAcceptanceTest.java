@@ -29,6 +29,7 @@ import java.time.OffsetDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -179,6 +180,10 @@ class TrialPreparationAcceptanceTest {
         prepareArgument(aParty, TrialSide.A);
         prepareArgument(bParty, TrialSide.B);
 
+        startTrial()
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PARTIES_NOT_READY"));
+
         confirmArgument(TrialSide.A)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.side").value("A"))
@@ -188,6 +193,9 @@ class TrialPreparationAcceptanceTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.aParty.ready").value(true))
                 .andExpect(jsonPath("$.data.bParty.ready").value(false));
+        startTrial()
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PARTIES_NOT_READY"));
         OffsetDateTime firstConfirmedAt = trialStatementRepository
                 .findByTrialPartyId(aParty.getId()).orElseThrow().getConfirmedAt();
 
@@ -204,6 +212,9 @@ class TrialPreparationAcceptanceTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.aParty.ready").value(true))
                 .andExpect(jsonPath("$.data.bParty.ready").value(true));
+        startTrial()
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("INTRODUCTION"));
 
         entityManager.flush();
         entityManager.clear();
@@ -274,6 +285,11 @@ class TrialPreparationAcceptanceTest {
             throws Exception {
         return mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                 .post("/api/v1/trials/{trialId}/parties/{side}/confirm", trial.getId(), side)
+                .header("X-Demo-User-Id", DEMO_USER_ID));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions startTrial() throws Exception {
+        return mockMvc.perform(post("/api/v1/trials/{trialId}/start", trial.getId())
                 .header("X-Demo-User-Id", DEMO_USER_ID));
     }
 }
