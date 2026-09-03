@@ -18,7 +18,7 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 
 | 영역 | 방향 |
 | --- | --- |
-| Frontend | Vue 3, Vite, JavaScript, Tailwind CSS 4, shadcn-vue, Vue Router, Axios, STOMP Client |
+| Frontend | Vue 3, Vite, JavaScript, Tailwind CSS 4, shadcn-vue, Vue Router, STOMP Client |
 | Backend | Java 21, Spring Boot, Gradle, Web, Validation, WebSocket |
 | Realtime | WebSocket, STOMP |
 | Database | PostgreSQL |
@@ -28,7 +28,7 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 
 미정인 Library와 Version, API Path, STOMP Destination, Database Schema와 AI JSON은 담당 Issue에서 설계가 확정된 후 추가합니다.
 
-Frontend 공통 REST 처리는 `frontend/src/api/httpClient.js`와 Axios Interceptor에서 담당합니다. Backend에는 별도 Interceptor 계층을 두지 않으며, Demo 사용자 식별과 인증 방식은 Backend 계약이 확정될 때 별도 범위로 결정합니다.
+Frontend 공통 REST 처리와 인증 규칙은 아직 미정이며, 계약 확정 전에는 문서상 디렉토리만 준비합니다. Demo 사용자 식별과 인증 방식도 Backend 계약 확정 시 별도 범위로 결정합니다.
 
 ## 저장소 구조
 
@@ -41,7 +41,7 @@ Frontend 공통 REST 처리는 `frontend/src/api/httpClient.js`와 Axios Interce
 │   ├── src/app/        # App 진입점과 Router
 │   ├── src/assets/     # 디자인 토큰과 공통 Style
 │   ├── src/components/ # shadcn 기본 UI와 공통 조합 UI
-│   ├── src/api/        # Axios Instance와 Interceptor
+│   ├── src/api/        # API 통신 인터페이스 뼈대(도메인 확정 후 보완)
 │   └── ...             # Vue 3 + Vite 프로젝트
 ├── backend/
 │   ├── .env.example    # Backend 환경변수 예시
