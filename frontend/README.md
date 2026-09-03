@@ -7,21 +7,23 @@ Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vu
 ```text
 src/
 ├── app/              # App.vue, main.js, router
-├── assets/           # images, styles/fonts·tokens·global.css
-├── components/       # ui(shadcn), common, layout
+├── assets/           # styles/fonts·tokens·global.css
+├── components/       # ui(shadcn), common, 도메인별 컴포넌트
 ├── pages/            # Router에 연결되는 화면
-├── features/         # 기능별 UI와 상태
-├── api/              # Axios 공통 Client, 오류 규약, 도메인별 REST API
-├── realtime/         # WebSocket·STOMP
-├── composables/      # 여러 기능이 공유하는 상태 로직
-├── constants/        # 상태·이벤트 상수(계약 확정 후 정의)
-├── lib/              # shadcn 유틸
-└── utils/            # 도메인과 무관한 순수 유틸
+├── apis/             # API별 순수 요청 함수
+├── lib/              # Axios·HTTP·STOMP 등 외부 의존 로직
+├── utils/            # 공용 순수 함수
+├── consts/           # 상수·메시지·매직넘버
+├── mock/             # 도메인별 Demo 목 데이터
+├── stores/           # 화면 상태
+└── composables/      # 여러 기능이 공유하는 상태 로직
 ```
 
-`components/ui`에는 shadcn-vue가 생성한 기본 UI만 두고, 여러 화면에서 조합하는 UI는 `components/common`, 특정 기능 전용 UI는 `features/*/components`에 둡니다. `pages`는 화면 조합과 라우팅에 집중합니다. REST 요청은 `api` 폴더의 Axios Client와 도메인 API를 통해 호출합니다.
+`components/ui`에는 shadcn-vue 스타일의 재사용 기본 UI를 두고, 도메인 조합 UI는 `components/{domain}`에 둡니다. `pages`는 화면 조합과 라우팅에 집중합니다. REST 요청은 `apis`의 개별 함수가 `lib/http.js`를 통해 호출합니다. STOMP 연결·구독·복구는 `lib/realtime.js`에서 관리합니다.
 
 ## 실행과 검증
+
+개별 개발:
 
 ```bash
 npm install
@@ -29,6 +31,15 @@ npm run dev
 npm run lint
 npm run build
 ```
+
+전체 서비스는 프로젝트 루트에서 실행합니다.
+
+```bash
+cd ..
+docker compose up -d --build
+```
+
+실행 주소는 `http://localhost:8081`이며, 종료는 `docker compose down`입니다.
 
 ## 디자인 시스템과 shadcn-vue
 
@@ -74,7 +85,7 @@ npx shadcn-vue@latest add button
 
 ```vue
 <script setup>
-import { Button } from "@/components/ui/button";
+import Button from "@/components/ui/Button.vue"
 </script>
 
 <template>
@@ -94,7 +105,7 @@ import { Button } from "@/components/ui/button";
 
 ## API 통신 규약
 
-로컬 실행 전 `.env.example`을 복사해 `VITE_API_BASE_URL`을 설정합니다. Demo REST Base URL에는 `/api/v1`을 포함합니다.
+Backend를 별도로 실행하는 로컬 개발에서는 `.env.example`을 복사해 `VITE_API_BASE_URL`을 설정합니다. Demo REST Base URL에는 `/api/v1`을 포함합니다. 루트 Docker Compose로 실행할 때는 기본값 `/api/v1`을 사용하므로 별도 `.env`가 필요하지 않습니다.
 
 ```bash
 cp .env.example .env.local
@@ -106,26 +117,28 @@ VITE_API_BASE_URL=http://localhost:8080/api/v1
 
 공통 규약:
 
-- `src/api/httpClient.js`의 Axios Instance만 사용합니다.
+- `src/lib/http.js`의 Axios Instance만 사용합니다.
 - 공통 timeout은 15초이며 자동 재시도하지 않습니다.
 - 요청 인터셉터가 Browser Local Storage의 UUID를 `X-Demo-User-Id`에 자동으로 추가합니다.
-- 응답 인터셉터는 Axios 응답에서 Backend JSON Body를 추출합니다.
+- 응답 변환은 `src/utils/apiResponse.js`의 순수 함수가 담당합니다.
 - 도메인 API는 성공 Envelope의 `data`를 반환합니다.
 - Backend 오류는 `ApiError`로 변환하며 `status`, `code`, `message`, `fieldErrors`, `timestamp`, `path`를 제공합니다.
 - 서버 응답이 없는 timeout과 네트워크 오류는 각각 `REQUEST_TIMEOUT`, `NETWORK_ERROR` Code를 사용합니다.
 - 로딩 상태는 전역 인터셉터가 아니라 요청을 호출하는 Page 또는 Composable에서 관리합니다.
 
 ```js
-import { trialApi } from '@/api/trialApi.js'
+import { getSnapshot } from '@/apis/trialApi.js'
 
-const snapshot = await trialApi.getSnapshot(trialId)
+const snapshot = await getSnapshot(trialId)
 ```
 
 화면은 `ApiError.code`를 기준으로 오류 상태를 분기합니다.
 
 ```js
+import { getResults } from '@/apis/trialApi.js'
+
 try {
-  return await trialApi.getResults(trialId)
+  return await getResults(trialId)
 } catch (error) {
   if (error.code === 'RESULT_NOT_FOUND') {
     // 결과 준비 중 화면 처리
@@ -135,7 +148,7 @@ try {
 ```
 
 ```text
-Page → Feature → Domain API → Axios Client
+Page → Composable → Domain API → HTTP Client
      → Backend
      → 화면 갱신
 ```
