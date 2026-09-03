@@ -1,0 +1,59 @@
+package com.skala.team6.webmini.trial;
+
+import com.skala.team6.webmini.common.exception.ApiException;
+import com.skala.team6.webmini.common.exception.ErrorCode;
+import com.skala.team6.webmini.common.model.TrialSide;
+import com.skala.team6.webmini.database.entity.TrialPartyEntity;
+import com.skala.team6.webmini.database.entity.TrialStatementEntity;
+import com.skala.team6.webmini.database.repository.TrialPartyRepository;
+import com.skala.team6.webmini.database.repository.TrialRepository;
+import com.skala.team6.webmini.database.repository.TrialStatementRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class TrialArgumentService {
+    private final TrialRepository trialRepository;
+    private final TrialPartyRepository trialPartyRepository;
+    private final TrialStatementRepository trialStatementRepository;
+    private final GuideAnswerService guideAnswerService;
+
+    public TrialArgumentService(
+            TrialRepository trialRepository,
+            TrialPartyRepository trialPartyRepository,
+            TrialStatementRepository trialStatementRepository,
+            GuideAnswerService guideAnswerService
+    ) {
+        this.trialRepository = trialRepository;
+        this.trialPartyRepository = trialPartyRepository;
+        this.trialStatementRepository = trialStatementRepository;
+        this.guideAnswerService = guideAnswerService;
+    }
+
+    @Transactional
+    public TrialStatementEntity updateDraft(
+            Long trialId,
+            TrialSide side,
+            UpdateArgumentDraftRequest request
+    ) {
+        TrialPartyEntity party = findParty(trialId, side);
+        TrialStatementEntity statement = trialStatementRepository.findByTrialPartyId(party.getId())
+                .orElseThrow(() -> new ApiException(ErrorCode.ARGUMENT_DRAFT_REQUIRED));
+        if (!guideAnswerService.areAllAnswered(party.getId())) {
+            throw new ApiException(ErrorCode.GUIDE_ANSWERS_INCOMPLETE);
+        }
+        statement.updateArgumentDraft(
+                request.factSummary().trim(),
+                request.argumentText().trim()
+        );
+        return trialStatementRepository.save(statement);
+    }
+
+    private TrialPartyEntity findParty(Long trialId, TrialSide side) {
+        if (!trialRepository.existsById(trialId)) {
+            throw new ApiException(ErrorCode.TRIAL_NOT_FOUND);
+        }
+        return trialPartyRepository.findByTrialIdAndSide(trialId, side)
+                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TRIAL_SIDE));
+    }
+}

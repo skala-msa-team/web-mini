@@ -110,4 +110,17 @@ public class TrialStatementEntity {
     public String getDesiredResolution() {
         return desiredResolution;
     }
+
+    public String getFactSummary() {
+        return factSummary;
+    }
+
+    public String getArgumentText() {
+        return argumentText;
+    }
+
+    public void updateArgumentDraft(String factSummary, String argumentText) {
+        this.factSummary = factSummary;
+        this.argumentText = argumentText;
+    }
 }

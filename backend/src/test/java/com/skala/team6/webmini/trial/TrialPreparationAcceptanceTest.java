@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -145,6 +146,33 @@ class TrialPreparationAcceptanceTest {
                 .andExpect(jsonPath("$.code").value("GUIDE_QUESTION_NOT_FOUND"));
     }
 
+    @Test
+    void savesArgumentDraftOnlyAfterAllGuideAnswers() throws Exception {
+        saveStatement(TrialSide.A, "A측 상황").andExpect(status().isOk());
+        AiGuideQuestionEntity question = questionRepository.save(
+                new AiGuideQuestionEntity(aParty, 1, "A측 질문"));
+
+        updateArgument(TrialSide.A, "사실 요약", "변론 내용")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("GUIDE_ANSWERS_INCOMPLETE"));
+
+        question.answer("완료된 답변", OffsetDateTime.now());
+        questionRepository.save(question);
+
+        updateArgument(TrialSide.A, " 사실 요약 ", " 변론 내용 ")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.side").value("A"))
+                .andExpect(jsonPath("$.data.factSummary").value("사실 요약"))
+                .andExpect(jsonPath("$.data.argumentText").value("변론 내용"));
+
+        entityManager.flush();
+        entityManager.clear();
+        var saved = trialStatementRepository.findByTrialPartyId(aParty.getId()).orElseThrow();
+        assertThat(saved.getFactSummary()).isEqualTo("사실 요약");
+        assertThat(saved.getArgumentText()).isEqualTo("변론 내용");
+        assertThat(trialStatementRepository.findByTrialPartyId(bParty.getId())).isEmpty();
+    }
+
     private org.springframework.test.web.servlet.ResultActions saveStatement(
             TrialSide side,
             String situation
@@ -176,5 +204,18 @@ class TrialPreparationAcceptanceTest {
                 .header("X-Demo-User-Id", DEMO_USER_ID)
                 .contentType("application/json")
                 .content("{\"answers\":" + answers + "}"));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions updateArgument(
+            TrialSide side,
+            String factSummary,
+            String argumentText
+    ) throws Exception {
+        return mockMvc.perform(put("/api/v1/trials/{trialId}/parties/{side}/argument-draft", trial.getId(), side)
+                .header("X-Demo-User-Id", DEMO_USER_ID)
+                .contentType("application/json")
+                .content("""
+                        {"factSummary":"%s","argumentText":"%s"}
+                        """.formatted(factSummary, argumentText)));
     }
 }

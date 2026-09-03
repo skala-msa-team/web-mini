@@ -34,15 +34,18 @@ public class TrialController {
     private final TrialQueryService trialQueryService;
     private final TrialStatementService trialStatementService;
     private final GuideAnswerService guideAnswerService;
+    private final TrialArgumentService trialArgumentService;
 
     public TrialController(
             TrialQueryService trialQueryService,
             TrialStatementService trialStatementService,
-            GuideAnswerService guideAnswerService
+            GuideAnswerService guideAnswerService,
+            TrialArgumentService trialArgumentService
     ) {
         this.trialQueryService = trialQueryService;
         this.trialStatementService = trialStatementService;
         this.guideAnswerService = guideAnswerService;
+        this.trialArgumentService = trialArgumentService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -180,11 +183,9 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody UpdateArgumentDraftRequest request
     ) {
+        var statement = trialArgumentService.updateDraft(trialId, side, request);
         return ResponseEntity.ok(ApiResponse.of(new ArgumentDraftResponse(
-                side,
-                request.factSummary(),
-                request.argumentText()
-        )));
+                side, statement.getFactSummary(), statement.getArgumentText())));
     }
 
     @Operation(summary = "변론문 최종 확인")
