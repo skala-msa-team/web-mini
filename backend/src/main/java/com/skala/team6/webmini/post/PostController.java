@@ -2,6 +2,9 @@ package com.skala.team6.webmini.post;
 
 import com.skala.team6.webmini.common.api.ApiResponse;
 import com.skala.team6.webmini.common.model.TrialStatus;
+import com.skala.team6.webmini.database.entity.PostEntity;
+import com.skala.team6.webmini.demo.DemoUserContext;
+import com.skala.team6.webmini.demo.DemoUserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,18 +23,25 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/posts")
 public class PostController {
+    private final PostService postService;
+
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
 
     @Operation(summary = "갈등 게시글 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<CreatePostResponse>> createPost(
+            @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody CreatePostRequest request
     ) {
+        PostEntity post = postService.createPost(demoUser.demoUserId(), request);
         CreatePostResponse response = new CreatePostResponse(
-                10L,
-                request.title(),
-                request.content(),
-                request.relationshipType(),
-                request.trialRequested()
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                post.getRelationshipType(),
+                post.isTrialRequested()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(response));
     }

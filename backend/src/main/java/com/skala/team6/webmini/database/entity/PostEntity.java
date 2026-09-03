@@ -56,4 +56,28 @@ public class PostEntity {
         this.relationshipType = relationshipType;
         this.trialRequested = trialRequested;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public UserEntity getAuthor() {
+        return author;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public RelationshipType getRelationshipType() {
+        return relationshipType;
+    }
+
+    public boolean isTrialRequested() {
+        return trialRequested;
+    }
 }

@@ -4,7 +4,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import com.skala.team6.webmini.post.PostService;
+import com.skala.team6.webmini.database.repository.PostRepository;
+import com.skala.team6.webmini.database.repository.UserRepository;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -16,6 +20,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration")
 @AutoConfigureMockMvc
 class ApiDocumentationSmokeTest {
+
+    @MockitoBean
+    private PostService postService;
+    @MockitoBean
+    private UserRepository userRepository;
+    @MockitoBean
+    private PostRepository postRepository;
 
     @Autowired
     private MockMvc mockMvc;
