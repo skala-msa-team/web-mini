@@ -15,17 +15,29 @@ import com.skala.team6.webmini.trial.GuideAnswerService;
 import com.skala.team6.webmini.trial.TrialArgumentService;
 import com.skala.team6.webmini.trial.TrialStartService;
 import com.skala.team6.webmini.trial.TrialStatementService;
+import com.skala.team6.webmini.trial.TrialPreparationAiService;
 import com.skala.team6.webmini.trial.TrialChatQueryService;
 import com.skala.team6.webmini.trial.TrialChatService;
+import com.skala.team6.webmini.trial.TrialEventWriter;
+import com.skala.team6.webmini.trial.TrialPhaseService;
+import com.skala.team6.webmini.trial.TrialVoteService;
+import com.skala.team6.webmini.trial.TrialResultService;
+import com.skala.team6.webmini.database.repository.VoteRepository;
+import com.skala.team6.webmini.common.exception.ApiException;
+import com.skala.team6.webmini.common.exception.ErrorCode;
+import com.skala.team6.webmini.common.model.TrialSide;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.autoconfigure.exclude="
+@SpringBootTest(properties = {"spring.autoconfigure.exclude="
         + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
         + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
-        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration")
+        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration",
+        "app.trial.scheduler-enabled=false"})
 @AutoConfigureMockMvc
 class ApiDocumentationSmokeTest {
 
@@ -48,9 +60,21 @@ class ApiDocumentationSmokeTest {
     @MockitoBean
     private TrialStartService trialStartService;
     @MockitoBean
+    private TrialPreparationAiService trialPreparationAiService;
+    @MockitoBean
     private TrialChatQueryService trialChatQueryService;
     @MockitoBean
     private TrialChatService trialChatService;
+    @MockitoBean
+    private TrialEventWriter trialEventWriter;
+    @MockitoBean
+    private TrialPhaseService trialPhaseService;
+    @MockitoBean
+    private TrialVoteService trialVoteService;
+    @MockitoBean
+    private TrialResultService trialResultService;
+    @MockitoBean
+    private VoteRepository voteRepository;
 
     @Autowired
     private MockMvc mockMvc;
@@ -84,5 +108,17 @@ class ApiDocumentationSmokeTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("DEMO_USER_REQUIRED"))
                 .andExpect(jsonPath("$.path").value("/api/v1/trials/10/parties/A/statement"));
+    }
+
+    @Test
+    void convertsMockAiFailureToCommonErrorResponse() throws Exception {
+        when(trialPreparationAiService.createGuideQuestions(10L, TrialSide.A))
+                .thenThrow(new ApiException(ErrorCode.MOCK_AI_RESPONSE_INVALID));
+
+        mockMvc.perform(post("/api/v1/trials/10/parties/A/guide-questions"))
+                .andExpect(status().is(422))
+                .andExpect(jsonPath("$.code").value("MOCK_AI_RESPONSE_INVALID"))
+                .andExpect(jsonPath("$.path")
+                        .value("/api/v1/trials/10/parties/A/guide-questions"));
     }
 }

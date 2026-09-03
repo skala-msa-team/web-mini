@@ -1,9 +1,15 @@
 <script setup>
+import { computed } from 'vue'
 import { Scale, UsersRound } from '@lucide/vue'
 
-defineProps({
+const props = defineProps({
   aiResult: { type: Object, required: true },
   juryResult: { type: Object, required: true },
+})
+
+const resultsAgree = computed(() => {
+  if (!props.aiResult.winnerSide || !props.juryResult.winnerSide) return null
+  return props.aiResult.winnerSide === props.juryResult.winnerSide
 })
 </script>
 
@@ -14,30 +20,29 @@ defineProps({
         <span>두 판단을 독립적으로 확인하세요</span>
         <h2 id="comparison-title">판결 결과 비교 <small>(AI vs 배심원)</small></h2>
       </div>
-      <span class="comparison-badge">판단 불일치</span>
+      <span class="comparison-badge" :class="{ 'comparison-badge--agree': resultsAgree }">
+        {{ resultsAgree === null ? '판단 비교 불가' : resultsAgree ? '판단 일치' : '판단 불일치' }}
+      </span>
     </header>
 
     <div class="comparison-grid">
       <article class="result-column">
         <h3><Scale :size="18" /> AI 판결</h3>
-        <div class="result-row">
-          <div><span>A측 승소</span><strong>{{ aiResult.sideA }}%</strong></div>
-          <div class="track"><span class="ai-side-a" :style="{ width: `${aiResult.sideA}%` }"></span></div>
+        <div class="ai-winner" role="status">
+          <span>승소 측</span>
+          <strong>{{ aiResult.winnerSide ? `${aiResult.winnerSide}측` : '미정' }}</strong>
         </div>
-        <div class="result-row">
-          <div><span>B측 승소</span><strong>{{ aiResult.sideB }}%</strong></div>
-          <div class="track"><span class="ai-side-b" :style="{ width: `${aiResult.sideB}%` }"></span></div>
-        </div>
+        <p class="ai-note">과실 비율은 위의 AI 판단 과실 비율 카드에서 확인할 수 있습니다.</p>
       </article>
 
       <article class="result-column jury-column">
         <h3><UsersRound :size="18" /> 배심원 투표 결과</h3>
         <div class="result-row">
-          <div><span>A측 승소</span><strong>{{ juryResult.sideA }}%</strong></div>
+          <div><span>A측 승소 <small v-if="juryResult.aVotes !== undefined">({{ juryResult.aVotes.toLocaleString('ko-KR') }}표)</small></span><strong>{{ juryResult.sideA }}%</strong></div>
           <div class="track"><span class="jury-side-a" :style="{ width: `${juryResult.sideA}%` }"></span></div>
         </div>
         <div class="result-row">
-          <div><span>B측 승소</span><strong>{{ juryResult.sideB }}%</strong></div>
+          <div><span>B측 승소 <small v-if="juryResult.bVotes !== undefined">({{ juryResult.bVotes.toLocaleString('ko-KR') }}표)</small></span><strong>{{ juryResult.sideB }}%</strong></div>
           <div class="track"><span class="jury-side-b" :style="{ width: `${juryResult.sideB}%` }"></span></div>
         </div>
         <p>총 참여 배심원 {{ juryResult.participantCount.toLocaleString('ko-KR') }}명</p>
@@ -66,14 +71,14 @@ header {
 
 header > div > span {
   color: var(--ds-color-justice-blue);
-  font-size: 0.64rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
 h2 {
   margin: 1px 0 0;
   color: var(--ds-color-primary);
-  font-size: 1rem;
+  font-size: 1.35rem;
 }
 
 h2 small {
@@ -85,8 +90,13 @@ h2 small {
   border-radius: var(--ds-radius-full);
   background: #fff1e9;
   color: #b65020;
-  font-size: 0.64rem;
+  font-size: 0.9rem;
   font-weight: 700;
+}
+
+.comparison-badge--agree {
+  background: #e8f7ed;
+  color: #207443;
 }
 
 .comparison-grid {
@@ -112,7 +122,7 @@ h3 {
   gap: 8px;
   color: var(--ds-color-on-surface-variant);
   font-family: var(--ds-font-body);
-  font-size: 0.9rem;
+  font-size: 1.15rem;
 }
 
 .result-row + .result-row {
@@ -124,12 +134,12 @@ h3 {
   display: flex;
   justify-content: space-between;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.72rem;
+  font-size: 1rem;
 }
 
 .result-row strong {
   color: var(--ds-color-primary);
-  font-size: 0.88rem;
+  font-size: 1.15rem;
 }
 
 .result-row:first-of-type strong {
@@ -149,23 +159,41 @@ h3 {
   border-radius: inherit;
 }
 
-.ai-side-a,
 .jury-side-a {
   background: var(--ds-color-justice-blue);
-}
-
-.ai-side-b {
-  background: var(--ds-color-primary);
 }
 
 .jury-side-b {
   background: #8a95a5;
 }
 
+.ai-winner {
+  min-height: 92px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--ds-radius-default);
+  background: #eef4ff;
+  color: var(--ds-color-on-surface-variant);
+}
+
+.ai-winner strong {
+  color: var(--ds-color-justice-blue);
+  font-size: 1.45rem;
+}
+
+.ai-note {
+  margin: 14px 0 0;
+  color: #7e8896;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .jury-column > p {
   margin: 15px 0 0;
   color: #7e8896;
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   text-align: right;
 }
 

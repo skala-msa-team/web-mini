@@ -27,7 +27,7 @@ const presentation = computed(() => {
         visible: true,
         tone: 'loading',
         title: 'Live 재판에 연결하고 있습니다.',
-        description: '현재 재판 상태와 이전 채팅을 불러오는 중입니다.',
+        description: '현재 재판 상태와 이전 진행 내역을 불러오는 중입니다.',
         retryable: false,
       }
     case CONNECTION_STATUS.RECONNECTING:
@@ -92,13 +92,13 @@ const presentation = computed(() => {
 
 .connection-status strong {
   display: block;
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 .connection-status p {
   margin: 3px 0 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.7rem;
+  font-size: 0.9rem;
 }
 
 .status-icon {
@@ -142,7 +142,7 @@ button {
   border-radius: var(--ds-radius-default);
   background: white;
   color: var(--ds-color-error);
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
 }

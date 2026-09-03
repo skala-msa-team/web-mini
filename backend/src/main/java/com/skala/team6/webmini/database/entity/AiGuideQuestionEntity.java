@@ -55,6 +55,14 @@ public class AiGuideQuestionEntity {
         return id;
     }
 
+    public int getSequenceNo() {
+        return sequenceNo;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
     public String getAnswer() {
         return answer;
     }

@@ -8,16 +8,41 @@ const props = defineProps({
   otherParty: { type: Object, default: null },
 })
 
-const emit = defineEmits(['update:party', 'back', 'confirm'])
+const emit = defineEmits(['update:party', 'back', 'prepare', 'generate-draft', 'confirm'])
 const chatInput = ref('')
 const chatLog = useTemplateRef('chatLog')
-const guideQuestions = [
-  '그 상황에서 가장 서운하거나 힘들었던 점은 무엇이었나요?',
-  '상대방에게 바라는 변화나 원하는 해결 방향을 알려주세요.',
+const statementFields = [
+  { key: 'incidentTime', question: '사건이 언제 발생했는지 알려주세요.' },
+  { key: 'situation', question: '당시 어떤 상황이었는지 구체적으로 설명해주세요.' },
+  { key: 'counterpartAction', question: '그 상황에서 상대방은 어떻게 행동했나요?' },
+  { key: 'ownAction', question: '그때 본인은 어떻게 행동했나요?' },
+  { key: 'afterConversation', question: '사건 이후 두 분은 어떤 대화를 나눴나요?' },
+  { key: 'desiredResolution', question: '이번 재판을 통해 원하는 해결 방향은 무엇인가요?' },
 ]
 
 const userMessages = computed(() => props.party.messages.filter((message) => message.role === 'USER'))
-const conversationComplete = computed(() => userMessages.value.length >= guideQuestions.length + 1)
+const statementMessages = computed(() => userMessages.value.slice(0, statementFields.length))
+const statementComplete = computed(() => statementMessages.value.length === statementFields.length)
+const guideComplete = computed(() =>
+  props.party.statementSaved &&
+  props.party.guideAnswers.length === props.party.guideQuestions.length,
+)
+const inputDisabled = computed(() =>
+  props.party.pending ||
+  props.party.draftGenerated ||
+  (!props.party.statementSaved && statementComplete.value) ||
+  (props.party.statementSaved && guideComplete.value),
+)
+const actionDisabled = computed(() =>
+  props.party.pending ||
+  props.party.draftGenerated ||
+  (!props.party.statementSaved ? !statementComplete.value : !guideComplete.value),
+)
+const actionLabel = computed(() => {
+  if (props.party.pending) return '처리 중...'
+  if (!props.party.statementSaved) return '진술 저장하고 추가 질문 받기'
+  return props.party.draftGenerated ? '변론문 생성 완료' : '진술서 작성 완료'
+})
 
 function updateParty(patch) {
   emit('update:party', { ...props.party, ...patch })
@@ -30,36 +55,51 @@ async function scrollChatToBottom() {
 
 function sendMessage() {
   const content = chatInput.value.trim()
-  if (!content || conversationComplete.value) return
+  if (!content || inputDisabled.value) return
 
   const messages = [...props.party.messages, { id: crypto.randomUUID(), role: 'USER', content }]
-  const answeredCount = messages.filter((message) => message.role === 'USER').length
-  const nextQuestion = guideQuestions[answeredCount - 1]
+  let guideAnswers = props.party.guideAnswers
+  let nextQuestion
+
+  if (props.party.statementSaved) {
+    const currentQuestion = props.party.guideQuestions[props.party.guideAnswers.length]
+    guideAnswers = [
+      ...props.party.guideAnswers,
+      { questionId: currentQuestion.questionId, answer: content },
+    ]
+    nextQuestion = props.party.guideQuestions[guideAnswers.length]?.question
+  } else {
+    const answeredCount = messages.filter((message) => message.role === 'USER').length
+    nextQuestion = statementFields[answeredCount]?.question
+  }
 
   messages.push({
     id: crypto.randomUUID(),
     role: 'ASSISTANT',
     content:
       nextQuestion ??
-      '필요한 내용을 모두 확인했습니다. 아래의 ‘진술서 작성 완료’를 누르면 대화를 바탕으로 초안을 정리해드릴게요.',
+      (props.party.statementSaved
+        ? '추가 답변을 모두 확인했습니다. 아래 버튼을 누르면 변론문을 정리해드릴게요.'
+        : '기본 진술을 모두 확인했습니다. 아래 버튼을 눌러 추가 질문을 받아주세요.'),
   })
 
   chatInput.value = ''
-  updateParty({ messages, draftGenerated: false })
+  updateParty({ messages, guideAnswers, draftGenerated: false })
   scrollChatToBottom()
 }
 
-// #221에서 Mock AI API 응답으로 교체할 임시 초안 생성 동작입니다.
-function createMockDraft() {
-  if (!conversationComplete.value) return
+function advancePreparation() {
+  if (actionDisabled.value) return
 
-  const answers = userMessages.value.map((message) => message.content)
-  updateParty({
-    draftGenerated: true,
-    caseOverview: `${props.side}측은 ${answers[0]} 이 과정에서 양측의 기대와 상황 인식이 달라 갈등이 발생한 것으로 파악됩니다.`,
-    keyPoints: [answers[1], answers[2]],
-    argumentText: `${props.side}측은 ${answers[1]}고 설명합니다. 이를 해결하기 위해 ${answers[2]}는 방향을 제안합니다.`,
-  })
+  if (!props.party.statementSaved) {
+    const statement = Object.fromEntries(
+      statementFields.map((field, index) => [field.key, statementMessages.value[index].content]),
+    )
+    emit('prepare', statement)
+    return
+  }
+
+  emit('generate-draft', props.party.guideAnswers)
 }
 </script>
 
@@ -108,12 +148,12 @@ function createMockDraft() {
           <input
             v-model="chatInput"
             class="min-w-0 flex-1 rounded-lg border border-input bg-muted px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed"
-            :disabled="conversationComplete"
-            :placeholder="conversationComplete ? '대화가 완료되었습니다.' : '상황을 설명해주세요...'"
+            :disabled="inputDisabled"
+            :placeholder="inputDisabled ? '아래 버튼을 눌러 다음 단계로 진행해주세요.' : '상황을 설명해주세요...'"
           />
           <button
             class="rounded-lg bg-primary px-5 text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="!chatInput.trim() || conversationComplete"
+            :disabled="!chatInput.trim() || inputDisabled"
             type="submit"
             aria-label="메시지 전송"
           >
@@ -123,12 +163,16 @@ function createMockDraft() {
 
         <button
           class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-primary px-4 py-2.5 font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-40"
-          :disabled="!conversationComplete"
+          :disabled="actionDisabled"
           type="button"
-          @click="createMockDraft"
+          @click="advancePreparation"
         >
-          <Sparkles class="size-4" /> {{ party.draftGenerated ? '진술서 다시 작성' : '진술서 작성 완료' }}
+          <Sparkles class="size-4" /> {{ actionLabel }}
         </button>
+
+        <p v-if="party.error" class="mt-3 text-sm text-destructive" role="alert">
+          {{ party.error }}
+        </p>
       </div>
     </section>
 
@@ -161,14 +205,14 @@ function createMockDraft() {
     </section>
 
     <div class="flex justify-between border-t border-border pt-4 lg:col-span-2">
-      <button class="rounded-lg border border-border bg-card px-5 py-2.5" type="button" @click="$emit('back')">이전</button>
+      <button class="rounded-lg border border-border bg-card px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-40" type="button" :disabled="party.pending" @click="$emit('back')">이전</button>
       <button
         class="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        :disabled="!party.draftGenerated || !party.argumentText.trim()"
+        :disabled="party.pending || !party.draftGenerated || !party.caseOverview.trim() || !party.argumentText.trim()"
         type="button"
         @click="$emit('confirm')"
       >
-        <CheckCircle2 class="size-4" /> 진술 확정
+        <CheckCircle2 class="size-4" /> {{ party.pending ? '저장 중...' : '진술 확정' }}
       </button>
     </div>
   </div>

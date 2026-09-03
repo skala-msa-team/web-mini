@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.OffsetDateTime;
 
 import com.skala.team6.webmini.common.model.TrialStatus;
 import com.skala.team6.webmini.common.model.Visibility;
@@ -32,6 +33,14 @@ public interface TrialRepository extends JpaRepository<TrialEntity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select trial from TrialEntity trial where trial.id = :trialId")
     Optional<TrialEntity> findByIdForUpdate(@Param("trialId") Long trialId);
+
+    @Query("select trial.id from TrialEntity trial "
+            + "where trial.status in :statuses and trial.phaseEndsAt <= :now")
+    List<Long> findExpiredTrialIds(@Param("statuses") List<TrialStatus> statuses,
+                                   @Param("now") OffsetDateTime now);
+
+    @Query("select trial.id from TrialEntity trial where trial.status = :status")
+    List<Long> findTrialIdsByStatus(@Param("status") TrialStatus status);
 
     @EntityGraph(attributePaths = "post")
     Page<TrialEntity> findByVisibilityAndStatusIn(
