@@ -117,14 +117,22 @@ PREPARING → INTRODUCTION → A_ARGUMENT → B_ARGUMENT → VOTING → VERDICT 
 │   ├── components.json # shadcn-vue CLI 설정
 │   ├── src/app/        # App 진입점과 Router
 │   ├── src/assets/     # 디자인 토큰과 공통 Style
-│   ├── src/components/ # shadcn 기본 UI와 공통 조합 UI
-│   ├── src/api/        # API 통신 인터페이스 뼈대(도메인 확정 후 보완)
+│   ├── src/components/ # shadcn 기본 UI와 도메인 조합 UI
+│   ├── src/apis/       # API별 순수 요청 함수
+│   ├── src/lib/        # Axios/HTTP/STOMP 등 외부 의존 로직
+│   ├── src/utils/      # 공용 순수 함수
+│   ├── src/consts/     # 도메인 상수와 매직넘버
+│   ├── src/mock/       # 도메인별 Demo 목 데이터
+│   ├── src/stores/     # 화면 상태
+│   ├── src/pages/      # 라우트 화면
 │   └── ...             # Vue 3 + Vite 프로젝트
 ├── backend/
 │   ├── .env.example    # Backend 환경변수 예시
 │   ├── AGENTS.md       # Backend 작업 규칙
-│   ├── compose.yaml    # 로컬 개발용 PostgreSQL 17
+│   ├── Dockerfile      # Spring Boot 이미지 빌드
+│   ├── compose.yaml    # PostgreSQL 단독 실행용
 │   └── ...             # Spring Boot 최소 프로젝트
+├── compose.yaml       # PostgreSQL·Backend·Frontend 통합 실행
 ├── docs/
 │   ├── AGENTS.md       # 설계 문서 작업 규칙
 │   ├── README.md       # docs 책임과 자산 안내
@@ -143,7 +151,21 @@ PREPARING → INTRODUCTION → A_ARGUMENT → B_ARGUMENT → VOTING → VERDICT 
 - Java 21
 - Docker와 Docker Compose
 
-Frontend:
+전체 서비스 Docker 실행:
+
+```bash
+docker compose up -d --build
+```
+
+실행 후 Frontend는 `http://localhost:8081`에서 접속합니다. 루트 Compose는 PostgreSQL, Spring Boot Backend, Nginx로 제공되는 Frontend를 함께 실행하며 `/api`와 `/ws`를 Backend로 프록시합니다.
+
+종료:
+
+```bash
+docker compose down
+```
+
+Frontend 개별 개발 실행:
 
 ```bash
 cd frontend
@@ -154,7 +176,7 @@ npm run dev
 
 디자인 토큰과 shadcn-vue 컴포넌트 추가 방법은 [`frontend/README.md`](frontend/README.md)의 `디자인 시스템과 shadcn-vue` 항목을 따릅니다. shadcn-vue 초기화는 완료되어 있으므로 `init`을 다시 실행하지 않습니다.
 
-Backend:
+Backend와 PostgreSQL 개별 개발 실행:
 
 ```bash
 cd backend
@@ -166,7 +188,7 @@ set +a
 ./gradlew bootRun
 ```
 
-`compose.yaml`은 로컬 개발용 PostgreSQL 17만 실행하며 Backend 애플리케이션은 컨테이너화하지 않습니다. 최초 실행 시 Flyway가 확정 Demo Schema를 자동으로 적용하고, PostgreSQL 데이터는 `webmini-postgres-data` Volume에 유지됩니다.
+루트 `compose.yaml`은 세 서비스를 함께 실행하고, `backend/compose.yaml`은 PostgreSQL만 실행합니다. 최초 실행 시 Flyway가 확정 Demo Schema를 자동으로 적용하고, PostgreSQL 데이터는 Compose Volume에 유지됩니다.
 
 PostgreSQL 상태와 종료 방법:
 
@@ -177,7 +199,7 @@ docker compose down
 
 `docker compose down`은 Volume을 보존합니다. Database를 완전히 초기화할 때만 `docker compose down -v`를 사용하며, 이 명령은 로컬 PostgreSQL 데이터를 삭제합니다.
 
-호스트의 5432 Port를 다른 PostgreSQL이 사용 중이면 `.env`에서 `DB_PORT`와 `DB_URL`을 같은 Port로 변경합니다.
+개별 개발에서 호스트의 5432 Port를 다른 PostgreSQL이 사용 중이면 `.env`에서 `DB_PORT`와 `DB_URL`을 같은 Port로 변경합니다. 루트 Compose를 사용할 때는 Compose가 Backend 컨테이너에 주입하는 `DB_URL`을 호스트 주소로 바꾸지 않습니다.
 
 ```dotenv
 DB_PORT=5433
@@ -188,9 +210,9 @@ DB_URL=jdbc:postgresql://localhost:5433/webmini
 
 | 영역 | 변수 | 예시 | 용도 |
 | --- | --- | --- | --- |
-| Frontend | `VITE_API_BASE_URL` | `http://localhost:8080` | Backend 기본 URL |
+| Frontend | `VITE_API_BASE_URL` | `/api/v1` 또는 `http://localhost:8080/api/v1` | Docker 통합 실행 또는 Backend 개별 실행용 REST Base URL |
 | Backend | `SERVER_PORT` | `8080` | Spring Boot 실행 Port |
-| Backend | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | REST API와 STOMP Endpoint 허용 Origin |
+| Backend | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:8081` | REST API와 STOMP Endpoint 허용 Origin |
 | Backend | `APP_DEMO_USER_HEADER_NAME` | `X-Demo-User-Id` | Demo 사용자 식별 Header 이름 |
 | Backend | `APP_WEBSOCKET_ENDPOINT` | `/ws` | STOMP Handshake Endpoint |
 | Backend | `APP_WEBSOCKET_HEARTBEAT` | `10000,10000` | STOMP Heartbeat 송수신 간격 |
@@ -211,7 +233,7 @@ Backend에는 [backend/.env.example](backend/.env.example)에 실행 예시를 �
 
 ### Backend WebSocket/STOMP 기본값
 
-현재 Backend에는 Demo 재판 실시간 연결을 위한 최소 WebSocket/STOMP 스캐폴딩이 포함되어 있습니다.
+현재 Backend에는 Demo 재판 실시간 연결과 재판 진행을 위한 WebSocket/STOMP 구현이 포함되어 있습니다.
 
 - Handshake Endpoint: `/ws`
 - Application Prefix: `/app`
@@ -220,7 +242,7 @@ Backend에는 [backend/.env.example](backend/.env.example)에 실행 예시를 �
 - 개인 오류 Queue: `/user/queue/errors`
 - Demo 사용자 식별: `CONNECT` 프레임의 `X-Demo-User-Id`
 
-현재 구현은 Demo 사용자 식별, 기본 Broker 설정, 개인 오류 Queue, 채팅용 최소 `@MessageMapping` 스캐폴딩까지 포함합니다. 재판 상태 전이, 채팅 저장, Event 저장과 Commit 이후 전송 같은 도메인 비즈니스 로직은 담당 Issue에서 이어서 구현합니다.
+현재 구현은 Demo 사용자 식별, 기본 Broker 설정, 개인 오류 Queue, 채팅 `@MessageMapping`, 재판 상태 전이, 채팅·Event 저장, Commit 이후 Broadcast를 포함합니다.
 
 간단한 로컬 확인 예시:
 
