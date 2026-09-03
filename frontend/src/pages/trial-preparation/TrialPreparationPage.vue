@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import PartyStatementStep from '@/features/trial/components/PartyStatementStep.vue'
 import TrialBasicInformation from '@/features/trial/components/TrialBasicInformation.vue'
 import TrialFinalConfirmation from '@/features/trial/components/TrialFinalConfirmation.vue'
@@ -7,12 +7,28 @@ import TrialPreparationHeader from '@/features/trial/components/TrialPreparation
 import TrialStepIndicator from '@/features/trial/components/TrialStepIndicator.vue'
 
 const currentStep = ref(1)
+const TRIAL_DRAFT_STORAGE_KEY = 'love-war:trial-draft'
 
 const trial = reactive({
   title: '',
   aDisplayName: '',
   bDisplayName: '',
   summary: '',
+})
+
+onMounted(() => {
+  const storedDraft = sessionStorage.getItem(TRIAL_DRAFT_STORAGE_KEY)
+
+  if (!storedDraft) return
+
+  try {
+    const draft = JSON.parse(storedDraft)
+
+    trial.title = draft.title ?? ''
+    trial.summary = draft.content ?? ''
+  } catch {
+    sessionStorage.removeItem(TRIAL_DRAFT_STORAGE_KEY)
+  }
 })
 
 const parties = reactive({
