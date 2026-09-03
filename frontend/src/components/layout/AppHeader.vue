@@ -1,20 +1,24 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Bell, Gavel, UserRound } from '@lucide/vue'
+import { Bell, Scale, UserRound } from '@lucide/vue'
 
 const route = useRoute()
 const trialId = computed(() => route.params.trialId ?? '1')
+const liveTrialRouteNames = ['live-trial', 'trial-voting', 'trial-result']
 
 const navigation = computed(() => [
-  { label: '홈', href: '#home' },
-  { label: '인기게시글', href: '#popular-posts' },
+  { label: '홈', to: { name: 'home' }, active: route.name === 'home' },
+  { label: '인기게시글', to: { name: 'home', hash: '#popular-posts' } },
   {
     label: 'Live 재판',
     to: { name: 'live-trial', params: { trialId: trialId.value } },
-    active: true,
+    active: liveTrialRouteNames.includes(route.name),
   },
-  { label: '커뮤니티 가이드라인', href: '#community-guide' },
+  {
+    label: '커뮤니티 가이드라인',
+    to: { name: 'home', hash: '#community-guidelines' },
+  },
   { label: '마이페이지', href: '#my-page' },
 ])
 </script>
@@ -24,10 +28,10 @@ const navigation = computed(() => [
     <div class="header-inner">
       <RouterLink
         class="brand"
-        :to="{ name: 'live-trial', params: { trialId } }"
+        :to="{ name: 'home' }"
         aria-label="사랑과 전쟁터 홈"
       >
-        <span class="brand-mark"><Gavel :size="21" stroke-width="2.4" /></span>
+        <Scale class="brand-logo" :size="24" stroke-width="2.4" />
         <span>사랑과 전쟁터</span>
       </RouterLink>
 
@@ -82,21 +86,15 @@ const navigation = computed(() => [
   align-items: center;
   gap: 10px;
   width: fit-content;
-  color: var(--ds-color-primary);
+  color: var(--ds-color-verdict-blue);
   font-family: var(--ds-font-heading);
   font-size: 1.15rem;
   font-weight: 700;
   text-decoration: none;
 }
 
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--ds-color-primary);
-  color: white;
+.brand-logo {
+  color: var(--ds-color-verdict-blue);
 }
 
 .primary-nav {

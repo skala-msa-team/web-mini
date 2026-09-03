@@ -1,14 +1,14 @@
 <script setup>
-import { Gavel } from '@lucide/vue'
+import { Scale } from '@lucide/vue'
 </script>
 
 <template>
   <footer class="app-footer">
     <div class="footer-inner">
-      <a class="footer-brand" href="#live-trial">
-        <Gavel :size="19" />
+      <RouterLink class="footer-brand" :to="{ name: 'home' }">
+        <Scale :size="19" />
         <span>사랑과 전쟁터</span>
-      </a>
+      </RouterLink>
       <nav aria-label="하단 메뉴">
         <a href="#terms">이용약관</a>
         <a href="#privacy">개인정보처리방침</a>
@@ -42,7 +42,7 @@ import { Gavel } from '@lucide/vue'
   align-items: center;
   gap: 8px;
   width: fit-content;
-  color: var(--ds-color-primary);
+  color: var(--ds-color-verdict-blue);
   font-weight: 700;
   text-decoration: none;
 }

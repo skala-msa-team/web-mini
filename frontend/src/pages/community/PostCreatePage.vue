@@ -1,11 +1,13 @@
 <script setup>
 import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
 import { Bold, Image, Italic, Link, Scale } from "@lucide/vue";
 
 import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
 import { categoryTypes } from "@/features/community/mock/communityData.js";
 
 const TRIAL_DRAFT_STORAGE_KEY = "love-war:trial-draft";
+const router = useRouter();
 
 const category = ref("");
 const title = ref("");
@@ -25,6 +27,8 @@ function submitPost() {
       content: content.value.trim(),
     }),
   );
+
+  router.push({ name: "trial-preparation" });
 }
 </script>
 
