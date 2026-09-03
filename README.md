@@ -85,12 +85,12 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 | Frontend | Vue 3, Vite, JavaScript, Tailwind CSS 4, shadcn-vue, Vue Router, STOMP Client; HTTP Client 미정 |
 | Backend | Java 21, Spring Boot, Gradle, Web, Validation, WebSocket |
 | Realtime | WebSocket, STOMP |
-| Database | PostgreSQL |
+| Database | PostgreSQL 17, Flyway, Spring Data JPA |
 | AI | Mock AI 우선, 추후 Amazon Bedrock 연동 |
 | Design | Justice & Empathy 디자인 시스템, Google Stitch, Figma |
 | Lint | ESLint, Checkstyle |
 
-REST API, STOMP Destination, Database Schema, Demo 사용자 식별 방식과 AI 입출력 JSON 계약은 위 Notion 문서에서 확정되었습니다. 상태 관리·HTTP Client·Migration·API 문서화 등 확정되지 않은 Library는 도입하지 않습니다.
+REST API, STOMP Destination, Database Schema, Demo 사용자 식별 방식과 AI 입출력 JSON 계약은 위 Notion 문서에서 확정되었습니다. 상태 관리·HTTP Client 등 확정되지 않은 Library는 도입하지 않습니다.
 
 ## 핵심 아키텍처 원칙
 
@@ -123,6 +123,7 @@ PREPARING → INTRODUCTION → A_ARGUMENT → B_ARGUMENT → VOTING → VERDICT 
 ├── backend/
 │   ├── .env.example    # Backend 환경변수 예시
 │   ├── AGENTS.md       # Backend 작업 규칙
+│   ├── compose.yaml    # 로컬 개발용 PostgreSQL 17
 │   └── ...             # Spring Boot 최소 프로젝트
 ├── docs/
 │   ├── AGENTS.md       # 설계 문서 작업 규칙
@@ -140,6 +141,7 @@ PREPARING → INTRODUCTION → A_ARGUMENT → B_ARGUMENT → VOTING → VERDICT 
 - Node.js `^20.19.0 || ^22.13.0 || >=24`
 - npm
 - Java 21
+- Docker와 Docker Compose
 
 Frontend:
 
@@ -156,7 +158,30 @@ Backend:
 
 ```bash
 cd backend
+cp .env.example .env
+docker compose up -d
+set -a
+source .env
+set +a
 ./gradlew bootRun
+```
+
+`compose.yaml`은 로컬 개발용 PostgreSQL 17만 실행하며 Backend 애플리케이션은 컨테이너화하지 않습니다. 최초 실행 시 Flyway가 확정 Demo Schema를 자동으로 적용하고, PostgreSQL 데이터는 `webmini-postgres-data` Volume에 유지됩니다.
+
+PostgreSQL 상태와 종료 방법:
+
+```bash
+docker compose ps
+docker compose down
+```
+
+`docker compose down`은 Volume을 보존합니다. Database를 완전히 초기화할 때만 `docker compose down -v`를 사용하며, 이 명령은 로컬 PostgreSQL 데이터를 삭제합니다.
+
+호스트의 5432 Port를 다른 PostgreSQL이 사용 중이면 `.env`에서 `DB_PORT`와 `DB_URL`을 같은 Port로 변경합니다.
+
+```dotenv
+DB_PORT=5433
+DB_URL=jdbc:postgresql://localhost:5433/webmini
 ```
 
 현재 환경변수:
@@ -165,6 +190,11 @@ cd backend
 | --- | --- | --- | --- |
 | Frontend | `VITE_API_BASE_URL` | `http://localhost:8080` | Backend 기본 URL |
 | Backend | `SERVER_PORT` | `8080` | Spring Boot 실행 Port |
+| Backend | `DB_NAME` | `webmini` | Docker PostgreSQL Database 이름 |
+| Backend | `DB_PORT` | `5432` | Docker PostgreSQL 호스트 Port |
+| Backend | `DB_URL` | `jdbc:postgresql://localhost:5432/webmini` | Backend Database JDBC URL |
+| Backend | `DB_USERNAME` | `webmini` | 로컬 개발 Database 사용자 |
+| Backend | `DB_PASSWORD` | `webmini` | 로컬 개발 Database 비밀번호 예시 |
 
 실제 비밀값은 `.env` 또는 로컬 실행 환경에만 저장합니다. 새로운 환경변수가 확정되면 영역별 `.env.example`에는 변수명과 비밀값이 아닌 예시만 추가합니다. Spring Boot는 `.env` 파일을 자동으로 읽지 않으므로 Backend 값은 실행 환경변수로 전달합니다.
 
@@ -301,5 +331,5 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - [x] Demo ERD와 Database 제약조건 확정
 - [x] 재판 상태·STOMP Message 계약 확정
 - [x] Mock AI 입출력 JSON 계약 확정
-- [ ] Database와 Docker 구성
+- [x] PostgreSQL Schema, Flyway와 로컬 Docker Compose 구성
 - [ ] API, WebSocket/STOMP, Mock AI와 기능 구현
