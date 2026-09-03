@@ -153,6 +153,7 @@ async function submitVote() {
 
         <TrialChatPanel
           :messages="session.messages.value"
+          :current-user-id="session.demoUserId"
           :audience-count="finalVoteMock.viewerCount"
           :header-label="trialEnded ? '종료' : '실시간'"
           :disabled="interactionsDisabled"
@@ -194,7 +195,7 @@ async function submitVote() {
   border-radius: var(--ds-radius-default);
   background: var(--ds-color-error-container);
   color: var(--ds-color-on-error-container);
-  font-size: 0.78rem;
+  font-size: 1rem;
 }
 
 .voting-main {
@@ -241,7 +242,7 @@ async function submitVote() {
   border-radius: var(--ds-radius-full);
   background: #c92532;
   color: white;
-  font-size: 0.68rem;
+  font-size: 0.88rem;
 }
 
 .live-indicator i {
@@ -271,7 +272,7 @@ async function submitVote() {
 }
 
 .stream-caption span {
-  font-size: 0.67rem;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   opacity: 0.76;
@@ -280,14 +281,14 @@ async function submitVote() {
 .stream-caption h1 {
   margin: 5px 0 3px;
   color: white;
-  font-size: clamp(1.16rem, 2.3vw, 1.62rem);
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
   text-shadow: 0 2px 12px rgb(0 0 0 / 36%);
 }
 
 .stream-caption p {
   margin: 0;
   color: rgb(255 255 255 / 80%);
-  font-size: 0.75rem;
+  font-size: 0.95rem;
 }
 
 .voting-layout > :deep(.chat-panel) {

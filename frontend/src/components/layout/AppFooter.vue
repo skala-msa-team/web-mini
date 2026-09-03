@@ -34,7 +34,7 @@ import { Scale } from '@lucide/vue'
   align-items: center;
   gap: 24px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.75rem;
+  font-size: 0.95rem;
 }
 
 .footer-brand {

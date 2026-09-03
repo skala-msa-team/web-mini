@@ -194,7 +194,7 @@ function resetFilters() {
   border-radius: var(--ds-radius-md);
   background: var(--ds-color-surface-container-lowest);
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.82rem;
+  font-size: 1rem;
   text-align: center;
 }
 </style>

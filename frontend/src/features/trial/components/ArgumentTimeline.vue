@@ -86,7 +86,7 @@ h2 {
   align-items: center;
   gap: 9px;
   color: var(--ds-color-primary);
-  font-size: 1rem;
+  font-size: 1.2rem;
 }
 
 .phase-badge,
@@ -95,7 +95,7 @@ h2 {
   border-radius: var(--ds-radius-full);
   background: #dbeafe;
   color: #245284;
-  font-size: 0.69rem;
+  font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -146,12 +146,12 @@ h2 {
 
 .speech-meta strong {
   color: var(--ds-color-primary);
-  font-size: 0.76rem;
+  font-size: 1.05rem;
 }
 
 .speech-meta time {
   color: #8b95a5;
-  font-size: 0.65rem;
+  font-size: 0.85rem;
 }
 
 .speech-wrap p {
@@ -160,8 +160,8 @@ h2 {
   border: 1px solid var(--ds-color-outline-variant);
   border-radius: 0 var(--ds-radius-md) var(--ds-radius-md) var(--ds-radius-md);
   color: var(--ds-color-on-surface);
-  font-size: 0.88rem;
-  line-height: 1.75;
+  font-size: 1.25rem;
+  line-height: 1.8;
 }
 
 .current-badge {
@@ -176,14 +176,14 @@ h2 {
   align-items: center;
   gap: 8px;
   color: #7f8998;
-  font-size: 0.78rem;
+  font-size: 1rem;
 }
 
 .empty-history {
   margin: 0;
   padding: 42px 0;
   color: #7f8998;
-  font-size: 0.78rem;
+  font-size: 1rem;
   text-align: center;
 }
 
@@ -207,6 +207,11 @@ h2 {
     position: static;
     display: inline-flex;
     margin-bottom: 6px;
+  }
+
+  .speech-wrap p {
+    padding: 16px;
+    font-size: 1.05rem;
   }
 }
 </style>

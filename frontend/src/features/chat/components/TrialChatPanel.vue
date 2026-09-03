@@ -5,6 +5,7 @@ import { MessageSquare, Send } from '@lucide/vue'
 const props = defineProps({
   initialMessages: { type: Array, default: () => [] },
   messages: { type: Array, default: null },
+  currentUserId: { type: String, default: '' },
   audienceCount: { type: Number, required: true },
   headerLabel: { type: String, default: '' },
   disabled: { type: Boolean, default: false },
@@ -62,6 +63,10 @@ function messageTone(message) {
   return message.tone || 'sky'
 }
 
+function isOwnMessage(message) {
+  return Boolean(props.currentUserId) && message.sender?.demoUserId === props.currentUserId
+}
+
 async function submitMessage() {
   if (props.disabled || props.sending) return
 
@@ -96,7 +101,12 @@ async function submitMessage() {
     <div ref="messageList" class="message-list" aria-live="polite" :aria-busy="loading">
       <p v-if="loading && !messages.length" class="chat-notice">이전 채팅을 불러오는 중입니다.</p>
       <p v-else-if="!messages.length" class="chat-notice">아직 등록된 채팅이 없습니다.</p>
-      <article v-for="message in messages" :key="messageKey(message)" class="message-item">
+      <article
+        v-for="message in messages"
+        :key="messageKey(message)"
+        class="message-item"
+        :class="{ 'message-item--own': isOwnMessage(message) }"
+      >
         <div class="avatar" :class="`tone-${messageTone(message)}`">
           {{ messageAvatar(message) }}
         </div>
@@ -159,7 +169,7 @@ h2 {
   align-items: center;
   gap: 8px;
   color: var(--ds-color-primary);
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
 header > span {
@@ -167,7 +177,7 @@ header > span {
   align-items: center;
   gap: 6px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -188,7 +198,7 @@ header i {
 .chat-notice {
   margin: 28px 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   text-align: center;
 }
 
@@ -199,6 +209,30 @@ header i {
   margin-bottom: 18px;
 }
 
+.message-item--own {
+  grid-template-columns: 1fr 30px;
+}
+
+.message-item--own .avatar {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.message-item--own > div:last-child {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
+}
+
+.message-item--own p {
+  margin-left: auto;
+  border-radius: 10px 0 10px 10px;
+  background: var(--ds-color-justice-blue);
+  color: white;
+  text-align: left;
+}
+
 .avatar {
   display: grid;
   place-items: center;
@@ -207,7 +241,7 @@ header i {
   border-radius: 50%;
   background: #e5edfa;
   color: #38608d;
-  font-size: 0.69rem;
+  font-size: 0.85rem;
 }
 
 .avatar.tone-violet {
@@ -234,7 +268,7 @@ header i {
   display: block;
   margin: 0 0 4px;
   color: #8c95a2;
-  font-size: 0.65rem;
+  font-size: 0.82rem;
 }
 
 .message-item small b {
@@ -255,8 +289,8 @@ header i {
   border-radius: 0 10px 10px 10px;
   background: #f7f9fc;
   color: var(--ds-color-on-surface);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .chat-form {
@@ -276,7 +310,7 @@ header i {
   border-radius: var(--ds-radius-default);
   background: white;
   color: var(--ds-color-on-surface);
-  font-size: 0.77rem;
+  font-size: 0.95rem;
   outline: none;
 }
 

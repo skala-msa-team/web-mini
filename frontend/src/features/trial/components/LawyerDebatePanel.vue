@@ -90,13 +90,13 @@ h2 {
   align-items: center;
   gap: 9px;
   color: var(--ds-color-primary);
-  font-size: 1rem;
+  font-size: 1.2rem;
 }
 
 .panel-header p {
   margin: 5px 0 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.72rem;
+  font-size: 1rem;
 }
 
 .timer-badge {
@@ -104,7 +104,7 @@ h2 {
   border-radius: var(--ds-radius-full);
   background: #dbeafe;
   color: #245284;
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -141,11 +141,12 @@ h2 {
   align-items: center;
   gap: 7px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.67rem;
+  font-size: 0.85rem;
 }
 
 .message-meta strong {
   color: var(--ds-color-primary);
+  font-size: 1.05rem;
 }
 
 .side-b .message-meta strong {
@@ -159,8 +160,8 @@ h2 {
   border-radius: 3px 14px 14px;
   background: #eff5ff;
   color: var(--ds-color-on-surface);
-  font-size: 0.84rem;
-  line-height: 1.65;
+  font-size: 1.25rem;
+  line-height: 1.8;
 }
 
 .side-b p {
@@ -176,7 +177,7 @@ h2 {
   justify-content: center;
   gap: 8px;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 @media (max-width: 680px) {
@@ -192,6 +193,10 @@ h2 {
 
   .debate-message {
     width: 92%;
+  }
+
+  .debate-message p {
+    font-size: 1.05rem;
   }
 }
 </style>

@@ -165,6 +165,6 @@ async function submitPost() {
 .form-error {
   margin: 12px 0 0;
   color: var(--ds-color-error);
-  font-size: 13px;
+  font-size: 16px;
 }
 </style>

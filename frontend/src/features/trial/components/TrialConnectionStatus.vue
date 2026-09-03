@@ -92,13 +92,13 @@ const presentation = computed(() => {
 
 .connection-status strong {
   display: block;
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 .connection-status p {
   margin: 3px 0 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.7rem;
+  font-size: 0.9rem;
 }
 
 .status-icon {
@@ -142,7 +142,7 @@ button {
   border-radius: var(--ds-radius-default);
   background: white;
   color: var(--ds-color-error);
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
 }

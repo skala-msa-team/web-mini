@@ -75,14 +75,14 @@ header {
 
 header > div > span {
   color: var(--ds-color-justice-blue);
-  font-size: 0.64rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
 h2 {
   margin: 1px 0 0;
   color: var(--ds-color-primary);
-  font-size: 1rem;
+  font-size: 1.35rem;
 }
 
 h2 small {
@@ -94,7 +94,7 @@ h2 small {
   border-radius: var(--ds-radius-full);
   background: #fff1e9;
   color: #b65020;
-  font-size: 0.64rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -126,7 +126,7 @@ h3 {
   gap: 8px;
   color: var(--ds-color-on-surface-variant);
   font-family: var(--ds-font-body);
-  font-size: 0.9rem;
+  font-size: 1.15rem;
 }
 
 .result-row + .result-row {
@@ -138,12 +138,12 @@ h3 {
   display: flex;
   justify-content: space-between;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.72rem;
+  font-size: 1rem;
 }
 
 .result-row strong {
   color: var(--ds-color-primary);
-  font-size: 0.88rem;
+  font-size: 1.15rem;
 }
 
 .result-row:first-of-type strong {
@@ -179,7 +179,7 @@ h3 {
 .jury-column > p {
   margin: 15px 0 0;
   color: #7e8896;
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   text-align: right;
 }
 
