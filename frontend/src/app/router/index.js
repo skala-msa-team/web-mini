@@ -5,6 +5,7 @@ import LiveTrialEntryPage from '@/pages/live-trial/LiveTrialEntryPage.vue'
 import TrialVotingPage from '@/pages/live-trial/TrialVotingPage.vue'
 import TrialPreparationPage from '@/pages/trial-preparation/TrialPreparationPage.vue'
 import TrialResultPage from '@/pages/trial-result/TrialResultPage.vue'
+import IntegrationSpikePage from '@/pages/integration/IntegrationSpikePage.vue'
 
 const DEFAULT_DEMO_TRIAL_ID = '1'
 
@@ -15,6 +16,7 @@ const router = createRouter({
     { path: '/community', redirect: '/' },
     { path: '/community/posts/new', name: 'post-create', component: PostCreatePage },
     { path: '/trials/new', name: 'trial-preparation', component: TrialPreparationPage },
+    { path: '/integration-spike', name: 'integration-spike', component: IntegrationSpikePage },
 
     {
       path: '/live-trial',
