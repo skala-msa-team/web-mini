@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Clock3, Eye, UsersRound } from '@lucide/vue'
 import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
@@ -15,32 +15,12 @@ import {
   getTrialPhaseLabel,
   getTrialWaitingMessage,
 } from '@/features/trial/liveTrialPresentation.js'
-import { mergeMessages } from '@/utils/messageMerge.js'
 import { toTimelineEvents } from '@/utils/trialEvent.js'
 
 const route = useRoute()
 const router = useRouter()
 const trialId = computed(() => route.params.trialId)
-const liveMessages = ref([...liveTrialMock.messages])
-
-function toChatMessage(payload) {
-  const sender = payload.sender || {}
-  return {
-    id: payload.messageId ?? payload.messageSequence,
-    avatar: (sender.nickname || '배').slice(0, 1),
-    nickname: sender.nickname || '관전자',
-    message: payload.content || '',
-    tone: 'blue',
-  }
-}
-
-function appendMessage(payload) {
-  liveMessages.value = mergeMessages(liveMessages.value, [toChatMessage(payload)])
-}
-
-const session = useLiveTrialSession(trialId, {
-  onMessage: appendMessage,
-})
+const session = useLiveTrialSession(trialId)
 
 const trialTitle = computed(() => session.detail.value?.title ?? '재판 정보를 불러오는 중입니다')
 const trialParticipants = computed(() => liveTrialMock.participants.map((participant) => {
@@ -105,8 +85,8 @@ watch(
         @retry="session.reconnect"
       />
 
-      <p v-if="session.userErrors.value.length" class="realtime-error" role="alert">
-        {{ session.userErrors.value.at(-1)?.message || '실시간 요청을 처리하지 못했습니다.' }}
+      <p v-if="session.chatError.value" class="realtime-error" role="alert">
+        {{ session.chatError.value?.message || '실시간 요청을 처리하지 못했습니다.' }}
       </p>
 
       <section class="trial-summary" aria-labelledby="trial-title">
@@ -150,11 +130,12 @@ watch(
         </div>
 
         <TrialChatPanel
-          :initial-messages="liveMessages"
-          :messages="liveMessages"
+          :messages="session.messages.value"
           :audience-count="liveTrialMock.audienceCount"
           :header-label="trialEnded ? '종료' : ''"
           :disabled="interactionsDisabled"
+          :loading="session.chatRestoring.value"
+          :sending="session.chatSending.value"
           :disabled-message="interactionDisabledMessage"
           :on-send="session.sendChat"
         />

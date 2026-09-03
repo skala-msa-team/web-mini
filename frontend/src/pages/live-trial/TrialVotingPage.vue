@@ -10,31 +10,11 @@ import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
 import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
 import FinalVerdictVote from '@/features/vote/components/FinalVerdictVote.vue'
 import { finalVoteMock } from '@/features/vote/finalVoteMock.js'
-import { mergeMessages } from '@/utils/messageMerge.js'
 
 const route = useRoute()
 const router = useRouter()
 const trialId = computed(() => route.params.trialId)
-const liveMessages = ref([...finalVoteMock.messages])
-
-function toChatMessage(payload) {
-  const sender = payload.sender || {}
-  return {
-    id: payload.messageId ?? payload.messageSequence,
-    avatar: (sender.nickname || '배').slice(0, 1),
-    nickname: sender.nickname || '관전자',
-    message: payload.content || '',
-    tone: 'blue',
-  }
-}
-
-function appendMessage(payload) {
-  liveMessages.value = mergeMessages(liveMessages.value, [toChatMessage(payload)])
-}
-
-const session = useLiveTrialSession(trialId, {
-  onMessage: appendMessage,
-})
+const session = useLiveTrialSession(trialId)
 
 const trialEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt)
 const { formattedRemainingTime } = useTrialCountdown(trialEndsAt)
@@ -111,8 +91,8 @@ function submitVote() {
         @retry="session.reconnect"
       />
 
-      <p v-if="session.userErrors.value.length" class="realtime-error" role="alert">
-        {{ session.userErrors.value.at(-1)?.message || '실시간 요청을 처리하지 못했습니다.' }}
+      <p v-if="session.chatError.value" class="realtime-error" role="alert">
+        {{ session.chatError.value?.message || '실시간 요청을 처리하지 못했습니다.' }}
       </p>
 
       <div class="voting-layout">
@@ -145,11 +125,12 @@ function submitVote() {
         </div>
 
         <TrialChatPanel
-          :initial-messages="liveMessages"
-          :messages="liveMessages"
+          :messages="session.messages.value"
           :audience-count="finalVoteMock.viewerCount"
           :header-label="trialEnded ? '종료' : '실시간'"
           :disabled="interactionsDisabled"
+          :loading="session.chatRestoring.value"
+          :sending="session.chatSending.value"
           :disabled-message="interactionDisabledMessage"
           :on-send="session.sendChat"
         />

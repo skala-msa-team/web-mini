@@ -3,11 +3,13 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { MessageSquare, Send } from '@lucide/vue'
 
 const props = defineProps({
-  initialMessages: { type: Array, required: true },
+  initialMessages: { type: Array, default: () => [] },
   messages: { type: Array, default: null },
   audienceCount: { type: Number, required: true },
   headerLabel: { type: String, default: '' },
   disabled: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false },
+  sending: { type: Boolean, default: false },
   disabledMessage: { type: String, default: '현재 채팅을 사용할 수 없습니다.' },
   onSend: { type: Function, default: null },
 })
@@ -28,8 +30,40 @@ watch(
   { deep: true },
 )
 
+watch(
+  () => {
+    const lastMessage = messages.value.at(-1)
+    return lastMessage?.messageId ?? lastMessage?.messageSequence ?? lastMessage?.id ?? null
+  },
+  async () => {
+    await nextTick()
+    messageList.value?.lastElementChild?.scrollIntoView({ behavior: 'smooth' })
+  },
+  { immediate: true },
+)
+
+function messageKey(message) {
+  return message.messageId ?? message.id ?? message.messageSequence
+}
+
+function messageNickname(message) {
+  return message.sender?.nickname || message.nickname || '관전자'
+}
+
+function messageAvatar(message) {
+  return message.avatar || messageNickname(message).slice(0, 1)
+}
+
+function messageContent(message) {
+  return message.content ?? message.message ?? ''
+}
+
+function messageTone(message) {
+  return message.tone || 'sky'
+}
+
 async function submitMessage() {
-  if (props.disabled) return
+  if (props.disabled || props.sending) return
 
   const message = draft.value.trim()
   if (!message) return
@@ -59,15 +93,19 @@ async function submitMessage() {
       <span><i aria-hidden="true"></i>{{ displayedHeaderLabel }}</span>
     </header>
 
-    <div ref="messageList" class="message-list" aria-live="polite">
-      <article v-for="message in messages" :key="message.id" class="message-item">
-        <div class="avatar" :class="`tone-${message.tone}`">{{ message.avatar }}</div>
+    <div ref="messageList" class="message-list" aria-live="polite" :aria-busy="loading">
+      <p v-if="loading && !messages.length" class="chat-notice">이전 채팅을 불러오는 중입니다.</p>
+      <p v-else-if="!messages.length" class="chat-notice">아직 등록된 채팅이 없습니다.</p>
+      <article v-for="message in messages" :key="messageKey(message)" class="message-item">
+        <div class="avatar" :class="`tone-${messageTone(message)}`">
+          {{ messageAvatar(message) }}
+        </div>
         <div>
           <small>
-            <b>{{ message.nickname }}</b>
+            <b>{{ messageNickname(message) }}</b>
             <span v-if="message.badge" class="message-badge">{{ message.badge }}</span>
           </small>
-          <p>{{ message.message }}</p>
+          <p>{{ messageContent(message) }}</p>
         </div>
       </article>
     </div>
@@ -78,10 +116,15 @@ async function submitMessage() {
         id="chat-message"
         v-model="draft"
         type="text"
+        maxlength="500"
         :placeholder="disabled ? disabledMessage : '의견을 남겨주세요...'"
         :disabled="disabled"
       />
-      <button type="submit" aria-label="메시지 보내기" :disabled="disabled || !draft.trim()">
+      <button
+        type="submit"
+        :aria-label="sending ? '메시지 전송 중' : '메시지 보내기'"
+        :disabled="disabled || sending || !draft.trim()"
+      >
         <Send :size="18" />
       </button>
     </form>
@@ -140,6 +183,13 @@ header i {
   max-height: 750px;
   padding: 20px 16px;
   overflow-y: auto;
+}
+
+.chat-notice {
+  margin: 28px 0;
+  color: var(--ds-color-on-surface-variant);
+  font-size: 0.78rem;
+  text-align: center;
 }
 
 .message-item {
