@@ -128,6 +128,10 @@
     letter-spacing: -0.01em;
   }
 
+  #app {
+    min-height: 100vh;
+  }
+
   button,
   input,
   textarea,
@@ -140,5 +144,11 @@
   h3,
   h4 {
     font-family: var(--ds-font-heading);
+  }
+
+  button,
+  a,
+  input {
+    -webkit-tap-highlight-color: transparent;
   }
 }
