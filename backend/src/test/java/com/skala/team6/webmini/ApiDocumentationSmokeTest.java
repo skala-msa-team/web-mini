@@ -61,6 +61,8 @@ class ApiDocumentationSmokeTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/v1/posts']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/trials/{trialId}/parties/{side}/statement']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/mock-ai/lawyer/questions']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/mock-ai/lawyer/argument']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/mock-ai/judge/verdict']").exists())
                 .andExpect(jsonPath("$.components.securitySchemes.demoUserHeader").exists());
     }
