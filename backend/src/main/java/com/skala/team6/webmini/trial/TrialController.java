@@ -32,9 +32,14 @@ import java.util.List;
 @RequestMapping("/api/v1/trials")
 public class TrialController {
     private final TrialQueryService trialQueryService;
+    private final TrialStatementService trialStatementService;
 
-    public TrialController(TrialQueryService trialQueryService) {
+    public TrialController(
+            TrialQueryService trialQueryService,
+            TrialStatementService trialStatementService
+    ) {
         this.trialQueryService = trialQueryService;
+        this.trialStatementService = trialStatementService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -100,7 +105,16 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody StatementRequest request
     ) {
-        return ResponseEntity.ok(ApiResponse.of(new StatementResponse(side, request)));
+        var statement = trialStatementService.save(trialId, side, request);
+        StatementRequest saved = new StatementRequest(
+                statement.getIncidentTime(),
+                statement.getSituation(),
+                statement.getCounterpartAction(),
+                statement.getOwnAction(),
+                statement.getAfterConversation(),
+                statement.getDesiredResolution()
+        );
+        return ResponseEntity.ok(ApiResponse.of(new StatementResponse(side, saved)));
     }
 
     @Operation(summary = "안내 질문 생성")

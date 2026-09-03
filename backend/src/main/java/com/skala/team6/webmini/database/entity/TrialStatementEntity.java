@@ -50,4 +50,64 @@ public class TrialStatementEntity {
 
     protected TrialStatementEntity() {
     }
+
+    public TrialStatementEntity(
+            TrialPartyEntity trialParty,
+            String incidentTime,
+            String situation,
+            String counterpartAction,
+            String ownAction,
+            String afterConversation,
+            String desiredResolution
+    ) {
+        this.trialParty = trialParty;
+        updateStatement(
+                incidentTime,
+                situation,
+                counterpartAction,
+                ownAction,
+                afterConversation,
+                desiredResolution
+        );
+    }
+
+    public void updateStatement(
+            String incidentTime,
+            String situation,
+            String counterpartAction,
+            String ownAction,
+            String afterConversation,
+            String desiredResolution
+    ) {
+        this.incidentTime = incidentTime;
+        this.situation = situation;
+        this.counterpartAction = counterpartAction;
+        this.ownAction = ownAction;
+        this.afterConversation = afterConversation;
+        this.desiredResolution = desiredResolution;
+    }
+
+    public String getIncidentTime() {
+        return incidentTime;
+    }
+
+    public String getSituation() {
+        return situation;
+    }
+
+    public String getCounterpartAction() {
+        return counterpartAction;
+    }
+
+    public String getOwnAction() {
+        return ownAction;
+    }
+
+    public String getAfterConversation() {
+        return afterConversation;
+    }
+
+    public String getDesiredResolution() {
+        return desiredResolution;
+    }
 }
