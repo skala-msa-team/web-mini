@@ -31,6 +31,10 @@
 - Keep approved screen designs in Google Stitch and Figma.
 - Do not duplicate live progress in `AGENTS.md`; update a link only when its canonical resource changes.
 
+## Recent applied work (for review basis)
+
+- `feat/frontend-189-design-system` (PR #274): Frontend 기초 세팅 정비를 완료했으며, Axios 공통 인스턴스/인터셉터 및 `axios` 의존성을 제거한 상태에서 구조/디자인 토큰/문서를 정리했습니다.
+
 ## Repository boundaries
 
 - Keep Frontend work in `frontend/`, Backend work in `backend/`, and approved design documents in `docs/`.

@@ -1,0 +1,144 @@
+@import './fonts.css';
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './tokens.css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: var(--ds-color-background);
+  --foreground: var(--ds-color-on-background);
+  --card: var(--ds-color-surface-container-lowest);
+  --card-foreground: var(--ds-color-on-surface);
+  --popover: var(--ds-color-surface-container-lowest);
+  --popover-foreground: var(--ds-color-on-surface);
+  --primary: var(--ds-color-justice-blue);
+  --primary-foreground: var(--ds-color-on-secondary);
+  --secondary: var(--ds-color-surface-container);
+  --secondary-foreground: var(--ds-color-primary);
+  --muted: var(--ds-color-surface-container-low);
+  --muted-foreground: var(--ds-color-on-surface-variant);
+  --accent: var(--ds-color-secondary-fixed);
+  --accent-foreground: var(--ds-color-on-secondary-fixed);
+  --destructive: var(--ds-color-error);
+  --destructive-foreground: var(--ds-color-on-error);
+  --border: var(--ds-color-card-border);
+  --input: var(--ds-color-card-border);
+  --ring: var(--ds-color-justice-blue);
+  --radius: var(--ds-radius-default);
+  --sidebar: var(--ds-color-surface-container-lowest);
+  --sidebar-foreground: var(--ds-color-on-surface);
+  --sidebar-primary: var(--ds-color-verdict-blue);
+  --sidebar-primary-foreground: var(--ds-color-on-primary);
+  --sidebar-accent: var(--ds-color-surface-container);
+  --sidebar-accent-foreground: var(--ds-color-on-surface);
+  --sidebar-border: var(--ds-color-card-border);
+  --sidebar-ring: var(--ds-color-justice-blue);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: var(--ds-font-body);
+  --font-heading: var(--ds-font-heading);
+  --text-heading-1: var(--ds-text-h1);
+  --text-heading-1--line-height: var(--ds-text-h1-line-height);
+  --text-heading-1--letter-spacing: var(--ds-text-h1-letter-spacing);
+  --text-heading-1--font-weight: var(--ds-text-h1-weight);
+  --text-heading-1-mobile: var(--ds-text-h1-mobile);
+  --text-heading-1-mobile--line-height: var(--ds-text-h1-mobile-line-height);
+  --text-heading-1-mobile--letter-spacing: var(--ds-text-h1-mobile-letter-spacing);
+  --text-heading-1-mobile--font-weight: var(--ds-text-h1-mobile-weight);
+  --text-heading-2: var(--ds-text-h2);
+  --text-heading-2--line-height: var(--ds-text-h2-line-height);
+  --text-heading-2--letter-spacing: var(--ds-text-h2-letter-spacing);
+  --text-heading-2--font-weight: var(--ds-text-h2-weight);
+  --text-heading-3: var(--ds-text-h3);
+  --text-heading-3--line-height: var(--ds-text-h3-line-height);
+  --text-heading-3--letter-spacing: var(--ds-text-h3-letter-spacing);
+  --text-heading-3--font-weight: var(--ds-text-h3-weight);
+  --text-heading-4: var(--ds-text-h4);
+  --text-heading-4--line-height: var(--ds-text-h4-line-height);
+  --text-heading-4--letter-spacing: var(--ds-text-h4-letter-spacing);
+  --text-heading-4--font-weight: var(--ds-text-h4-weight);
+  --text-body-lg: var(--ds-text-body-lg);
+  --text-body-lg--line-height: var(--ds-text-body-lg-line-height);
+  --text-body-lg--letter-spacing: var(--ds-text-body-lg-letter-spacing);
+  --text-body-lg--font-weight: var(--ds-text-body-lg-weight);
+  --text-body-sm: var(--ds-text-body-sm);
+  --text-body-sm--line-height: var(--ds-text-body-sm-line-height);
+  --text-body-sm--letter-spacing: var(--ds-text-body-sm-letter-spacing);
+  --text-body-sm--font-weight: var(--ds-text-body-sm-weight);
+  --text-label: var(--ds-text-label);
+  --text-label--line-height: var(--ds-text-label-line-height);
+  --text-label--letter-spacing: var(--ds-text-label-letter-spacing);
+  --text-label--font-weight: var(--ds-text-label-weight);
+  --radius-sm: var(--ds-radius-sm);
+  --radius-md: var(--ds-radius-default);
+  --radius-lg: var(--ds-radius-md);
+  --radius-xl: var(--ds-radius-lg);
+  --radius-2xl: var(--ds-radius-xl);
+  --shadow-interactive: var(--ds-shadow-interactive);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    font-family: var(--ds-font-body);
+    background: var(--background);
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--ds-font-body);
+    font-size: var(--ds-text-body-lg);
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--ds-font-heading);
+  }
+}
