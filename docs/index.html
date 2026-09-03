@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Backend #205 STOMP Plan</title>
+    <style>
+      :root {
+        --bg: #f5efe4;
+        --paper: #fffaf2;
+        --ink: #1d1a16;
+        --muted: #6a6258;
+        --line: #d8c9b5;
+        --accent: #c55c32;
+        --accent-soft: #f3d8ca;
+        --ok: #2d6a4f;
+        --warn: #8c5d12;
+        --code: #2b2119;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "SUIT", "Pretendard", "Apple SD Gothic Neo", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, #fffdf8 0, #fffdf8 12rem, transparent 12rem),
+          linear-gradient(180deg, #f0e6d7 0%, var(--bg) 100%);
+      }
+
+      main {
+        width: min(1120px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 40px 0 80px;
+      }
+
+      .hero {
+        background: linear-gradient(135deg, rgba(197, 92, 50, 0.16), rgba(255, 250, 242, 0.96));
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: 0 20px 60px rgba(77, 52, 28, 0.08);
+      }
+
+      .eyebrow,
+      .label {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: "Georgia", "Times New Roman", serif;
+        line-height: 1.1;
+      }
+
+      h1 {
+        margin-top: 18px;
+        font-size: clamp(2rem, 4vw, 3.7rem);
+      }
+
+      p {
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .hero-grid,
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1.5fr 1fr;
+        margin-top: 24px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(12, 1fr);
+        margin-top: 24px;
+      }
+
+      .card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 12px 40px rgba(77, 52, 28, 0.05);
+      }
+
+      .span-4 { grid-column: span 4; }
+      .span-5 { grid-column: span 5; }
+      .span-6 { grid-column: span 6; }
+      .span-7 { grid-column: span 7; }
+      .span-8 { grid-column: span 8; }
+      .span-12 { grid-column: span 12; }
+
+      .metric {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--accent);
+        margin: 10px 0 4px;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .step {
+        position: relative;
+        padding: 18px 18px 18px 72px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fffdf9;
+      }
+
+      .step-number {
+        position: absolute;
+        left: 18px;
+        top: 18px;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: var(--accent);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+      }
+
+      ul {
+        margin: 14px 0 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      code {
+        font-family: "SFMono-Regular", "Menlo", monospace;
+        font-size: 0.95em;
+        background: #f3ece1;
+        color: var(--code);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      .path-list div,
+      .mini-list div {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .path-list div:last-child,
+      .mini-list div:last-child {
+        border-bottom: 0;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .status.ok {
+        background: rgba(45, 106, 79, 0.12);
+        color: var(--ok);
+      }
+
+      .status.warn {
+        background: rgba(140, 93, 18, 0.13);
+        color: var(--warn);
+      }
+
+      .flow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .flow span {
+        padding: 10px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fffdf9;
+        font-weight: 700;
+      }
+
+      .flow span::after {
+        content: "→";
+        margin-left: 10px;
+        color: var(--accent);
+      }
+
+      .flow span:last-child::after {
+        content: "";
+        margin: 0;
+      }
+
+      .footer-note {
+        margin-top: 24px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #f8f1e7;
+        border: 1px dashed var(--line);
+      }
+
+      @media (max-width: 900px) {
+        .hero-grid,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .span-4,
+        .span-5,
+        .span-6,
+        .span-7,
+        .span-8,
+        .span-12 {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <span class="eyebrow">Backend Issue #205</span>
+        <h1>WebSocket · STOMP · Demo 사용자 연결 계획</h1>
+        <p>
+          이 문서는 <code>chore/backend-205-websocket-stomp-demo-identity</code> 브랜치에서
+          진행할 백엔드 작업 순서를 바로 따라갈 수 있게 정리한 실행용 체크리스트다.
+          이번 이슈의 핵심은 REST가 아니라 STOMP 인프라 구성이다. 도메인 서비스 상세 구현은
+          다른 이슈에서 붙고, 여기서는 연결 규칙과 메시지 통로를 먼저 고정한다.
+        </p>
+
+        <div class="hero-grid">
+          <div class="card">
+            <span class="label">이번 이슈에서 끝내야 하는 것</span>
+            <div class="flow">
+              <span>/ws handshake</span>
+              <span>/app publish</span>
+              <span>/topic subscribe</span>
+              <span>/user/queue/errors</span>
+            </div>
+          </div>
+          <div class="card">
+            <span class="label">완료 판단</span>
+            <div class="metric">2 Browser</div>
+            <p>두 브라우저에서 같은 재판 채널에 연결하고, 정상 메시지와 개인 오류 Queue까지 확인한다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card span-4">
+          <span class="label">Scope</span>
+          <h2 style="margin-top: 12px;">작업 범위</h2>
+          <ul>
+            <li><code>/ws</code> 핸드셰이크 엔드포인트</li>
+            <li><code>/app</code>, <code>/topic</code>, <code>/user/queue/errors</code> 브로커 규칙</li>
+            <li><code>X-Demo-User-Id</code> 검증과 STOMP 세션 연결</li>
+            <li>Heartbeat, 허용 Origin, 메시지 크기 기본값</li>
+            <li>Demo STOMP 명세와 동일한 Destination 유지</li>
+          </ul>
+        </article>
+
+        <article class="card span-4">
+          <span class="label">Out of Scope</span>
+          <h2 style="margin-top: 12px;">이번 이슈에서 안 하는 것</h2>
+          <ul>
+            <li>재판 도메인 규칙 계산</li>
+            <li>DB Entity, Migration, JPA 저장 구현</li>
+            <li>프론트 STOMP Client 연결 화면</li>
+            <li>실제 Judge, Vote, Trial 비즈니스 로직</li>
+          </ul>
+        </article>
+
+        <article class="card span-4">
+          <span class="label">Key Contract</span>
+          <h2 style="margin-top: 12px;">고정해야 할 경로</h2>
+          <div class="mini-list">
+            <div><code>CONNECT /ws</code> <span class="status ok">필수</span></div>
+            <div><code>SEND /app/trials/{trialId}/chat</code> <span class="status ok">필수</span></div>
+            <div><code>SUBSCRIBE /topic/trials/{trialId}/chat</code> <span class="status ok">필수</span></div>
+            <div><code>SUBSCRIBE /topic/trials/{trialId}/events</code> <span class="status ok">필수</span></div>
+            <div><code>SUBSCRIBE /user/queue/errors</code> <span class="status ok">필수</span></div>
+          </div>
+        </article>
+
+        <article class="card span-7">
+          <span class="label">Execution Order</span>
+          <h2 style="margin-top: 12px;">단계별 구현 순서</h2>
+          <div class="timeline">
+            <div class="step">
+              <div class="step-number">1</div>
+              <h3>기존 공통 Demo 사용자 코드 재사용 지점 확인</h3>
+              <ul>
+                <li><code>#207</code>에서 만든 Demo 사용자 식별/검증 클래스를 그대로 재사용한다.</li>
+                <li>새로 UUID 규칙을 만들지 말고, WebSocket 세션 속성에 같은 값을 넣는다.</li>
+                <li>핵심 질문: HTTP Header 검증 로직을 Handshake 단계로 어떻게 옮길지 결정.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="step-number">2</div>
+              <h3>STOMP 기본 설정 추가</h3>
+              <ul>
+                <li><code>WebSocketMessageBrokerConfigurer</code> 구현 클래스를 추가한다.</li>
+                <li><code>registerStompEndpoints</code> 에서 <code>/ws</code> 와 허용 Origin을 설정한다.</li>
+                <li><code>configureMessageBroker</code> 에서 <code>/app</code>, <code>/topic</code>, <code>/user</code> 를 연결한다.</li>
+                <li>Heartbeat와 메시지 크기 기본값을 설정한다.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="step-number">3</div>
+              <h3>연결 식별: Handshake 또는 Channel Interceptor</h3>
+              <ul>
+                <li><code>X-Demo-User-Id</code> 가 없거나 형식이 틀리면 연결을 막는다.</li>
+                <li>정상 값이면 session attribute 또는 Principal에 Demo 사용자 식별값을 저장한다.</li>
+                <li>이 값이 이후 <code>@MessageMapping</code> 처리에서 조회 가능해야 한다.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="step-number">4</div>
+              <h3>에러 전달 규칙 고정</h3>
+              <ul>
+                <li>잘못된 CONNECT, SEND, payload 검증 실패를 <code>/user/queue/errors</code> 로 보낸다.</li>
+                <li>형식은 공통 에러 Envelope로 맞추고, 최소 <code>code</code>, <code>message</code>, <code>destination</code>, <code>occurredAt</code> 를 포함한다.</li>
+                <li>REST 예외 처리와 STOMP 예외 처리를 섞지 말고, 메시징 전용 핸들러를 분리한다.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="step-number">5</div>
+              <h3>메시지 핸들러 스캐폴딩 추가</h3>
+              <ul>
+                <li><code>@MessageMapping("/trials/{trialId}/chat")</code> 정도의 최소 엔드포인트를 만든다.</li>
+                <li>지금은 서비스 로직 대신 계약 검증, 사용자 식별 조회, 브로드캐스트 구조만 맞춘다.</li>
+                <li>브로드캐스트는 <code>/topic/trials/{trialId}/chat</code> 와 <code>/topic/trials/{trialId}/events</code> 를 사용한다.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="step-number">6</div>
+              <h3>검증과 확인</h3>
+              <ul>
+                <li><code>./gradlew check</code> 로 기본 검증.</li>
+                <li>앱 실행 후 두 브라우저 또는 두 탭으로 <code>CONNECT → SUBSCRIBE → SEND</code> 시나리오 확인.</li>
+                <li>헤더 누락, 잘못된 UUID, 허용되지 않은 메시지에서 개인 오류 Queue 수신 확인.</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="card span-5">
+          <span class="label">Files</span>
+          <h2 style="margin-top: 12px;">예상 파일 단위</h2>
+          <div class="path-list">
+            <div><code>backend/src/main/java/.../config/WebSocketStompConfig.java</code></div>
+            <div><code>backend/src/main/java/.../websocket/DemoUserHandshakeInterceptor.java</code></div>
+            <div><code>backend/src/main/java/.../websocket/DemoUserChannelInterceptor.java</code></div>
+            <div><code>backend/src/main/java/.../websocket/TrialStompController.java</code></div>
+            <div><code>backend/src/main/java/.../websocket/StompErrorHandler.java</code></div>
+            <div><code>backend/src/test/java/.../websocket/...</code> <span class="status warn">가능하면 추가</span></div>
+          </div>
+          <div class="footer-note">
+            서비스 클래스가 필요해도 이번 단계에서는 stub 또는 interface 수준이면 충분하다.
+            비즈니스 계산을 여기서 깊게 넣으면 이슈 범위를 넘는다.
+          </div>
+        </article>
+
+        <article class="card span-6">
+          <span class="label">Coding Notes</span>
+          <h2 style="margin-top: 12px;">코드 작성 포인트</h2>
+          <ul>
+            <li>REST용 공통 응답 래퍼를 STOMP payload에 그대로 복제하지 말고, 명세에 맞는 이벤트 Envelope를 별도로 둔다.</li>
+            <li>Demo 사용자 검증 로직은 중복 구현하지 말고 공통 Validator 또는 Factory를 주입받아 쓴다.</li>
+            <li><code>Principal</code> 이름을 Demo 사용자 ID로 두면 이후 메시지 처리에서 접근이 단순해진다.</li>
+            <li>에러 전송 시 전체 stack trace나 내부 예외 문구를 그대로 노출하지 않는다.</li>
+            <li>허용 Origin은 현재 로컬 프론트 개발 주소만 열고, 와일드카드 사용은 피한다.</li>
+          </ul>
+        </article>
+
+        <article class="card span-6">
+          <span class="label">Definition of Done</span>
+          <h2 style="margin-top: 12px;">완료 체크리스트</h2>
+          <ul>
+            <li><code>/ws</code> 로 STOMP CONNECT가 성립한다.</li>
+            <li><code>X-Demo-User-Id</code> 가 메시지 처리 단계에서 조회된다.</li>
+            <li><code>/app/trials/{trialId}/chat</code> SEND가 브로드캐스트 경로와 연결된다.</li>
+            <li>잘못된 연결/메시지가 <code>/user/queue/errors</code> 로 전달된다.</li>
+            <li>두 브라우저 동시 연결 확인 결과를 남긴다.</li>
+          </ul>
+        </article>
+
+        <article class="card span-12">
+          <span class="label">Recommended Start</span>
+          <h2 style="margin-top: 12px;">바로 시작할 순서</h2>
+          <p>
+            1. <code>#207</code>에서 만든 Demo 사용자 공통 코드를 읽고, WebSocket에서 재사용할 지점을 정한다.
+            2. <code>WebSocketStompConfig</code> 를 만든 뒤 <code>/ws</code>, <code>/app</code>, <code>/topic</code>, <code>/user</code> 를 고정한다.
+            3. Handshake/Channel interceptor로 <code>X-Demo-User-Id</code> 를 세션에 심는다.
+            4. 최소 <code>@MessageMapping</code> 과 개인 오류 Queue를 붙인다.
+            5. 마지막에 두 브라우저 연결과 실패 케이스까지 검증한다.
+          </p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
