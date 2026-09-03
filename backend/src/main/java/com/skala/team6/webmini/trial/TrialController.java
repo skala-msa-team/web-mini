@@ -91,8 +91,14 @@ public class TrialController {
                 trial.getStatus(),
                 trial.getPhaseStartedAt() == null ? null : trial.getPhaseStartedAt().toString(),
                 trial.getPhaseEndsAt() == null ? null : trial.getPhaseEndsAt().toString(),
-                new TrialPartyInfo(parties.get(0).getSide(), parties.get(0).getDisplayName()),
-                new TrialPartyInfo(parties.get(1).getSide(), parties.get(1).getDisplayName())
+                new TrialPartyInfo(
+                        parties.get(0).getSide(),
+                        parties.get(0).getDisplayName(),
+                        parties.get(0).isReady()),
+                new TrialPartyInfo(
+                        parties.get(1).getSide(),
+                        parties.get(1).getDisplayName(),
+                        parties.get(1).isReady())
         );
         return ResponseEntity.ok(ApiResponse.of(response));
     }

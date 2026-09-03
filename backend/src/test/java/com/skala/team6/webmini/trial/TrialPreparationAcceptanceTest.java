@@ -28,6 +28,7 @@ import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -183,6 +184,10 @@ class TrialPreparationAcceptanceTest {
                 .andExpect(jsonPath("$.data.side").value("A"))
                 .andExpect(jsonPath("$.data.confirmedAt").isNotEmpty())
                 .andExpect(jsonPath("$.data.bothConfirmed").value(false));
+        mockMvc.perform(get("/api/v1/trials/{trialId}", trial.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.aParty.ready").value(true))
+                .andExpect(jsonPath("$.data.bParty.ready").value(false));
         OffsetDateTime firstConfirmedAt = trialStatementRepository
                 .findByTrialPartyId(aParty.getId()).orElseThrow().getConfirmedAt();
 
@@ -195,6 +200,10 @@ class TrialPreparationAcceptanceTest {
         confirmArgument(TrialSide.B)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.bothConfirmed").value(true));
+        mockMvc.perform(get("/api/v1/trials/{trialId}", trial.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.aParty.ready").value(true))
+                .andExpect(jsonPath("$.data.bParty.ready").value(true));
 
         entityManager.flush();
         entityManager.clear();
