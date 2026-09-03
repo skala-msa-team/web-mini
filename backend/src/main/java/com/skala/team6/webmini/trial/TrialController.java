@@ -34,6 +34,7 @@ public class TrialController {
     private final TrialStatementService trialStatementService;
     private final GuideAnswerService guideAnswerService;
     private final TrialArgumentService trialArgumentService;
+    private final TrialPreparationAiService trialPreparationAiService;
     private final TrialStartService trialStartService;
     private final TrialChatQueryService trialChatQueryService;
 
@@ -42,6 +43,7 @@ public class TrialController {
             TrialStatementService trialStatementService,
             GuideAnswerService guideAnswerService,
             TrialArgumentService trialArgumentService,
+            TrialPreparationAiService trialPreparationAiService,
             TrialStartService trialStartService,
             TrialChatQueryService trialChatQueryService
     ) {
@@ -49,6 +51,7 @@ public class TrialController {
         this.trialStatementService = trialStatementService;
         this.guideAnswerService = guideAnswerService;
         this.trialArgumentService = trialArgumentService;
+        this.trialPreparationAiService = trialPreparationAiService;
         this.trialStartService = trialStartService;
         this.trialChatQueryService = trialChatQueryService;
     }
@@ -145,9 +148,13 @@ public class TrialController {
             @PathVariable TrialSide side
     ) {
         GuideQuestionsResponse response = new GuideQuestionsResponse(
-                101L,
-                1,
-                List.of("평소 두 분이 합의한 연락 기준이 있었나요?")
+                trialPreparationAiService.createGuideQuestions(trialId, side).stream()
+                        .map(question -> new GuideQuestionResponse(
+                                question.getId(),
+                                question.getSequenceNo(),
+                                question.getQuestion()
+                        ))
+                        .toList()
         );
         return ResponseEntity.ok(ApiResponse.of(response));
     }
@@ -177,11 +184,9 @@ public class TrialController {
             @PathVariable @Min(1) Long trialId,
             @PathVariable TrialSide side
     ) {
+        var statement = trialPreparationAiService.createArgumentDraft(trialId, side);
         return ResponseEntity.ok(ApiResponse.of(new ArgumentDraftResponse(
-                side,
-                "양측은 연락 빈도에 대한 명확한 합의가 없었습니다.",
-                "A측은 불안감 때문에 반복 연락했으나 사전 합의가 없었다고 주장합니다."
-        )));
+                side, statement.getFactSummary(), statement.getArgumentText())));
     }
 
     @Operation(summary = "변론문 초안 수정")

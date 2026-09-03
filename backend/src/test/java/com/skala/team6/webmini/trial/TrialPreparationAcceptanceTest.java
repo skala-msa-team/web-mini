@@ -2,6 +2,7 @@ package com.skala.team6.webmini.trial;
 
 import com.skala.team6.webmini.common.model.RelationshipType;
 import com.skala.team6.webmini.common.model.TrialSide;
+import com.skala.team6.webmini.common.model.TrialStatus;
 import com.skala.team6.webmini.database.entity.PostEntity;
 import com.skala.team6.webmini.database.entity.AiGuideQuestionEntity;
 import com.skala.team6.webmini.database.entity.TrialEntity;
@@ -150,6 +151,99 @@ class TrialPreparationAcceptanceTest {
     }
 
     @Test
+    void generatesAndStoresIndependentQuestionsAndArgumentsForBothSides() throws Exception {
+        saveStatement(TrialSide.A, "A측 상황").andExpect(status().isOk());
+        saveStatement(TrialSide.B, "B측 상황").andExpect(status().isOk());
+
+        createGuideQuestions(TrialSide.A)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.questions.length()").value(3))
+                .andExpect(jsonPath("$.data.questions[0].questionId").isNumber())
+                .andExpect(jsonPath("$.data.questions[0].sequence").value(1))
+                .andExpect(jsonPath("$.data.questions[0].question").value(
+                        org.hamcrest.Matchers.containsString("A측")));
+        createGuideQuestions(TrialSide.B)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.questions.length()").value(3))
+                .andExpect(jsonPath("$.data.questions[0].question").value(
+                        org.hamcrest.Matchers.containsString("B측")));
+
+        entityManager.flush();
+        entityManager.clear();
+        var aQuestions = questionRepository
+                .findByTrialPartyIdOrderBySequenceNoAsc(aParty.getId());
+        var bQuestions = questionRepository
+                .findByTrialPartyIdOrderBySequenceNoAsc(bParty.getId());
+        assertThat(aQuestions).hasSize(3);
+        assertThat(bQuestions).hasSize(3);
+        assertThat(aQuestions).extracting(AiGuideQuestionEntity::getId)
+                .doesNotContainAnyElementsOf(
+                        bQuestions.stream().map(AiGuideQuestionEntity::getId).toList());
+
+        saveAllAnswers(TrialSide.A, aQuestions).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.allAnswered").value(true));
+        saveAllAnswers(TrialSide.B, bQuestions).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.allAnswered").value(true));
+
+        createArgument(TrialSide.A)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.side").value("A"))
+                .andExpect(jsonPath("$.data.factSummary").value(
+                        org.hamcrest.Matchers.containsString("A측 상황")))
+                .andExpect(jsonPath("$.data.argumentText").value(
+                        org.hamcrest.Matchers.containsString("A측")));
+        createArgument(TrialSide.B)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.side").value("B"))
+                .andExpect(jsonPath("$.data.factSummary").value(
+                        org.hamcrest.Matchers.containsString("B측 상황")))
+                .andExpect(jsonPath("$.data.argumentText").value(
+                        org.hamcrest.Matchers.containsString("B측")));
+
+        Long firstAQuestionId = aQuestions.get(0).getId();
+        createGuideQuestions(TrialSide.A)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.questions[0].questionId").value(firstAQuestionId));
+        updateArgument(TrialSide.A, "사용자가 수정한 요약", "사용자가 수정한 변론")
+                .andExpect(status().isOk());
+        createArgument(TrialSide.A)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.factSummary").value("사용자가 수정한 요약"))
+                .andExpect(jsonPath("$.data.argumentText").value("사용자가 수정한 변론"));
+        assertThat(questionRepository.findByTrialPartyIdOrderBySequenceNoAsc(aParty.getId()))
+                .hasSize(3);
+
+        confirmArgument(TrialSide.A)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.bothConfirmed").value(false));
+        startTrial()
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PARTIES_NOT_READY"));
+        confirmArgument(TrialSide.B)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.bothConfirmed").value(true));
+        startTrial().andExpect(status().isOk());
+    }
+
+    @Test
+    void rejectsQuestionAndArgumentGenerationOutsidePreparationState() throws Exception {
+        saveStatement(TrialSide.A, "A측 상황").andExpect(status().isOk());
+        trial.startPhase(
+                TrialStatus.INTRODUCTION,
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(5)
+        );
+        trialRepository.saveAndFlush(trial);
+
+        createGuideQuestions(TrialSide.A)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_PREPARING"));
+        createArgument(TrialSide.A)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_PREPARING"));
+    }
+
+    @Test
     void savesArgumentDraftOnlyAfterAllGuideAnswers() throws Exception {
         saveStatement(TrialSide.A, "A측 상황").andExpect(status().isOk());
         AiGuideQuestionEntity question = questionRepository.save(
@@ -287,6 +381,36 @@ class TrialPreparationAcceptanceTest {
                 .header("X-Demo-User-Id", DEMO_USER_ID)
                 .contentType("application/json")
                 .content("{\"answers\":" + answers + "}"));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions saveAllAnswers(
+            TrialSide side,
+            java.util.List<AiGuideQuestionEntity> questions
+    ) throws Exception {
+        String answers = questions.stream()
+                .map(question -> """
+                        {"questionId":%d,"answer":"%s측 답변 %d"}
+                        """.formatted(question.getId(), side, question.getId()).trim())
+                .collect(java.util.stream.Collectors.joining(",", "[", "]"));
+        return saveAnswers(side, answers);
+    }
+
+    private org.springframework.test.web.servlet.ResultActions createGuideQuestions(TrialSide side)
+            throws Exception {
+        return mockMvc.perform(post(
+                "/api/v1/trials/{trialId}/parties/{side}/guide-questions",
+                trial.getId(),
+                side
+        ));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions createArgument(TrialSide side)
+            throws Exception {
+        return mockMvc.perform(post(
+                "/api/v1/trials/{trialId}/parties/{side}/argument-draft",
+                trial.getId(),
+                side
+        ));
     }
 
     private org.springframework.test.web.servlet.ResultActions updateArgument(
