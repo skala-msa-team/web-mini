@@ -1,0 +1,3 @@
+export const API_TIMEOUT_MS = 15_000
+export const DEFAULT_TRIAL_PAGE_SIZE = 10
+export const DEFAULT_MESSAGE_PAGE_SIZE = 100

@@ -1,7 +1,7 @@
 import {
   LIVE_TRIAL_MOCK_SCENARIO,
   getLiveTrialStateMock,
-} from '@/features/trial/liveTrialStateMock.js'
+} from '@/mock/trial/liveTrialStateMock.js'
 
 export const trialResultMock = Object.freeze({
   state: getLiveTrialStateMock(LIVE_TRIAL_MOCK_SCENARIO.ENDED),

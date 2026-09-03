@@ -1,5 +1,5 @@
-import { CHAT_STATUS, CONNECTION_STATUS, VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { TRIAL_STATUS } from '@/constants/trialStatus.js'
+import { CHAT_STATUS, CONNECTION_STATUS, VOTE_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { TRIAL_STATUS } from '@/consts/trialStatus.js'
 
 export const LIVE_TRIAL_TIMING = Object.freeze({
   INTRODUCTION_SECONDS: 7,

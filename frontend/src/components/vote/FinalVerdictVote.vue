@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Check, Clock3, Scale } from '@lucide/vue'
-import { VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { VOTE_STATUS } from '@/consts/liveTrialUiStatus.js'
 
 const props = defineProps({
   choices: { type: Array, required: true },
