@@ -43,4 +43,18 @@ public class VoteEntity {
 
     protected VoteEntity() {
     }
+
+    public VoteEntity(TrialEntity trial, UserEntity voter, TrialSide selectedSide) {
+        this.trial = trial;
+        this.voter = voter;
+        this.selectedSide = selectedSide;
+    }
+
+    public TrialSide getSelectedSide() {
+        return selectedSide;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
 }
