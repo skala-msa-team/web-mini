@@ -15,7 +15,7 @@ import java.util.List;
 public class TrialPhaseScheduler {
     private static final List<TrialStatus> ACTIVE_PHASES = List.of(
             TrialStatus.INTRODUCTION, TrialStatus.A_ARGUMENT, TrialStatus.B_ARGUMENT,
-            TrialStatus.VOTING, TrialStatus.VERDICT);
+            TrialStatus.DEBATE, TrialStatus.VOTING, TrialStatus.VERDICT);
 
     private final TrialRepository trialRepository;
     private final TrialPhaseService phaseService;
@@ -28,6 +28,9 @@ public class TrialPhaseScheduler {
     @Scheduled(fixedDelayString = "${app.trial.scheduler-interval-millis:1000}")
     public void advanceExpiredTrials() {
         OffsetDateTime now = OffsetDateTime.now();
+        for (Long trialId : trialRepository.findTrialIdsByStatus(TrialStatus.DEBATE)) {
+            phaseService.publishDueDebateTurns(trialId, now);
+        }
         for (Long trialId : trialRepository.findExpiredTrialIds(ACTIVE_PHASES, now)) {
             phaseService.advanceIfExpired(trialId, now);
         }

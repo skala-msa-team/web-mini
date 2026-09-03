@@ -19,8 +19,10 @@ function inferSpeaker(type) {
     case TRIAL_EVENT_TYPE.VERDICT_PUBLISHED:
       return "JUDGE";
     case TRIAL_EVENT_TYPE.A_ARGUMENT:
+    case TRIAL_EVENT_TYPE.A_DEBATE:
       return "A_LAWYER";
     case TRIAL_EVENT_TYPE.B_ARGUMENT:
+    case TRIAL_EVENT_TYPE.B_DEBATE:
       return "B_LAWYER";
     default:
       return "SYSTEM";
@@ -145,11 +147,25 @@ const EVENT_LABEL = Object.freeze({
   [TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION]: "사건 소개",
   [TRIAL_EVENT_TYPE.A_ARGUMENT]: "A측 발언",
   [TRIAL_EVENT_TYPE.B_ARGUMENT]: "B측 발언",
+  [TRIAL_EVENT_TYPE.A_DEBATE]: "A측 반론",
+  [TRIAL_EVENT_TYPE.B_DEBATE]: "B측 반론",
   [TRIAL_EVENT_TYPE.VERDICT_ANNOUNCED]: "최종 판결",
   [TRIAL_EVENT_TYPE.VERDICT_PUBLISHED]: "최종 판결",
 });
 
 const SPEECH_EVENT_TYPES = new Set(Object.keys(EVENT_LABEL));
+
+export function toLawyerDebateEvents(events = []) {
+  return events
+    .filter((event) => [TRIAL_EVENT_TYPE.A_DEBATE, TRIAL_EVENT_TYPE.B_DEBATE].includes(event.type))
+    .map((event) => ({
+      id: event.eventId ?? event.sequence,
+      side: event.type === TRIAL_EVENT_TYPE.A_DEBATE ? 'A' : 'B',
+      speaker: SPEAKER_LABEL[event.speaker] || event.speaker || 'AI 변호사',
+      content: event.content || '변론 내용을 불러오는 중입니다.',
+      occurredAt: event.occurredAt,
+    }));
+}
 
 export function toTimelineEvents(events = []) {
   return events
