@@ -92,6 +92,10 @@ public class TrialEntity {
         return phaseStartedAt;
     }
 
+    public OffsetDateTime getStartedAt() {
+        return startedAt;
+    }
+
     public OffsetDateTime getPhaseEndsAt() {
         return phaseEndsAt;
     }
@@ -105,6 +109,9 @@ public class TrialEntity {
     }
 
     public void startPhase(TrialStatus status, OffsetDateTime startsAt, OffsetDateTime endsAt) {
+        if (this.startedAt == null) {
+            this.startedAt = startsAt;
+        }
         this.status = status;
         this.phaseStartedAt = startsAt;
         this.phaseEndsAt = endsAt;
