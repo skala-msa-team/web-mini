@@ -8,7 +8,6 @@ These instructions apply to `docs/` in addition to the repository-level `AGENTS.
 - Keep assignees, priority, iteration, and status in GitHub Project.
 - Store only approved, versioned Architecture, ERD, API, Database, WebSocket/STOMP, AI contract, and QA documents in `docs/`.
 - Keep one responsibility per document and mark undecided content as `미정`.
-- 최근 Frontend 기초세팅 정비는 PR #274 기준으로 진행되었으며, 문서-기반 근거는 README/AGENTS 및 Notion 링크로 관리합니다.
 
 ## Change boundaries
 
