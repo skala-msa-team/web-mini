@@ -20,6 +20,9 @@ import com.skala.team6.webmini.trial.TrialChatQueryService;
 import com.skala.team6.webmini.trial.TrialChatService;
 import com.skala.team6.webmini.trial.TrialEventWriter;
 import com.skala.team6.webmini.trial.TrialPhaseService;
+import com.skala.team6.webmini.trial.TrialVoteService;
+import com.skala.team6.webmini.trial.TrialResultService;
+import com.skala.team6.webmini.database.repository.VoteRepository;
 import com.skala.team6.webmini.common.exception.ApiException;
 import com.skala.team6.webmini.common.exception.ErrorCode;
 import com.skala.team6.webmini.common.model.TrialSide;
@@ -66,6 +69,12 @@ class ApiDocumentationSmokeTest {
     private TrialEventWriter trialEventWriter;
     @MockitoBean
     private TrialPhaseService trialPhaseService;
+    @MockitoBean
+    private TrialVoteService trialVoteService;
+    @MockitoBean
+    private TrialResultService trialResultService;
+    @MockitoBean
+    private VoteRepository voteRepository;
 
     @Autowired
     private MockMvc mockMvc;

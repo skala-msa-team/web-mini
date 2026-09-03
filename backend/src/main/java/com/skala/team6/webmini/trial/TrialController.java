@@ -37,6 +37,8 @@ public class TrialController {
     private final TrialPreparationAiService trialPreparationAiService;
     private final TrialStartService trialStartService;
     private final TrialChatQueryService trialChatQueryService;
+    private final TrialVoteService trialVoteService;
+    private final TrialResultService trialResultService;
 
     public TrialController(
             TrialQueryService trialQueryService,
@@ -45,7 +47,9 @@ public class TrialController {
             TrialArgumentService trialArgumentService,
             TrialPreparationAiService trialPreparationAiService,
             TrialStartService trialStartService,
-            TrialChatQueryService trialChatQueryService
+            TrialChatQueryService trialChatQueryService,
+            TrialVoteService trialVoteService,
+            TrialResultService trialResultService
     ) {
         this.trialQueryService = trialQueryService;
         this.trialStatementService = trialStatementService;
@@ -54,6 +58,8 @@ public class TrialController {
         this.trialPreparationAiService = trialPreparationAiService;
         this.trialStartService = trialStartService;
         this.trialChatQueryService = trialChatQueryService;
+        this.trialVoteService = trialVoteService;
+        this.trialResultService = trialResultService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -318,10 +324,10 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody VoteRequest request
     ) {
+        TrialVoteService.VoteResult result = trialVoteService.vote(
+                trialId, demoUser.demoUserId(), request.selectedSide());
         return ResponseEntity.status(201).body(ApiResponse.of(new VoteResponse(
-                request.selectedSide(),
-                "2026-09-03T03:25:00Z"
-        )));
+                result.selectedSide(), result.votedAt().toString())));
     }
 
     @Operation(summary = "재판 결과 조회")
@@ -329,20 +335,7 @@ public class TrialController {
     public ResponseEntity<ApiResponse<TrialResultResponse>> getResults(
             @PathVariable @Min(1) Long trialId
     ) {
-        TrialResultResponse response = new TrialResultResponse(
-                trialId,
-                new VerdictPayload(
-                        TrialSide.B,
-                        60,
-                        40,
-                        "판결 요지",
-                        List.of("판단 근거"),
-                        "A측 개선 행동",
-                        "B측 개선 행동"
-                ),
-                new PublicVotePayload(7, 13, 20)
-        );
-        return ResponseEntity.ok(ApiResponse.of(response));
+        return ResponseEntity.ok(ApiResponse.of(trialResultService.getResult(trialId)));
     }
 
     private TrialSnapshotResponse sampleSnapshot(TrialStatus status) {
