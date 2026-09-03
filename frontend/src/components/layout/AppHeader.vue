@@ -6,10 +6,19 @@ import { Bell, Scale, UserRound } from '@lucide/vue'
 const route = useRoute()
 const trialId = computed(() => route.params.trialId ?? '1')
 const liveTrialRouteNames = ['live-trial', 'trial-voting', 'trial-result']
+const communityRouteNames = ['home', 'post-create', 'post-detail']
 
 const navigation = computed(() => [
-  { label: '홈', to: { name: 'home' }, active: route.name === 'home' },
-  { label: '인기게시글', to: { name: 'home', hash: '#popular-posts' } },
+  {
+    label: '홈',
+    to: { name: 'home' },
+    active: communityRouteNames.includes(route.name) && !route.hash,
+  },
+  {
+    label: '인기게시글',
+    to: { name: 'home', hash: '#popular-posts' },
+    active: route.name === 'home' && route.hash === '#popular-posts',
+  },
   {
     label: 'Live 재판',
     to: { name: 'live-trial', params: { trialId: trialId.value } },
@@ -18,6 +27,7 @@ const navigation = computed(() => [
   {
     label: '커뮤니티 가이드라인',
     to: { name: 'home', hash: '#community-guidelines' },
+    active: route.name === 'home' && route.hash === '#community-guidelines',
   },
   { label: '마이페이지', href: '#my-page' },
 ])

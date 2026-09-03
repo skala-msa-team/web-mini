@@ -1,5 +1,5 @@
 <script setup>
-import { AlertTriangle, FilePenLine, Gavel, UserRound } from '@lucide/vue'
+import { AlertTriangle, CheckCircle2, FilePenLine, Gavel, UserRound } from '@lucide/vue'
 
 defineProps({
   trial: {
@@ -10,9 +10,21 @@ defineProps({
     type: Object,
     required: true,
   },
+  startPending: {
+    type: Boolean,
+    default: false,
+  },
+  bothConfirmed: {
+    type: Boolean,
+    required: true,
+  },
+  startError: {
+    type: String,
+    default: '',
+  },
 })
 
-defineEmits(['back', 'edit'])
+defineEmits(['back', 'edit', 'start'])
 </script>
 
 <template>
@@ -44,7 +56,12 @@ defineEmits(['back', 'edit'])
             <UserRound class="size-4" :class="side === 'A' ? 'text-primary' : 'text-destructive'" />
             {{ side }}측 진술
           </h2>
-          <button class="flex items-center gap-1 text-sm text-primary" type="button" @click="$emit('edit', side === 'A' ? 2 : 3)"><FilePenLine class="size-4" />수정</button>
+          <div class="flex items-center gap-3">
+            <span v-if="parties[side].confirmed" class="flex items-center gap-1 text-xs text-[var(--ds-color-success)]">
+              <CheckCircle2 class="size-4" /> 진술 확정
+            </span>
+            <button class="flex items-center gap-1 text-sm text-primary" type="button" @click="$emit('edit', side === 'A' ? 2 : 3)"><FilePenLine class="size-4" />수정</button>
+          </div>
         </div>
         <p class="mb-2 text-xs text-muted-foreground">사건 개요 및 쟁점 파악</p>
         <p class="mb-5 text-sm leading-6">{{ parties[side].caseOverview }}</p>
@@ -57,10 +74,23 @@ defineEmits(['back', 'edit'])
       </article>
     </div>
 
+    <p
+      v-if="startError"
+      class="mt-6 rounded-lg bg-[var(--ds-color-error-container)] px-4 py-3 text-sm text-[var(--ds-color-on-error-container)]"
+      role="alert"
+    >
+      {{ startError }}
+    </p>
+
     <div class="mt-6 grid grid-cols-[1fr_2fr] gap-3">
-      <button class="rounded-lg border border-primary px-5 py-3 text-primary" type="button" @click="$emit('back')">이전</button>
-      <button class="flex items-center justify-center gap-2 rounded-lg bg-[var(--ds-color-primary)] px-5 py-3 font-semibold text-white" type="button">
-        재판 시작하기 <Gavel class="size-4" />
+      <button class="rounded-lg border border-primary px-5 py-3 text-primary disabled:cursor-not-allowed disabled:opacity-40" type="button" :disabled="startPending" @click="$emit('back')">이전</button>
+      <button
+        class="flex items-center justify-center gap-2 rounded-lg bg-[var(--ds-color-primary)] px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        type="button"
+        :disabled="!bothConfirmed || startPending"
+        @click="$emit('start')"
+      >
+        {{ startPending ? '재판을 시작하는 중...' : '재판 시작하기' }} <Gavel class="size-4" />
       </button>
     </div>
   </section>

@@ -7,7 +7,10 @@ const RECONNECT_DELAY_MS = 5_000
 
 function defaultBrokerUrl() {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin
-  return apiBaseUrl.replace(/^http/, 'ws') + STOMP_DESTINATION.endpoint
+  const apiUrl = new URL(apiBaseUrl, window.location.origin)
+  const brokerUrl = new URL(STOMP_DESTINATION.endpoint, apiUrl.origin)
+  brokerUrl.protocol = brokerUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+  return brokerUrl.toString()
 }
 
 function readMessage(frame) {
