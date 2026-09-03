@@ -190,6 +190,15 @@ DB_URL=jdbc:postgresql://localhost:5433/webmini
 | --- | --- | --- | --- |
 | Frontend | `VITE_API_BASE_URL` | `http://localhost:8080` | Backend 기본 URL |
 | Backend | `SERVER_PORT` | `8080` | Spring Boot 실행 Port |
+| Backend | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | REST API와 STOMP Endpoint 허용 Origin |
+| Backend | `APP_DEMO_USER_HEADER_NAME` | `X-Demo-User-Id` | Demo 사용자 식별 Header 이름 |
+| Backend | `APP_WEBSOCKET_ENDPOINT` | `/ws` | STOMP Handshake Endpoint |
+| Backend | `APP_WEBSOCKET_HEARTBEAT` | `10000,10000` | STOMP Heartbeat 송수신 간격 |
+| Backend | `APP_WEBSOCKET_MESSAGE_SIZE_LIMIT` | `65536` | 수신 메시지 최대 크기 |
+| Backend | `APP_WEBSOCKET_SEND_BUFFER_SIZE_LIMIT` | `131072` | 송신 버퍼 최대 크기 |
+| Backend | `APP_WEBSOCKET_SEND_TIME_LIMIT` | `20000` | 송신 시간 제한 |
+| Backend | `APP_AI_PROVIDER` | `mock` | 현재 AI Adapter 선택 |
+| Backend | `APP_AI_PROMPT_VERSION` | `judge-v1` | AI 요청 Prompt Version |
 | Backend | `DB_NAME` | `webmini` | Docker PostgreSQL Database 이름 |
 | Backend | `DB_PORT` | `5432` | Docker PostgreSQL 호스트 Port |
 | Backend | `DB_URL` | `jdbc:postgresql://localhost:5432/webmini` | Backend Database JDBC URL |
@@ -197,6 +206,37 @@ DB_URL=jdbc:postgresql://localhost:5433/webmini
 | Backend | `DB_PASSWORD` | `webmini` | 로컬 개발 Database 비밀번호 예시 |
 
 실제 비밀값은 `.env` 또는 로컬 실행 환경에만 저장합니다. 새로운 환경변수가 확정되면 영역별 `.env.example`에는 변수명과 비밀값이 아닌 예시만 추가합니다. Spring Boot는 `.env` 파일을 자동으로 읽지 않으므로 Backend 값은 실행 환경변수로 전달합니다.
+
+Backend에는 [backend/.env.example](backend/.env.example)에 실행 예시를 두었습니다. 이 파일은 참고용이며 자동 로드되지 않습니다. 아무 환경변수를 주지 않아도 기본값으로 실행되지만, 팀원별 또는 환경별 차이는 실행 환경변수로 override합니다.
+
+### Backend WebSocket/STOMP 기본값
+
+현재 Backend에는 Demo 재판 실시간 연결을 위한 최소 WebSocket/STOMP 스캐폴딩이 포함되어 있습니다.
+
+- Handshake Endpoint: `/ws`
+- Application Prefix: `/app`
+- Broker Prefix: `/topic`
+- User Destination Prefix: `/user`
+- 개인 오류 Queue: `/user/queue/errors`
+- Demo 사용자 식별: `CONNECT` 프레임의 `X-Demo-User-Id`
+
+현재 구현은 Demo 사용자 식별, 기본 Broker 설정, 개인 오류 Queue, 채팅용 최소 `@MessageMapping` 스캐폴딩까지 포함합니다. 재판 상태 전이, 채팅 저장, Event 저장과 Commit 이후 전송 같은 도메인 비즈니스 로직은 담당 Issue에서 이어서 구현합니다.
+
+간단한 로컬 확인 예시:
+
+```bash
+cd backend
+export APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
+export APP_WEBSOCKET_ENDPOINT=/ws
+./gradlew bootRun
+```
+
+이후 STOMP Client에서 `/ws` 로 연결하고 다음 경로를 확인합니다.
+
+- `SEND /app/trials/{trialId}/chat`
+- `SUBSCRIBE /topic/trials/{trialId}/chat`
+- `SUBSCRIBE /topic/trials/{trialId}/events`
+- `SUBSCRIBE /user/queue/errors`
 
 기본 검증:
 
