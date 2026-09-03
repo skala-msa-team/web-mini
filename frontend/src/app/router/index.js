@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LiveTrialEntryPage from '@/pages/live-trial/LiveTrialEntryPage.vue'
 import TrialVotingPage from '@/pages/live-trial/TrialVotingPage.vue'
+import TrialResultPage from '@/pages/trial-result/TrialResultPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,6 +19,11 @@ const router = createRouter({
       path: '/live-trial/vote',
       name: 'trial-voting',
       component: TrialVotingPage,
+    },
+    {
+      path: '/live-trial/result',
+      name: 'trial-result',
+      component: TrialResultPage,
     },
   ],
 })

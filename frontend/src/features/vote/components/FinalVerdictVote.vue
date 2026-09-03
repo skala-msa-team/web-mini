@@ -25,8 +25,8 @@ defineEmits(['select'])
     </header>
 
     <div class="choice-guide" aria-hidden="true">
-      <span>원고 승소</span>
-      <span>피고 승소</span>
+      <span>A측 승소</span>
+      <span>B측 승소</span>
     </div>
     <div class="vote-progress" aria-hidden="true"><span></span></div>
 
