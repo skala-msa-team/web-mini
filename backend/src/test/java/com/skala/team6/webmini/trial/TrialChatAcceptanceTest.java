@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -29,8 +31,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @EnabledIfEnvironmentVariable(named = "DB_INTEGRATION_TEST", matches = "true")
 class TrialChatAcceptanceTest {
     @Autowired
@@ -47,6 +53,8 @@ class TrialChatAcceptanceTest {
     private PlatformTransactionManager transactionManager;
     @MockitoBean
     private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    private MockMvc mockMvc;
 
     private TrialEntity trial;
 
@@ -113,5 +121,36 @@ class TrialChatAcceptanceTest {
 
         assertThat(chatMessageRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId())).isEmpty();
         verifyNoInteractions(messagingTemplate);
+    }
+
+    @Test
+    void restoresMessagesAfterCursorAndKeepsHistoryAfterTrialEnds() throws Exception {
+        String demoUserId = UUID.randomUUID().toString();
+        trialChatService.send(trial.getId(), demoUserId, "첫 메시지");
+        trialChatService.send(trial.getId(), demoUserId, "둘째 메시지");
+        trialChatService.send(trial.getId(), demoUserId, "셋째 메시지");
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}/messages", trial.getId())
+                        .param("afterSequence", "1")
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items.length()").value(1))
+                .andExpect(jsonPath("$.data.items[0].messageSequence").value(2))
+                .andExpect(jsonPath("$.data.items[0].messageId").isNumber())
+                .andExpect(jsonPath("$.data.items[0].sender.demoUserId").value(demoUserId))
+                .andExpect(jsonPath("$.data.latestMessageSequence").value(2))
+                .andExpect(jsonPath("$.data.hasMore").value(true));
+
+        trial.complete(OffsetDateTime.now());
+        trialRepository.saveAndFlush(trial);
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}/messages", trial.getId())
+                        .param("afterSequence", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items.length()").value(1))
+                .andExpect(jsonPath("$.data.items[0].messageSequence").value(3))
+                .andExpect(jsonPath("$.data.items[0].content").value("셋째 메시지"))
+                .andExpect(jsonPath("$.data.latestMessageSequence").value(3))
+                .andExpect(jsonPath("$.data.hasMore").value(false));
     }
 }
