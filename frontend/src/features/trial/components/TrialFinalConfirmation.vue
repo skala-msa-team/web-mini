@@ -1,5 +1,5 @@
 <script setup>
-import { AlertTriangle, CheckCircle2, Gavel, LoaderCircle, UserRound } from '@lucide/vue'
+import { AlertTriangle, CheckCircle2, FilePenLine, Gavel, UserRound } from '@lucide/vue'
 
 defineProps({
   trial: {
@@ -10,13 +10,13 @@ defineProps({
     type: Object,
     required: true,
   },
+  startPending: {
+    type: Boolean,
+    default: false,
+  },
   bothConfirmed: {
     type: Boolean,
     required: true,
-  },
-  startLoading: {
-    type: Boolean,
-    default: false,
   },
   startError: {
     type: String,
@@ -24,7 +24,7 @@ defineProps({
   },
 })
 
-defineEmits(['back', 'start'])
+defineEmits(['back', 'edit', 'start'])
 </script>
 
 <template>
@@ -39,8 +39,9 @@ defineEmits(['back', 'start'])
 
     <div class="grid gap-4">
       <article class="rounded-xl border border-border p-5">
-        <div class="mb-4 border-b border-border pb-3">
+        <div class="mb-4 flex items-center justify-between border-b border-border pb-3">
           <h2 class="flex items-center gap-2 font-heading text-lg font-semibold"><Gavel class="size-5 text-primary" /> 사건 개요</h2>
+          <button class="flex items-center gap-1 text-sm text-primary" type="button" @click="$emit('edit', 1)"><FilePenLine class="size-4" />수정</button>
         </div>
         <dl class="grid gap-4 text-sm">
           <div><dt class="text-muted-foreground">재판 제목</dt><dd class="mt-1 text-base">{{ trial.title }}</dd></div>
@@ -55,32 +56,41 @@ defineEmits(['back', 'start'])
             <UserRound class="size-4" :class="side === 'A' ? 'text-primary' : 'text-destructive'" />
             {{ side }}측 진술
           </h2>
-          <span class="flex items-center gap-1 text-sm" :class="parties[side].confirmed ? 'text-primary' : 'text-muted-foreground'">
-            <CheckCircle2 class="size-4" /> {{ parties[side].confirmed ? '확정 완료' : '확정 필요' }}
-          </span>
+          <div class="flex items-center gap-3">
+            <span v-if="parties[side].confirmed" class="flex items-center gap-1 text-xs text-[var(--ds-color-success)]">
+              <CheckCircle2 class="size-4" /> 진술 확정
+            </span>
+            <button class="flex items-center gap-1 text-sm text-primary" type="button" @click="$emit('edit', side === 'A' ? 2 : 3)"><FilePenLine class="size-4" />수정</button>
+          </div>
         </div>
         <p class="mb-2 text-xs text-muted-foreground">사건 개요 및 쟁점 파악</p>
-        <p class="mb-5 text-sm leading-6">{{ parties[side].factSummary }}</p>
-        <p class="mb-2 text-xs text-muted-foreground">완성 변론문</p>
+        <p class="mb-5 text-sm leading-6">{{ parties[side].caseOverview }}</p>
+        <p class="mb-2 text-xs text-muted-foreground">핵심 진술 요지</p>
+        <ul class="mb-5 list-disc space-y-1 pl-5 text-sm leading-6">
+          <li v-for="point in parties[side].keyPoints" :key="point">{{ point }}</li>
+        </ul>
+        <p class="mb-2 text-xs text-muted-foreground">최종 변론문</p>
         <p class="text-sm leading-6">{{ parties[side].argumentText }}</p>
       </article>
     </div>
 
-    <p v-if="startError" class="mt-5 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+    <p
+      v-if="startError"
+      class="mt-6 rounded-lg bg-[var(--ds-color-error-container)] px-4 py-3 text-sm text-[var(--ds-color-on-error-container)]"
+      role="alert"
+    >
       {{ startError }}
     </p>
 
     <div class="mt-6 grid grid-cols-[1fr_2fr] gap-3">
-      <button class="rounded-lg border border-primary px-5 py-3 text-primary" type="button" :disabled="startLoading" @click="$emit('back')">이전</button>
+      <button class="rounded-lg border border-primary px-5 py-3 text-primary disabled:cursor-not-allowed disabled:opacity-40" type="button" :disabled="startPending" @click="$emit('back')">이전</button>
       <button
-        class="flex items-center justify-center gap-2 rounded-lg bg-[var(--ds-color-primary)] px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+        class="flex items-center justify-center gap-2 rounded-lg bg-[var(--ds-color-primary)] px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
         type="button"
-        :disabled="!bothConfirmed || startLoading"
+        :disabled="!bothConfirmed || startPending"
         @click="$emit('start')"
       >
-        <LoaderCircle v-if="startLoading" class="size-4 animate-spin" />
-        <Gavel v-else class="size-4" />
-        {{ startLoading ? '재판 시작 중...' : '재판 시작하기' }}
+        {{ startPending ? '재판을 시작하는 중...' : '재판 시작하기' }} <Gavel class="size-4" />
       </button>
     </div>
   </section>

@@ -6,6 +6,7 @@ import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
 import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
 import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
+import { trialApi } from '@/api/trialApi.js'
 import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
 import ArgumentTimeline from '@/features/trial/components/ArgumentTimeline.vue'
 import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
@@ -25,6 +26,17 @@ const trialId = computed(() => route.params.trialId ?? liveTrialMock.id)
 const liveMessages = ref([...liveTrialMock.messages])
 const realtimeSnapshot = ref(null)
 const realtimeEvents = ref([])
+const trialDetail = ref(null)
+const trialTitle = computed(() => trialDetail.value?.title ?? liveTrialMock.title)
+const trialParticipants = computed(() => liveTrialMock.participants.map((participant) => {
+  if (participant.position === 'left' && trialDetail.value?.aParty) {
+    return { ...participant, name: `${trialDetail.value.aParty.displayName} AI 변호사` }
+  }
+  if (participant.position === 'right' && trialDetail.value?.bParty) {
+    return { ...participant, name: `${trialDetail.value.bParty.displayName} AI 변호사` }
+  }
+  return participant
+}))
 
 const {
   state: trialState,
@@ -53,12 +65,16 @@ function appendEvent(event) {
 }
 
 async function recoverConnection({ trialId: currentTrialId }) {
-  await recoverLiveTrial({
-    trialId: currentTrialId,
-    onSnapshot: (snapshot) => { realtimeSnapshot.value = snapshot },
-    onEvent: appendEvent,
-    onMessage: appendMessage,
-  })
+  const [detail] = await Promise.all([
+    trialApi.getTrial(currentTrialId),
+    recoverLiveTrial({
+      trialId: currentTrialId,
+      onSnapshot: (snapshot) => { realtimeSnapshot.value = snapshot },
+      onEvent: appendEvent,
+      onMessage: appendMessage,
+    }),
+  ])
+  trialDetail.value = detail
 }
 
 const realtime = useLiveTrialRealtime(trialId, {
@@ -133,7 +149,7 @@ watch(
             </span>
             <span class="view-badge"><Eye :size="14" />{{ liveTrialMock.viewCount }}</span>
           </div>
-          <h1 id="trial-title">“{{ liveTrialMock.title }}”</h1>
+          <h1 id="trial-title">“{{ trialTitle }}”</h1>
         </div>
 
         <div class="summary-stats">
@@ -156,7 +172,7 @@ watch(
 
       <div class="trial-layout">
         <div class="trial-main-column">
-          <TrialStage :participants="liveTrialMock.participants" />
+          <TrialStage :participants="trialParticipants" />
           <ArgumentTimeline
             :phase="phaseLabel"
             :notice="timeline.notice"
