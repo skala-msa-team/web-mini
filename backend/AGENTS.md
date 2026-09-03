@@ -6,8 +6,7 @@ These instructions apply to `backend/` in addition to the repository-level `AGEN
 
 - A minimal Java 21 Spring Boot Gradle project exists.
 - Web, Validation, and WebSocket/STOMP dependencies are present without application configuration.
-- JPA, PostgreSQL, Database schema, WebSocket/STOMP endpoints, REST APIs, persistence code, and Docker configuration are not present yet.
-- 최근 Frontend PR(#274)만 반영되었으며, Backend는 범위 미적용 상태입니다.
+- The Demo Database Schema contract is approved in Notion, but JPA Entities, Migration or DDL files, PostgreSQL connection, WebSocket/STOMP endpoints, REST APIs, persistence code, and Docker configuration are not present in the Repository yet.
 
 ## Change boundaries
 
