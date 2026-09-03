@@ -61,7 +61,11 @@ public class TrialQueryService {
             int page,
             int size
     ) {
-        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        var pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
+        );
         Page<TrialEntity> trials;
         if (status == null) {
             trials = trialRepository.findByVisibilityAndStatusIn(
@@ -89,8 +93,7 @@ public class TrialQueryService {
 
     @Transactional(readOnly = true)
     public TrialSnapshot findSnapshot(Long trialId) {
-        TrialEntity trial = trialRepository.findById(trialId)
-                .orElseThrow(() -> new ApiException(ErrorCode.TRIAL_NOT_FOUND));
+        TrialEntity trial = findPublicRecoverableTrial(trialId);
         return new TrialSnapshot(
                 trial,
                 trialEventRepository.findLatestSequenceByTrialId(trialId),
@@ -100,12 +103,16 @@ public class TrialQueryService {
 
     @Transactional(readOnly = true)
     public List<TrialEventEntity> findEventsAfter(Long trialId, long afterSequence) {
-        if (!trialRepository.existsById(trialId)) {
-            throw new ApiException(ErrorCode.TRIAL_NOT_FOUND);
-        }
+        findPublicRecoverableTrial(trialId);
         return trialEventRepository
                 .findByTrialIdAndSequenceNoGreaterThanOrderBySequenceNoAsc(
                         trialId, afterSequence);
+    }
+
+    private TrialEntity findPublicRecoverableTrial(Long trialId) {
+        return trialRepository.findByIdAndVisibilityAndStatusNot(
+                        trialId, Visibility.PUBLIC, TrialStatus.PREPARING)
+                .orElseThrow(() -> new ApiException(ErrorCode.TRIAL_NOT_FOUND));
     }
 
     private TrialListEntry toListEntry(

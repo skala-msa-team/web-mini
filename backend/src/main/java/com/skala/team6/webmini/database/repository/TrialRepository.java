@@ -18,6 +18,12 @@ public interface TrialRepository extends JpaRepository<TrialEntity, Long> {
     @EntityGraph(attributePaths = "post")
     Optional<TrialEntity> findDetailById(Long id);
 
+    Optional<TrialEntity> findByIdAndVisibilityAndStatusNot(
+            Long id,
+            Visibility visibility,
+            TrialStatus excludedStatus
+    );
+
     @EntityGraph(attributePaths = "post")
     Page<TrialEntity> findByVisibilityAndStatusIn(
             Visibility visibility,

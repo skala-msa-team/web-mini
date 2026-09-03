@@ -147,6 +147,29 @@ class TrialRecoveryAcceptanceTest {
                 .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
     }
 
+    @Test
+    void hidesPreparingRecoveryDataAndValidatesQueryParameters() throws Exception {
+        TrialEntity preparing = createTrial("준비 중", TrialStatus.PREPARING);
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}/snapshot", preparing.getId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
+        mockMvc.perform(get("/api/v1/trials/{trialId}/events", preparing.getId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
+
+        mockMvc.perform(get("/api/v1/trials").param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mockMvc.perform(get("/api/v1/trials").param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mockMvc.perform(get("/api/v1/trials/{trialId}/events", preparing.getId())
+                        .param("afterSequence", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
     private TrialEntity createTrial(String title, TrialStatus status) {
         UserEntity user = userRepository.save(
                 new UserEntity(UUID.randomUUID().toString(), "작성자"));
