@@ -6,6 +6,7 @@ import { Bold, Image, Italic, Link, Scale } from "@lucide/vue";
 import { postApi } from "@/api/postApi.js";
 import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
 import { categoryTypes } from "@/features/community/mock/communityData.js";
+import { useCommunityStore } from "@/features/community/stores/communityStore.js";
 
 const TRIAL_DRAFT_STORAGE_KEY = "love-war:trial-draft";
 const relationshipOptions = [
@@ -14,6 +15,7 @@ const relationshipOptions = [
   { label: "부부", value: "SPOUSE" },
 ];
 const router = useRouter();
+const { addPost } = useCommunityStore();
 
 const category = ref("");
 const relationshipType = ref("");
@@ -46,8 +48,19 @@ async function submitPost() {
     });
 
     if (!requestTrial.value) {
+      const localPost = addPost({
+        id: `created-${createdPost.postId}-${crypto.randomUUID()}`,
+        backendPostId: createdPost.postId,
+        category: category.value,
+        relationshipType: createdPost.relationshipType,
+        title: createdPost.title,
+        content: createdPost.content,
+      });
       sessionStorage.removeItem(TRIAL_DRAFT_STORAGE_KEY);
-      await router.push({ name: "home" });
+      await router.push({
+        name: "post-detail",
+        params: { postId: localPost.id },
+      });
       return;
     }
 
