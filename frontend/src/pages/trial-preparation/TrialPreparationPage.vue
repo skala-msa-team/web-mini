@@ -14,6 +14,7 @@ const route = useRoute()
 const router = useRouter()
 const startPending = ref(false)
 const startError = ref('')
+const bothConfirmed = ref(false)
 const preparationPending = ref(false)
 const preparationError = ref('')
 
@@ -59,6 +60,9 @@ onMounted(async () => {
     trial.summary = savedTrial.content
     trial.aDisplayName = savedTrial.aParty.displayName
     trial.bDisplayName = savedTrial.bParty.displayName
+    parties.A.confirmed = Boolean(savedTrial.aParty.ready)
+    parties.B.confirmed = Boolean(savedTrial.bParty.ready)
+    bothConfirmed.value = parties.A.confirmed && parties.B.confirmed
   } catch (error) {
     preparationError.value = error?.message || '재판 정보를 불러오지 못했습니다.'
   } finally {
@@ -80,6 +84,7 @@ const parties = reactive({
     keyPoints: [],
     argumentText: '',
     confirmed: false,
+    confirmedAt: null,
     statementSaved: false,
     guideQuestions: [],
     guideAnswers: [],
@@ -99,6 +104,7 @@ const parties = reactive({
     keyPoints: [],
     argumentText: '',
     confirmed: false,
+    confirmedAt: null,
     statementSaved: false,
     guideQuestions: [],
     guideAnswers: [],
@@ -195,9 +201,13 @@ async function generatePartyDraft(guideAnswers) {
 
   try {
     if (guideAnswers.length) {
-      await trialApi.saveGuideAnswers(trialId.value, side, {
+      const savedAnswers = await trialApi.saveGuideAnswers(trialId.value, side, {
         answers: guideAnswers,
       })
+
+      if (!savedAnswers.allAnswered) {
+        throw new Error('모든 AI 안내 질문에 답변한 뒤 변론문을 생성해주세요.')
+      }
     }
 
     const draft = await trialApi.createArgumentDraft(trialId.value, side)
@@ -227,11 +237,13 @@ async function confirmParty() {
       factSummary: party.caseOverview.trim(),
       argumentText: party.argumentText.trim(),
     })
-    await trialApi.confirmArgument(trialId.value, side)
+    const confirmation = await trialApi.confirmArgument(trialId.value, side)
 
     party.caseOverview = updatedDraft.factSummary
     party.argumentText = updatedDraft.argumentText
     party.confirmed = true
+    party.confirmedAt = confirmation.confirmedAt
+    bothConfirmed.value = Boolean(confirmation.bothConfirmed)
     currentStep.value += 1
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (error) {
@@ -252,6 +264,11 @@ async function startTrial() {
 
   if (!trialId.value) {
     startError.value = '재판 식별 정보가 없습니다. 게시글 등록부터 다시 진행해주세요.'
+    return
+  }
+
+  if (!bothConfirmed.value) {
+    startError.value = '양측 진술이 모두 확정되어야 재판을 시작할 수 있습니다.'
     return
   }
 
@@ -314,6 +331,7 @@ async function startTrial() {
           v-else
           :trial="trial"
           :parties="parties"
+          :both-confirmed="bothConfirmed"
           :start-pending="startPending"
           :start-error="startError"
           @back="goToStep(3)"
