@@ -14,6 +14,7 @@ These instructions apply to `backend/` in addition to the repository-level `AGEN
 - Do not define REST paths, status codes, WebSocket endpoints, STOMP destinations, or message payloads before interface review.
 - Do not implement Mock AI or provider adapters before Prompt and JSON Schema approval.
 - Keep Frontend files out of Backend Tasks and PRs.
+- Create Backend work branches from the latest `backend` branch and open Backend PRs back into `backend`.
 
 ## Commands
 

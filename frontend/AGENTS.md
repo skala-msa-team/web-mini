@@ -14,6 +14,7 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 - Do not implement screens before the user flow and Google Stitch/Figma design are approved.
 - Do not define REST payloads or STOMP destinations before the shared interface is approved.
 - Keep Backend files out of Frontend Tasks and PRs.
+- Create Frontend work branches from the latest `frontend` branch and open Frontend PRs back into `frontend`.
 
 ## Commands
 

@@ -14,6 +14,7 @@ These instructions apply to `docs/` in addition to the repository-level `AGENTS.
 - Do not create empty or speculative contract documents.
 - Distinguish assignment requirements, team decisions, implemented behavior, and verified results.
 - Do not rename or remove `assets/github-guide/` files without updating and verifying the Notion pages that use their GitHub Raw URLs.
+- Follow the repository branch workflow: `frontend` and `backend` are area branches from `dev`, and cross-area documentation should stay aligned with promotions into `dev`.
 
 ## Code review rules
 

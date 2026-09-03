@@ -178,13 +178,14 @@ cd backend
 
 ## 협업 흐름
 
-1. 최신 `dev`에서 작업 Branch를 생성합니다.
+1. 최신 `dev`에서 영역 통합 Branch인 `frontend`와 `backend`를 분기하고 최신 상태를 유지합니다.
 2. Issue 하나에 Branch 하나와 PR 하나를 연결합니다.
 3. Frontend와 Backend 작업은 Task, Branch, Commit, PR을 분리합니다.
-4. 일반 작업 PR은 `dev`로 생성합니다.
-5. `dev` 대상 PR은 최소 1명의 승인을 받은 뒤 병합합니다.
-6. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
-7. Review와 검증 후 Squash and merge합니다.
+4. Frontend 작업 Branch는 최신 `frontend`에서, Backend 작업 Branch는 최신 `backend`에서 생성합니다.
+5. Frontend 작업 PR은 `frontend`로, Backend 작업 PR은 `backend`로 생성합니다.
+6. `frontend`와 `backend`에서 검증된 변경을 `dev`로 반영합니다.
+7. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
+8. Review와 검증 후 Squash and merge합니다.
 
 초기 Repository 부트스트랩 Issue는 위 협업 규칙 확정 전에 직접 반영되었습니다. 이후 기능 작업부터 Issue·Branch·PR 연결과 Review 규칙을 적용합니다.
 
@@ -203,6 +204,8 @@ cd backend
 ### Branch
 
 - 형식: `type/작업영역-이슈번호-영어-작업명`
+- 기준 Branch:
+  Frontend 작업은 `frontend`, Backend 작업은 `backend`, Integration 작업은 `dev`에서 분기합니다.
 - Frontend: `feat/frontend-12-task-form`
 - Backend: `feat/backend-13-task-api`
 - 연동: `fix/integration-27-task-flow`
@@ -236,12 +239,15 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 
 ### Pull Request
 
-- 일반 작업은 작업 Branch에서 `dev`로 PR을 생성합니다.
-- `dev`는 작업 통합 Branch이며, GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
+- Frontend 작업은 작업 Branch에서 `frontend`로 PR을 생성합니다.
+- Backend 작업은 작업 Branch에서 `backend`로 PR을 생성합니다.
+- `frontend`와 `backend`는 영역 통합 Branch이며, 각 영역의 검증된 작업을 먼저 모읍니다.
+- `frontend`와 `backend`에서 검증된 변경만 `dev`로 반영합니다.
+- `dev`는 최종 통합 Branch이며, GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
 - `main`은 최종 완성본 Branch이며, GitHub의 필수 승인 규칙은 적용하지 않습니다.
 - 작업 Branch에서 `main`으로 직접 병합하지 않고 최종 완료 시점에 `dev`의 검증된 내용을 `main`에 반영합니다.
 - `Closes #이슈번호`를 작성합니다.
-- Frontend와 Backend PR을 각각 병합한 뒤 별도 Integration Task와 PR로 연동합니다.
+- Frontend와 Backend PR을 각각 영역 Branch에 병합한 뒤 별도 Integration Task와 PR로 `dev` 반영을 진행합니다.
 - Review와 필요한 검증을 통과한 뒤 Squash and merge합니다.
 
 ### 네이밍

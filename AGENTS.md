@@ -35,17 +35,20 @@
 
 - Keep Frontend work in `frontend/`, Backend work in `backend/`, and approved design documents in `docs/`.
 - Do not mix Frontend and Backend changes in one Task, Branch, Commit, or PR.
-- Handle cross-area changes in a separate Integration Task after each area is merged into `dev`.
+- Handle cross-area changes in a separate Integration Task after each area branch is merged and promoted to `dev`.
 - Preserve unrelated user changes.
 
 ## Git workflow
 
-- Create work branches from the latest `dev`.
+- Keep `frontend` and `backend` as long-lived area branches created from the latest `dev`.
+- Create Frontend work branches from the latest `frontend` and Backend work branches from the latest `backend`.
+- Create Integration work branches from the latest `dev` after the required Frontend and Backend changes are merged.
 - Use `type/작업영역-이슈번호-영어-작업명` for branch names.
 - Use `type(scope): 한국어 제목` for commits; scope is required.
 - Link one Issue to one Branch and one PR.
-- Open normal work PRs into `dev`; use `dev` to `main` only for final integration.
-- Require at least one approving review before merging a PR into `dev`.
+- Open Frontend work PRs into `frontend` and Backend work PRs into `backend`.
+- Promote verified `frontend` and `backend` changes into `dev`; use `dev` to `main` only for final integration.
+- Require at least one approving review before merging a PR into `frontend`, `backend`, or `dev`.
 - `main` has no required-approval protection rule, but team convention allows only final promotion from `dev`, not direct work-branch merges.
 - Do not commit, push, merge, or edit Notion unless the user explicitly asks.
 
