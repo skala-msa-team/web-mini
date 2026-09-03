@@ -6,6 +6,8 @@ defineProps({
   notice: { type: String, required: true },
   argument: { type: Object, required: true },
   summary: { type: Object, required: true },
+  currentLabel: { type: String, default: '현재 변론 내용' },
+  waitingMessage: { type: String, required: true },
 })
 </script>
 
@@ -26,7 +28,7 @@ defineProps({
         <div class="timeline-icon"><Gavel :size="19" /></div>
         <div class="speech-wrap">
           <strong>{{ argument.speaker }}</strong>
-          <span class="current-badge">현재 변론 내용</span>
+          <span class="current-badge">{{ currentLabel }}</span>
           <p>“{{ argument.content }}”</p>
         </div>
       </article>
@@ -34,12 +36,12 @@ defineProps({
       <article class="summary-card">
         <h3><FileText :size="16" /> {{ summary.title }}</h3>
         <p>“{{ summary.content }}”</p>
-        <div class="progress-track" aria-label="B측 주장 요약 준비 진행률">
+        <div class="progress-track" aria-label="현재 재판 진행률">
           <span :style="{ width: `${summary.progress}%` }"></span>
         </div>
       </article>
 
-      <p class="waiting"><Hourglass :size="16" /> AI 변호사 B가 반론을 준비 중입니다...</p>
+      <p class="waiting"><Hourglass :size="16" /> {{ waitingMessage }}</p>
     </div>
   </section>
 </template>

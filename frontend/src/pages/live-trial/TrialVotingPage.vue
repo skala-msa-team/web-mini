@@ -86,20 +86,25 @@ const interactionsDisabled = computed(
 const interactionDisabledMessage = computed(() =>
   isExpired.value ? '재판 시간이 종료되었습니다.' : stateInteractionDisabledMessage.value,
 )
+const submittedVote = ref(null)
 const selectedChoice = ref(toChoiceId(trialState.value.vote.selectedSide))
+const voteStatus = computed(() =>
+  submittedVote.value ? VOTE_STATUS.SUBMITTED : trialState.value.vote.status,
+)
 const voteDisabled = computed(
-  () => interactionsDisabled.value || trialState.value.vote.status !== VOTE_STATUS.OPEN,
+  () => interactionsDisabled.value || voteStatus.value !== VOTE_STATUS.OPEN,
 )
 const voteDisabledMessage = computed(() => {
   if (interactionsDisabled.value) return interactionDisabledMessage.value
-  if (trialState.value.vote.status === VOTE_STATUS.WAITING) return '최종 투표가 아직 시작되지 않았습니다.'
-  if (trialState.value.vote.status === VOTE_STATUS.SUBMITTED) return '투표 제출이 완료되었습니다.'
+  if (voteStatus.value === VOTE_STATUS.WAITING) return '최종 투표가 아직 시작되지 않았습니다.'
+  if (voteStatus.value === VOTE_STATUS.SUBMITTED) return '투표 제출이 완료되었습니다.'
   return ''
 })
 
 watch(
   () => trialState.value.vote.selectedSide,
   (selectedSide) => {
+    submittedVote.value = null
     selectedChoice.value = toChoiceId(selectedSide)
   },
 )
@@ -120,6 +125,15 @@ function toChoiceId(side) {
 function selectChoice(choiceId) {
   if (voteDisabled.value) return
   selectedChoice.value = choiceId
+}
+
+function submitVote() {
+  if (voteDisabled.value || !selectedChoice.value) return
+
+  submittedVote.value = Object.freeze({
+    selectedSide: selectedChoice.value.replace('SIDE_', ''),
+    votedAt: new Date().toISOString(),
+  })
 }
 </script>
 
@@ -157,9 +171,11 @@ function selectChoice(choiceId) {
             :choices="finalVoteMock.choices"
             :remaining-time="formattedRemainingTime"
             :selected-choice="selectedChoice"
-            :disabled="voteDisabled"
+            :status="voteStatus"
+            :disabled="interactionsDisabled"
             :disabled-message="voteDisabledMessage"
             @select="selectChoice"
+            @submit="submitVote"
           />
         </div>
 

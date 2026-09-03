@@ -3,7 +3,6 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Clock3, Eye, UsersRound } from '@lucide/vue'
 import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { TRIAL_STATUS_LABEL } from '@/constants/trialStatus.js'
 import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
 import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
@@ -13,6 +12,7 @@ import TrialConnectionStatus from '@/features/trial/components/TrialConnectionSt
 import TrialStage from '@/features/trial/components/TrialStage.vue'
 import { recoverLiveTrial } from '@/realtime/liveTrialRecovery.js'
 import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
+import { getLiveTrialTimelineMock } from '@/features/trial/liveTrialTimelineMock.js'
 import {
   LIVE_TRIAL_MOCK_SCENARIO,
   LIVE_TRIAL_TIMING,
@@ -76,9 +76,10 @@ const currentSnapshot = computed(() => realtimeSnapshot.value || trialState.valu
 const trialEndsAt = computed(() => currentSnapshot.value?.scheduledEndAt)
 const { remainingSeconds, formattedRemainingTime, isExpired } = useTrialCountdown(trialEndsAt)
 const trialEnded = computed(() => Boolean(currentSnapshot.value?.ended || isExpired.value))
+const timeline = computed(() => getLiveTrialTimelineMock(remainingSeconds.value))
 const phaseLabel = computed(() => {
   if (trialEnded.value) return '재판 종료'
-  return TRIAL_STATUS_LABEL[trialState.value.snapshot?.status] ?? '상태 확인 중'
+  return timeline.value.phase
 })
 const interactionsDisabled = computed(
   () => realtime.connection.value.status !== CONNECTION_STATUS.CONNECTED || isExpired.value,
@@ -158,9 +159,11 @@ watch(
           <TrialStage :participants="liveTrialMock.participants" />
           <ArgumentTimeline
             :phase="phaseLabel"
-            :notice="liveTrialMock.judgeNotice"
-            :argument="liveTrialMock.currentArgument"
-            :summary="liveTrialMock.nextSummary"
+            :notice="timeline.notice"
+            :argument="timeline.argument"
+            :summary="timeline.summary"
+            :current-label="timeline.currentLabel"
+            :waiting-message="timeline.waitingMessage"
           />
 
         </div>
