@@ -123,4 +123,14 @@ public class TrialStatementEntity {
         this.factSummary = factSummary;
         this.argumentText = argumentText;
     }
+
+    public OffsetDateTime getConfirmedAt() {
+        return confirmedAt;
+    }
+
+    public void confirm(OffsetDateTime confirmedAt) {
+        if (this.confirmedAt == null) {
+            this.confirmedAt = confirmedAt;
+        }
+    }
 }

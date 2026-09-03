@@ -201,10 +201,12 @@ public class TrialController {
             )
             @DemoUserId DemoUserContext demoUser
     ) {
+        TrialArgumentService.ConfirmedArgument confirmed =
+                trialArgumentService.confirm(trialId, side);
         return ResponseEntity.ok(ApiResponse.of(new ConfirmArgumentResponse(
                 side,
-                "2026-09-03T03:20:00Z",
-                side == TrialSide.B
+                confirmed.statement().getConfirmedAt().toString(),
+                confirmed.bothConfirmed()
         )));
     }
 

@@ -67,4 +67,8 @@ public class TrialPartyEntity {
     public boolean isReady() {
         return ready;
     }
+
+    public void markReady() {
+        this.ready = true;
+    }
 }

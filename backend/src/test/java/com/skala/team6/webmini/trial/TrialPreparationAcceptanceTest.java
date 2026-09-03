@@ -173,6 +173,39 @@ class TrialPreparationAcceptanceTest {
         assertThat(trialStatementRepository.findByTrialPartyId(bParty.getId())).isEmpty();
     }
 
+    @Test
+    void confirmsEachPartyIndependentlyAndReportsBothConfirmed() throws Exception {
+        prepareArgument(aParty, TrialSide.A);
+        prepareArgument(bParty, TrialSide.B);
+
+        confirmArgument(TrialSide.A)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.side").value("A"))
+                .andExpect(jsonPath("$.data.confirmedAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.bothConfirmed").value(false));
+        OffsetDateTime firstConfirmedAt = trialStatementRepository
+                .findByTrialPartyId(aParty.getId()).orElseThrow().getConfirmedAt();
+
+        confirmArgument(TrialSide.A)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.bothConfirmed").value(false));
+        assertThat(trialStatementRepository.findByTrialPartyId(aParty.getId())
+                .orElseThrow().getConfirmedAt()).isEqualTo(firstConfirmedAt);
+
+        confirmArgument(TrialSide.B)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.bothConfirmed").value(true));
+
+        entityManager.flush();
+        entityManager.clear();
+        assertThat(trialPartyRepository.findByTrialIdAndSide(trial.getId(), TrialSide.A)
+                .orElseThrow().isReady()).isTrue();
+        assertThat(trialPartyRepository.findByTrialIdAndSide(trial.getId(), TrialSide.B)
+                .orElseThrow().isReady()).isTrue();
+        assertThat(trialStatementRepository.findByTrialPartyId(bParty.getId())
+                .orElseThrow().getConfirmedAt()).isNotNull();
+    }
+
     private org.springframework.test.web.servlet.ResultActions saveStatement(
             TrialSide side,
             String situation
@@ -217,5 +250,21 @@ class TrialPreparationAcceptanceTest {
                 .content("""
                         {"factSummary":"%s","argumentText":"%s"}
                         """.formatted(factSummary, argumentText)));
+    }
+
+    private void prepareArgument(TrialPartyEntity party, TrialSide side) throws Exception {
+        saveStatement(side, side + "측 상황").andExpect(status().isOk());
+        AiGuideQuestionEntity question = questionRepository.save(
+                new AiGuideQuestionEntity(party, 1, side + "측 질문"));
+        question.answer("완료된 답변", OffsetDateTime.now());
+        questionRepository.save(question);
+        updateArgument(side, side + "측 사실", side + "측 변론").andExpect(status().isOk());
+    }
+
+    private org.springframework.test.web.servlet.ResultActions confirmArgument(TrialSide side)
+            throws Exception {
+        return mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/api/v1/trials/{trialId}/parties/{side}/confirm", trial.getId(), side)
+                .header("X-Demo-User-Id", DEMO_USER_ID));
     }
 }
