@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { getLiveTrialStateMock } from '@/features/trial/liveTrialStateMock.js'
+import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { getLiveTrialStateMock } from '@/mock/trial/liveTrialStateMock.js'
 
 export function useLiveTrialMockState(defaultScenario) {
   const route = useRoute()

@@ -1,0 +1,5 @@
+import { API_TIMEOUT_MS } from '@/consts/api.js'
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
+export { API_TIMEOUT_MS }

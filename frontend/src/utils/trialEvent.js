@@ -1,5 +1,5 @@
-import { TRIAL_EVENT_TYPE } from "@/constants/trialEventType.js";
-import { TRIAL_STATUS } from "@/constants/trialStatus.js";
+import { TRIAL_EVENT_TYPE } from "@/consts/trialEventType.js";
+import { TRIAL_STATUS } from "@/consts/trialStatus.js";
 
 function parsePayload(payload) {
   if (!payload) return {};

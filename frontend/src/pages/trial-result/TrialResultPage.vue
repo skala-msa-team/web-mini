@@ -2,10 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, Check, Share2 } from '@lucide/vue'
-import { trialApi } from '@/api/trialApi.js'
-import FaultRatioCard from '@/features/verdict/components/FaultRatioCard.vue'
-import JudgmentGrounds from '@/features/verdict/components/JudgmentGrounds.vue'
-import VerdictComparison from '@/features/verdict/components/VerdictComparison.vue'
+import { getResults, getTrial } from '@/apis/trialApi.js'
+import FaultRatioCard from '@/components/verdict/FaultRatioCard.vue'
+import JudgmentGrounds from '@/components/verdict/JudgmentGrounds.vue'
+import VerdictComparison from '@/components/verdict/VerdictComparison.vue'
 
 const shareCompleted = ref(false)
 const route = useRoute()
@@ -54,8 +54,8 @@ const juryResult = computed(() => {
 onMounted(async () => {
   try {
     const [detail, result] = await Promise.all([
-      trialApi.getTrial(route.params.trialId),
-      trialApi.getResults(route.params.trialId),
+      getTrial(route.params.trialId),
+      getResults(route.params.trialId),
     ])
     trialDetail.value = detail
     trialResult.value = result

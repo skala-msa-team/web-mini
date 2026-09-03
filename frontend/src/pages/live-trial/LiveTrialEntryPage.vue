@@ -2,20 +2,20 @@
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Clock3, Eye, UsersRound } from '@lucide/vue'
-import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { TRIAL_STATUS } from '@/constants/trialStatus.js'
+import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { TRIAL_STATUS } from '@/consts/trialStatus.js'
 import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
-import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
-import ArgumentTimeline from '@/features/trial/components/ArgumentTimeline.vue'
-import LawyerDebatePanel from '@/features/trial/components/LawyerDebatePanel.vue'
-import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
-import TrialStage from '@/features/trial/components/TrialStage.vue'
-import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
+import TrialChatPanel from '@/components/chat/TrialChatPanel.vue'
+import ArgumentTimeline from '@/components/trial/ArgumentTimeline.vue'
+import LawyerDebatePanel from '@/components/trial/LawyerDebatePanel.vue'
+import TrialConnectionStatus from '@/components/trial/TrialConnectionStatus.vue'
+import TrialStage from '@/components/trial/TrialStage.vue'
+import { liveTrialMock } from '@/mock/trial/liveTrialMock.js'
 import {
   getTrialPhaseLabel,
   getTrialWaitingMessage,
-} from '@/features/trial/liveTrialPresentation.js'
+} from '@/mock/trial/liveTrialPresentation.js'
 import { toLawyerDebateEvents, toTimelineEvents } from '@/utils/trialEvent.js'
 
 const route = useRoute()
