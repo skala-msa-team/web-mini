@@ -1,8 +1,10 @@
 <script setup>
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
-import { Bot, CheckCircle2, FileText, Send, Sparkles, UserRound } from '@lucide/vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
+import { Bot, CheckCircle2, FileText, LoaderCircle, Send, Sparkles, UserRound } from '@lucide/vue'
+import { trialApi } from '@/api/trialApi.js'
 
 const props = defineProps({
+  trialId: { type: Number, required: true },
   side: { type: String, required: true, validator: (value) => ['A', 'B'].includes(value) },
   party: { type: Object, required: true },
   otherParty: { type: Object, default: null },
@@ -10,14 +12,18 @@ const props = defineProps({
 
 const emit = defineEmits(['update:party', 'back', 'confirm'])
 const chatInput = ref('')
+const errorMessage = ref('')
+const loadingAction = ref('')
 const chatLog = useTemplateRef('chatLog')
-const guideQuestions = [
-  '그 상황에서 가장 서운하거나 힘들었던 점은 무엇이었나요?',
-  '상대방에게 바라는 변화나 원하는 해결 방향을 알려주세요.',
-]
 
-const userMessages = computed(() => props.party.messages.filter((message) => message.role === 'USER'))
-const conversationComplete = computed(() => userMessages.value.length >= guideQuestions.length + 1)
+const answeredCount = computed(() => props.party.answers.length)
+const currentQuestion = computed(() => props.party.questions[answeredCount.value] ?? null)
+const conversationComplete = computed(() => (
+  props.party.questionsLoaded
+  && props.party.questions.length > 0
+  && answeredCount.value === props.party.questions.length
+))
+const isBusy = computed(() => Boolean(loadingAction.value))
 
 function updateParty(patch) {
   emit('update:party', { ...props.party, ...patch })
@@ -30,37 +36,106 @@ async function scrollChatToBottom() {
 
 function sendMessage() {
   const content = chatInput.value.trim()
-  if (!content || conversationComplete.value) return
+  const question = currentQuestion.value
+  if (!content || !question || isBusy.value || props.party.confirmed) return
 
+  const answers = [...props.party.answers, { questionId: question.questionId, answer: content }]
   const messages = [...props.party.messages, { id: crypto.randomUUID(), role: 'USER', content }]
-  const answeredCount = messages.filter((message) => message.role === 'USER').length
-  const nextQuestion = guideQuestions[answeredCount - 1]
+  const nextQuestion = props.party.questions[answers.length]
 
   messages.push({
     id: crypto.randomUUID(),
     role: 'ASSISTANT',
     content:
-      nextQuestion ??
-      '필요한 내용을 모두 확인했습니다. 아래의 ‘진술서 작성 완료’를 누르면 대화를 바탕으로 초안을 정리해드릴게요.',
+      nextQuestion?.question ??
+      '필요한 내용을 모두 확인했습니다. ‘진술서 작성 완료’를 누르면 답변을 저장하고 변론문을 생성할게요.',
   })
 
   chatInput.value = ''
-  updateParty({ messages, draftGenerated: false })
+  errorMessage.value = ''
+  updateParty({ answers, messages, draftGenerated: false })
   scrollChatToBottom()
 }
 
-// #221에서 Mock AI API 응답으로 교체할 임시 초안 생성 동작입니다.
-function createMockDraft() {
-  if (!conversationComplete.value) return
+async function loadGuideQuestions() {
+  if (props.party.questionsLoaded || isBusy.value) return
 
-  const answers = userMessages.value.map((message) => message.content)
-  updateParty({
-    draftGenerated: true,
-    caseOverview: `${props.side}측은 ${answers[0]} 이 과정에서 양측의 기대와 상황 인식이 달라 갈등이 발생한 것으로 파악됩니다.`,
-    keyPoints: [answers[1], answers[2]],
-    argumentText: `${props.side}측은 ${answers[1]}고 설명합니다. 이를 해결하기 위해 ${answers[2]}는 방향을 제안합니다.`,
-  })
+  loadingAction.value = 'questions'
+  errorMessage.value = ''
+  try {
+    const result = await trialApi.createGuideQuestions(props.trialId, props.side)
+    const questions = (result.questions ?? []).map((question) => ({
+      questionId: question.questionId,
+      sequence: question.sequence,
+      question: question.question,
+    }))
+
+    if (!questions.length) throw new Error('생성된 안내 질문이 없습니다.')
+
+    updateParty({
+      questions,
+      questionsLoaded: true,
+      messages: [
+        ...props.party.messages,
+        { id: crypto.randomUUID(), role: 'ASSISTANT', content: questions[0].question },
+      ],
+    })
+    await scrollChatToBottom()
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    loadingAction.value = ''
+  }
 }
+
+async function createDraft() {
+  if (!conversationComplete.value || isBusy.value || props.party.confirmed) return
+
+  loadingAction.value = 'draft'
+  errorMessage.value = ''
+  try {
+    const saved = await trialApi.saveGuideAnswers(props.trialId, props.side, {
+      answers: props.party.answers,
+    })
+    if (!saved.allAnswered) {
+      throw new Error('모든 안내 질문에 답변해야 변론문을 생성할 수 있습니다.')
+    }
+
+    const draft = await trialApi.createArgumentDraft(props.trialId, props.side)
+    updateParty({
+      draftGenerated: true,
+      factSummary: draft.factSummary,
+      argumentText: draft.argumentText,
+    })
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    loadingAction.value = ''
+  }
+}
+
+async function confirmDraft() {
+  if (!props.party.draftGenerated || !props.party.factSummary.trim() || !props.party.argumentText.trim() || isBusy.value || props.party.confirmed) return
+
+  loadingAction.value = 'confirm'
+  errorMessage.value = ''
+  try {
+    const draft = await trialApi.updateArgumentDraft(props.trialId, props.side, {
+      factSummary: props.party.factSummary.trim(),
+      argumentText: props.party.argumentText.trim(),
+    })
+    updateParty({ factSummary: draft.factSummary, argumentText: draft.argumentText })
+
+    const confirmed = await trialApi.confirmArgument(props.trialId, props.side)
+    emit('confirm', confirmed)
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    loadingAction.value = ''
+  }
+}
+
+onMounted(loadGuideQuestions)
 </script>
 
 <template>
@@ -70,7 +145,7 @@ function createMockDraft() {
         <h2 class="mb-2 flex items-center gap-2 font-heading font-semibold">
           <FileText class="size-4 text-primary" /> A측 주요 진술 요약
         </h2>
-        <p class="rounded-lg bg-muted p-3 text-sm text-muted-foreground">{{ otherParty.argumentText }}</p>
+        <p class="rounded-lg bg-muted p-3 text-sm text-muted-foreground">{{ otherParty.factSummary }}</p>
       </div>
 
       <div class="flex min-h-[36rem] flex-col rounded-xl border border-border bg-card p-5 shadow-interactive">
@@ -78,7 +153,7 @@ function createMockDraft() {
           <span class="grid size-10 place-items-center rounded-full bg-[var(--ds-color-primary-fixed)] text-primary"><Bot class="size-5" /></span>
           <div>
             <h2 class="font-heading font-semibold">{{ side }}측 AI 변호사</h2>
-            <p class="text-xs text-muted-foreground">대화를 통해 진술을 정리해드려요</p>
+            <p class="text-xs text-muted-foreground">안내 질문을 통해 진술을 정리해드려요</p>
           </div>
         </div>
 
@@ -102,20 +177,37 @@ function createMockDraft() {
               <UserRound class="size-4" />
             </span>
           </div>
+
+          <div v-if="loadingAction === 'questions'" class="flex items-center gap-2 text-sm text-muted-foreground">
+            <LoaderCircle class="size-4 animate-spin" /> 안내 질문을 준비하고 있습니다.
+          </div>
         </div>
+
+        <p v-if="errorMessage" class="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+          {{ errorMessage }}
+        </p>
+        <button
+          v-if="errorMessage && !party.questionsLoaded"
+          class="mt-2 self-start text-sm font-semibold text-primary"
+          type="button"
+          :disabled="isBusy"
+          @click="loadGuideQuestions"
+        >
+          안내 질문 다시 불러오기
+        </button>
 
         <form class="mt-4 flex gap-2 border-t border-border pt-4" @submit.prevent="sendMessage">
           <input
             v-model="chatInput"
             class="min-w-0 flex-1 rounded-lg border border-input bg-muted px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed"
-            :disabled="conversationComplete"
-            :placeholder="conversationComplete ? '대화가 완료되었습니다.' : '상황을 설명해주세요...'"
+            :disabled="!currentQuestion || isBusy || party.confirmed"
+            :placeholder="conversationComplete ? '답변이 완료되었습니다.' : '답변을 입력해주세요...'"
           />
           <button
             class="rounded-lg bg-primary px-5 text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="!chatInput.trim() || conversationComplete"
+            :disabled="!chatInput.trim() || !currentQuestion || isBusy || party.confirmed"
             type="submit"
-            aria-label="메시지 전송"
+            aria-label="답변 전송"
           >
             <Send class="size-4" />
           </button>
@@ -123,11 +215,13 @@ function createMockDraft() {
 
         <button
           class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-primary px-4 py-2.5 font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-40"
-          :disabled="!conversationComplete"
+          :disabled="!conversationComplete || isBusy || party.confirmed"
           type="button"
-          @click="createMockDraft"
+          @click="createDraft"
         >
-          <Sparkles class="size-4" /> {{ party.draftGenerated ? '진술서 다시 작성' : '진술서 작성 완료' }}
+          <LoaderCircle v-if="loadingAction === 'draft'" class="size-4 animate-spin" />
+          <Sparkles v-else class="size-4" />
+          {{ loadingAction === 'draft' ? '변론문 생성 중...' : party.draftGenerated ? '진술서 다시 작성' : '진술서 작성 완료' }}
         </button>
       </div>
     </section>
@@ -136,17 +230,19 @@ function createMockDraft() {
       <h2 class="border-b border-border pb-3 font-heading text-xl font-semibold">변론문 초안 미리보기</h2>
       <div v-if="party.draftGenerated" class="mt-4 min-h-[31rem] rounded-lg bg-[var(--ds-color-primary-fixed)] p-5">
         <h3 class="mb-2 font-heading font-semibold">사건 개요 및 쟁점 파악</h3>
-        <p class="mb-6 text-sm leading-6 text-muted-foreground">{{ party.caseOverview }}</p>
+        <textarea
+          :value="party.factSummary"
+          class="mb-6 min-h-28 w-full resize-none rounded-lg border border-primary/20 bg-card/60 p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-ring disabled:opacity-70"
+          :disabled="party.confirmed"
+          aria-label="사실관계 요약 수정"
+          @input="updateParty({ factSummary: $event.target.value })"
+        />
 
-        <h3 class="mb-2 font-heading font-semibold">핵심 진술 요지</h3>
-        <ul class="mb-6 list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
-          <li v-for="point in party.keyPoints" :key="point">{{ point }}</li>
-        </ul>
-
-        <h3 class="mb-2 font-heading font-semibold">{{ side }}측 변론문</h3>
+        <h3 class="mb-2 font-heading font-semibold">{{ side }}측 완성 변론문</h3>
         <textarea
           :value="party.argumentText"
-          class="min-h-40 w-full resize-none rounded-lg border border-primary/20 bg-card/60 p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-ring"
+          class="min-h-64 w-full resize-none rounded-lg border border-primary/20 bg-card/60 p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-ring disabled:opacity-70"
+          :disabled="party.confirmed"
           aria-label="변론문 수정"
           @input="updateParty({ argumentText: $event.target.value })"
         />
@@ -154,21 +250,23 @@ function createMockDraft() {
       <div v-else class="mt-4 grid min-h-[31rem] place-items-center rounded-lg border border-dashed border-border bg-muted p-8 text-center text-sm text-muted-foreground">
         <div>
           <Sparkles class="mx-auto mb-3 size-7 text-primary" />
-          AI 변호사와 대화를 마친 뒤<br />‘진술서 작성 완료’를 눌러주세요.
+          모든 안내 질문에 답한 뒤<br />‘진술서 작성 완료’를 눌러주세요.
         </div>
       </div>
-      <p class="mt-3 text-center text-xs text-muted-foreground">대화 완료 후 Mock AI가 사건 개요와 핵심 진술을 요약합니다.</p>
+      <p class="mt-3 text-center text-xs text-muted-foreground">모든 답변이 저장된 후 Mock AI가 사실관계와 변론문을 생성합니다.</p>
     </section>
 
     <div class="flex justify-between border-t border-border pt-4 lg:col-span-2">
-      <button class="rounded-lg border border-border bg-card px-5 py-2.5" type="button" @click="$emit('back')">이전</button>
+      <button class="rounded-lg border border-border bg-card px-5 py-2.5" type="button" :disabled="isBusy" @click="$emit('back')">이전</button>
       <button
         class="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        :disabled="!party.draftGenerated || !party.argumentText.trim()"
+        :disabled="!party.draftGenerated || !party.factSummary.trim() || !party.argumentText.trim() || isBusy || party.confirmed"
         type="button"
-        @click="$emit('confirm')"
+        @click="confirmDraft"
       >
-        <CheckCircle2 class="size-4" /> 진술 확정
+        <LoaderCircle v-if="loadingAction === 'confirm'" class="size-4 animate-spin" />
+        <CheckCircle2 v-else class="size-4" />
+        {{ party.confirmed ? '진술 확정 완료' : loadingAction === 'confirm' ? '저장 및 확정 중...' : '진술 확정' }}
       </button>
     </div>
   </div>

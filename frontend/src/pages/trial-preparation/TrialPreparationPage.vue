@@ -1,12 +1,24 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { trialApi } from '@/api/trialApi.js'
 import PartyStatementStep from '@/features/trial/components/PartyStatementStep.vue'
 import TrialBasicInformation from '@/features/trial/components/TrialBasicInformation.vue'
 import TrialFinalConfirmation from '@/features/trial/components/TrialFinalConfirmation.vue'
 import TrialStepIndicator from '@/features/trial/components/TrialStepIndicator.vue'
 
+const route = useRoute()
+const router = useRouter()
 const currentStep = ref(1)
+const pageError = ref('')
+const startLoading = ref(false)
+const bothConfirmed = ref(false)
 const TRIAL_DRAFT_STORAGE_KEY = 'love-war:trial-draft'
+
+const trialId = computed(() => {
+  const value = Number(route.query.trialId)
+  return Number.isInteger(value) && value > 0 ? value : null
+})
 
 const trial = reactive({
   title: '',
@@ -15,53 +27,65 @@ const trial = reactive({
   summary: '',
 })
 
-onMounted(() => {
+function loadStoredDraft() {
   const storedDraft = sessionStorage.getItem(TRIAL_DRAFT_STORAGE_KEY)
-
   if (!storedDraft) return
 
   try {
     const draft = JSON.parse(storedDraft)
-
     trial.title = draft.title ?? ''
     trial.summary = draft.content ?? ''
   } catch {
     sessionStorage.removeItem(TRIAL_DRAFT_STORAGE_KEY)
   }
-})
+}
+
+function createParty(side) {
+  return {
+    messages: [{
+      id: `${side.toLowerCase()}-introduction`,
+      role: 'ASSISTANT',
+      content: `안녕하세요. ${side}측의 입장을 담당한 AI 변호사입니다. 저장된 진술을 확인하고 안내 질문을 준비할게요.`,
+    }],
+    questions: [],
+    answers: [],
+    questionsLoaded: false,
+    draftGenerated: false,
+    factSummary: '',
+    argumentText: '',
+    confirmed: false,
+    confirmedAt: null,
+  }
+}
 
 const parties = reactive({
-  A: {
-    messages: [
-      {
-        id: 'a-introduction',
-        role: 'ASSISTANT',
-        content: '안녕하세요. A측의 입장을 담당한 AI 변호사입니다. 먼저 사건이 어떻게 시작됐는지 편하게 설명해주세요.',
-      },
-    ],
-    draftGenerated: false,
-    caseOverview: '',
-    keyPoints: [],
-    argumentText: '',
-    confirmed: false,
-  },
-  B: {
-    messages: [
-      {
-        id: 'b-introduction',
-        role: 'ASSISTANT',
-        content: '안녕하세요. B측의 입장을 담당한 AI 변호사입니다. A측과 다른 관점이 있다면 사건의 시작부터 설명해주세요.',
-      },
-    ],
-    draftGenerated: false,
-    caseOverview: '',
-    keyPoints: [],
-    argumentText: '',
-    confirmed: false,
-  },
+  A: createParty('A'),
+  B: createParty('B'),
 })
 
 const currentSide = computed(() => (currentStep.value === 2 ? 'A' : 'B'))
+
+async function loadTrial() {
+  if (!trialId.value) return
+
+  try {
+    const detail = await trialApi.getTrial(trialId.value)
+    trial.title = detail.title ?? trial.title
+    trial.summary = detail.content ?? trial.summary
+    trial.aDisplayName = detail.aParty?.displayName ?? trial.aDisplayName
+    trial.bDisplayName = detail.bParty?.displayName ?? trial.bDisplayName
+    parties.A.confirmed = Boolean(detail.aParty?.ready)
+    parties.B.confirmed = Boolean(detail.bParty?.ready)
+    bothConfirmed.value = parties.A.confirmed && parties.B.confirmed
+  } catch (error) {
+    pageError.value = error.message
+  }
+}
+
+onMounted(() => {
+  loadStoredDraft()
+  loadTrial()
+})
 
 function updateTrial(value) {
   Object.assign(trial, value)
@@ -71,15 +95,40 @@ function updateParty(value) {
   Object.assign(parties[currentSide.value], value)
 }
 
-function confirmParty() {
-  parties[currentSide.value].confirmed = true
-  currentStep.value += 1
+function confirmParty(result) {
+  const party = parties[currentSide.value]
+  party.confirmed = true
+  party.confirmedAt = result.confirmedAt
+  bothConfirmed.value = Boolean(result.bothConfirmed)
+  currentStep.value = currentSide.value === 'A' ? 3 : 4
+  pageError.value = ''
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function goToStep(step) {
+  if (step >= 2 && !trialId.value) {
+    pageError.value = '연동할 재판 ID가 없습니다. 재판 생성 후 다시 시도해 주세요.'
+    return
+  }
+
+  pageError.value = ''
   currentStep.value = step
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+async function startTrial() {
+  if (!trialId.value || !bothConfirmed.value || startLoading.value) return
+
+  startLoading.value = true
+  pageError.value = ''
+  try {
+    await trialApi.startTrial(trialId.value)
+    await router.push({ name: 'live-trial', params: { trialId: trialId.value } })
+  } catch (error) {
+    pageError.value = error.message
+  } finally {
+    startLoading.value = false
+  }
 }
 </script>
 
@@ -92,6 +141,14 @@ function goToStep(step) {
         <TrialStepIndicator :current-step="currentStep" />
       </div>
 
+      <p
+        v-if="pageError && currentStep !== 4"
+        class="mx-auto mb-5 max-w-3xl rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        role="alert"
+      >
+        {{ pageError }}
+      </p>
+
       <div :class="currentStep === 2 || currentStep === 3 ? '' : 'mx-auto max-w-3xl'">
         <TrialBasicInformation
           v-if="currentStep === 1"
@@ -103,6 +160,7 @@ function goToStep(step) {
         <PartyStatementStep
           v-else-if="currentStep === 2 || currentStep === 3"
           :key="currentSide"
+          :trial-id="trialId"
           :side="currentSide"
           :party="parties[currentSide]"
           :other-party="currentSide === 'B' ? parties.A : null"
@@ -115,11 +173,13 @@ function goToStep(step) {
           v-else
           :trial="trial"
           :parties="parties"
+          :both-confirmed="bothConfirmed"
+          :start-loading="startLoading"
+          :start-error="pageError"
           @back="goToStep(3)"
-          @edit="goToStep"
+          @start="startTrial"
         />
       </div>
     </main>
-
   </div>
 </template>
