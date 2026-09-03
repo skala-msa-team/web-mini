@@ -5,6 +5,7 @@ import com.skala.team6.webmini.common.model.TrialSide;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class MockAiClient implements AiClient {
@@ -20,8 +21,26 @@ public class MockAiClient implements AiClient {
             AiRequestContext context,
             LawyerQuestionsRequest request
     ) {
+        String sideLabel = sideLabel(request.side());
+        StatementPayload statement = request.statement();
         return new LawyerQuestionsResponse(
-                List.of(new GuideQuestionItem(1, "평소 두 분이 합의한 연락 기준이 있었나요?")),
+                List.of(
+                        new GuideQuestionItem(
+                                1,
+                                "%s이 설명한 '%s' 상황에서 가장 중요했던 사실은 무엇인가요?"
+                                        .formatted(sideLabel, statement.situation())
+                        ),
+                        new GuideQuestionItem(
+                                2,
+                                "%s이 '%s' 행동을 한 이유와 당시 의도는 무엇이었나요?"
+                                        .formatted(sideLabel, statement.ownAction())
+                        ),
+                        new GuideQuestionItem(
+                                3,
+                                "%s이 원하는 해결인 '%s'을 위해 상대측과 합의할 기준은 무엇인가요?"
+                                        .formatted(sideLabel, statement.desiredResolution())
+                        )
+                ),
                 "1.0"
         );
     }
@@ -31,9 +50,23 @@ public class MockAiClient implements AiClient {
             AiRequestContext context,
             LawyerArgumentRequest request
     ) {
+        String sideLabel = sideLabel(request.side());
+        StatementPayload statement = request.statement();
+        String answers = request.guideAnswers().stream()
+                .map(GuideAnswerItem::answer)
+                .collect(Collectors.joining(" "));
         return new LawyerArgumentResponse(
-                "양측은 연락 빈도에 대한 명확한 합의가 없었습니다.",
-                "A측은 불안감 때문에 반복 연락했으나 사전 합의가 없었다고 주장합니다.",
+                "%s에 %s 상대측은 %s, %s은 %s 이후 %s"
+                        .formatted(
+                                statement.incidentTime(),
+                                statement.situation(),
+                                statement.counterpartAction(),
+                                sideLabel,
+                                statement.ownAction(),
+                                statement.afterConversation()
+                        ),
+                "%s은 '%s'라는 해결을 요청합니다. 안내 답변에 따르면 %s"
+                        .formatted(sideLabel, statement.desiredResolution(), answers),
                 "1.0"
         );
     }
@@ -58,5 +91,9 @@ public class MockAiClient implements AiClient {
                         ? appAiProperties.promptVersion()
                         : request.promptVersion()
         );
+    }
+
+    private String sideLabel(TrialSide side) {
+        return side.name() + "측";
     }
 }

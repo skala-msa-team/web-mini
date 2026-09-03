@@ -50,7 +50,8 @@ record TrialDetailResponse(
 
 record TrialPartyInfo(
         TrialSide side,
-        String displayName
+        String displayName,
+        boolean ready
 ) {
 }
 

@@ -1,7 +1,10 @@
 package com.skala.team6.webmini.post;
 
 import com.skala.team6.webmini.common.api.ApiResponse;
-import com.skala.team6.webmini.common.model.TrialStatus;
+import com.skala.team6.webmini.database.entity.PostEntity;
+import com.skala.team6.webmini.demo.DemoUserContext;
+import com.skala.team6.webmini.demo.DemoUserId;
+import com.skala.team6.webmini.trial.TrialCreationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,18 +23,27 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/posts")
 public class PostController {
+    private final PostService postService;
+    private final TrialCreationService trialCreationService;
+
+    public PostController(PostService postService, TrialCreationService trialCreationService) {
+        this.postService = postService;
+        this.trialCreationService = trialCreationService;
+    }
 
     @Operation(summary = "갈등 게시글 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<CreatePostResponse>> createPost(
+            @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody CreatePostRequest request
     ) {
+        PostEntity post = postService.createPost(demoUser.demoUserId(), request);
         CreatePostResponse response = new CreatePostResponse(
-                10L,
-                request.title(),
-                request.content(),
-                request.relationshipType(),
-                request.trialRequested()
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                post.getRelationshipType(),
+                post.isTrialRequested()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(response));
     }
@@ -40,13 +52,16 @@ public class PostController {
     @PostMapping("/{postId}/trials")
     public ResponseEntity<ApiResponse<CreateTrialResponse>> createTrial(
             @PathVariable @Min(1) Long postId,
+            @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody CreateTrialRequest request
     ) {
+        TrialCreationService.CreatedTrial created = trialCreationService.create(
+                demoUser.demoUserId(), postId, request.aDisplayName(), request.bDisplayName());
         CreateTrialResponse response = new CreateTrialResponse(
-                21L,
-                TrialStatus.PREPARING,
-                new TrialPartySummary("A", request.aDisplayName()),
-                new TrialPartySummary("B", request.bDisplayName())
+                created.trial().getId(),
+                created.trial().getStatus(),
+                new TrialPartySummary("A", created.parties().get(0).getDisplayName()),
+                new TrialPartySummary("B", created.parties().get(1).getDisplayName())
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(response));
     }

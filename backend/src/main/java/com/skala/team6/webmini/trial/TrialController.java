@@ -1,10 +1,8 @@
 package com.skala.team6.webmini.trial;
 
 import com.skala.team6.webmini.common.api.ApiResponse;
-import com.skala.team6.webmini.common.model.RelationshipType;
 import com.skala.team6.webmini.common.model.TrialSide;
 import com.skala.team6.webmini.common.model.TrialStatus;
-import com.skala.team6.webmini.common.model.Visibility;
 import com.skala.team6.webmini.demo.DemoUserContext;
 import com.skala.team6.webmini.demo.DemoUserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +30,28 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/trials")
 public class TrialController {
+    private final TrialQueryService trialQueryService;
+    private final TrialStatementService trialStatementService;
+    private final GuideAnswerService guideAnswerService;
+    private final TrialArgumentService trialArgumentService;
+    private final TrialStartService trialStartService;
+    private final TrialChatQueryService trialChatQueryService;
+
+    public TrialController(
+            TrialQueryService trialQueryService,
+            TrialStatementService trialStatementService,
+            GuideAnswerService guideAnswerService,
+            TrialArgumentService trialArgumentService,
+            TrialStartService trialStartService,
+            TrialChatQueryService trialChatQueryService
+    ) {
+        this.trialQueryService = trialQueryService;
+        this.trialStatementService = trialStatementService;
+        this.guideAnswerService = guideAnswerService;
+        this.trialArgumentService = trialArgumentService;
+        this.trialStartService = trialStartService;
+        this.trialChatQueryService = trialChatQueryService;
+    }
 
     @Operation(summary = "재판 목록 조회")
     @GetMapping
@@ -40,20 +60,24 @@ public class TrialController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
+        TrialQueryService.TrialList result =
+                trialQueryService.findPublicActiveTrials(status, page, size);
+        List<TrialListItem> items = result.entries().stream()
+                .map(entry -> new TrialListItem(
+                        entry.trial().getId(),
+                        entry.trial().getStatus(),
+                        entry.trial().getPost().getTitle(),
+                        entry.aDisplayName(),
+                        entry.bDisplayName(),
+                        entry.trial().getVisibility()
+                ))
+                .toList();
         TrialListResponse response = new TrialListResponse(
-                List.of(new TrialListItem(
-                        21L,
-                        status == null ? TrialStatus.PREPARING : status,
-                        "연락 문제로 다툰 사연",
-                        "A측",
-                        "B측",
-                        Visibility.PUBLIC
-                )),
-                page,
-                size,
-                1,
-                1
-        );
+                items,
+                result.page(),
+                result.size(),
+                result.totalElements(),
+                result.totalPages());
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -62,18 +86,28 @@ public class TrialController {
     public ResponseEntity<ApiResponse<TrialDetailResponse>> getTrial(
             @PathVariable @Min(1) Long trialId
     ) {
+        TrialQueryService.TrialDetail detail = trialQueryService.findDetail(trialId);
+        var trial = detail.trial();
+        var post = trial.getPost();
+        var parties = detail.parties();
         TrialDetailResponse response = new TrialDetailResponse(
-                trialId,
-                10L,
-                "연락 문제로 다툰 사연",
-                "연인이 답장이 늦어 갈등이 생겼습니다.",
-                RelationshipType.COUPLE,
-                Visibility.PUBLIC,
-                TrialStatus.PREPARING,
-                "2026-09-03T03:00:00Z",
-                "2026-09-03T03:10:00Z",
-                new TrialPartyInfo(TrialSide.A, "A측"),
-                new TrialPartyInfo(TrialSide.B, "B측")
+                trial.getId(),
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                post.getRelationshipType(),
+                trial.getVisibility(),
+                trial.getStatus(),
+                trial.getPhaseStartedAt() == null ? null : trial.getPhaseStartedAt().toString(),
+                trial.getPhaseEndsAt() == null ? null : trial.getPhaseEndsAt().toString(),
+                new TrialPartyInfo(
+                        parties.get(0).getSide(),
+                        parties.get(0).getDisplayName(),
+                        parties.get(0).isReady()),
+                new TrialPartyInfo(
+                        parties.get(1).getSide(),
+                        parties.get(1).getDisplayName(),
+                        parties.get(1).isReady())
         );
         return ResponseEntity.ok(ApiResponse.of(response));
     }
@@ -92,7 +126,16 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody StatementRequest request
     ) {
-        return ResponseEntity.ok(ApiResponse.of(new StatementResponse(side, request)));
+        var statement = trialStatementService.save(trialId, side, request);
+        StatementRequest saved = new StatementRequest(
+                statement.getIncidentTime(),
+                statement.getSituation(),
+                statement.getCounterpartAction(),
+                statement.getOwnAction(),
+                statement.getAfterConversation(),
+                statement.getDesiredResolution()
+        );
+        return ResponseEntity.ok(ApiResponse.of(new StatementResponse(side, saved)));
     }
 
     @Operation(summary = "안내 질문 생성")
@@ -123,7 +166,8 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody GuideAnswersRequest request
     ) {
-        GuideAnswersResponse response = new GuideAnswersResponse(request.answers(), true);
+        GuideAnswerService.SavedGuideAnswers saved = guideAnswerService.save(trialId, side, request);
+        GuideAnswersResponse response = new GuideAnswersResponse(saved.answers(), saved.allAnswered());
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -154,11 +198,9 @@ public class TrialController {
             @DemoUserId DemoUserContext demoUser,
             @Valid @RequestBody UpdateArgumentDraftRequest request
     ) {
+        var statement = trialArgumentService.updateDraft(trialId, side, request);
         return ResponseEntity.ok(ApiResponse.of(new ArgumentDraftResponse(
-                side,
-                request.factSummary(),
-                request.argumentText()
-        )));
+                side, statement.getFactSummary(), statement.getArgumentText())));
     }
 
     @Operation(summary = "변론문 최종 확인")
@@ -174,10 +216,12 @@ public class TrialController {
             )
             @DemoUserId DemoUserContext demoUser
     ) {
+        TrialArgumentService.ConfirmedArgument confirmed =
+                trialArgumentService.confirm(trialId, side);
         return ResponseEntity.ok(ApiResponse.of(new ConfirmArgumentResponse(
                 side,
-                "2026-09-03T03:20:00Z",
-                side == TrialSide.B
+                confirmed.statement().getConfirmedAt().toString(),
+                confirmed.bothConfirmed()
         )));
     }
 
@@ -193,6 +237,7 @@ public class TrialController {
             )
             @DemoUserId DemoUserContext demoUser
     ) {
+        trialStartService.validateReady(trialId);
         return ResponseEntity.ok(ApiResponse.of(sampleSnapshot(TrialStatus.INTRODUCTION)));
     }
 
@@ -201,7 +246,19 @@ public class TrialController {
     public ResponseEntity<ApiResponse<TrialSnapshotResponse>> getSnapshot(
             @PathVariable @Min(1) Long trialId
     ) {
-        return ResponseEntity.ok(ApiResponse.of(sampleSnapshot(TrialStatus.INTRODUCTION)));
+        TrialQueryService.TrialSnapshot snapshot = trialQueryService.findSnapshot(trialId);
+        var trial = snapshot.trial();
+        TrialSnapshotResponse response = new TrialSnapshotResponse(
+                trial.getStatus(),
+                formatTime(trial.getPhaseStartedAt()),
+                formatTime(trial.getPhaseEndsAt()),
+                formatTime(trial.getScheduledEndAt()),
+                snapshot.latestEventSequence(),
+                snapshot.latestMessageSequence(),
+                trial.getStatus() == TrialStatus.VOTING,
+                trial.getStatus() == TrialStatus.ENDED
+        );
+        return ResponseEntity.ok(ApiResponse.of(response));
     }
 
     @Operation(summary = "재판 이벤트 조회")
@@ -210,9 +267,16 @@ public class TrialController {
             @PathVariable @Min(1) Long trialId,
             @RequestParam(defaultValue = "0") @Min(0) long afterSequence
     ) {
-        List<TrialEventResponse> response = List.of(
-                new TrialEventResponse(1, "TRIAL_STARTED", "{\"status\":\"INTRODUCTION\"}", "2026-09-03T03:00:00Z")
-        );
+        List<TrialEventResponse> response = trialQueryService
+                .findEventsAfter(trialId, afterSequence)
+                .stream()
+                .map(event -> new TrialEventResponse(
+                        event.getSequenceNo(),
+                        event.getEventType(),
+                        event.getPayload(),
+                        event.getCreatedAt().toString()
+                ))
+                .toList();
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -223,22 +287,8 @@ public class TrialController {
             @RequestParam(defaultValue = "0") @Min(0) long afterSequence,
             @RequestParam(defaultValue = "100") @Min(1) @Max(200) int size
     ) {
-        TrialMessagesResponse response = new TrialMessagesResponse(
-                List.of(new TrialMessageItem(
-                        9001L,
-                        15,
-                        trialId,
-                        new TrialMessageSender(
-                                "7f33baf1-74aa-4eaf-8750-139f6324784f",
-                                "관전자1"
-                        ),
-                        "A측의 설명도 이해됩니다.",
-                        "2026-09-03T03:05:00Z"
-                )),
-                15,
-                false
-        );
-        return ResponseEntity.ok(ApiResponse.of(response));
+        return ResponseEntity.ok(ApiResponse.of(
+                trialChatQueryService.findMessages(trialId, afterSequence, size)));
     }
 
     @Operation(summary = "승소 투표")
@@ -292,5 +342,9 @@ public class TrialController {
                 true,
                 false
         );
+    }
+
+    private String formatTime(java.time.OffsetDateTime value) {
+        return value == null ? null : value.toString();
     }
 }

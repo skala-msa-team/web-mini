@@ -4,15 +4,53 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import com.skala.team6.webmini.post.PostService;
+import com.skala.team6.webmini.database.repository.PostRepository;
+import com.skala.team6.webmini.database.repository.UserRepository;
+import com.skala.team6.webmini.trial.TrialCreationService;
+import com.skala.team6.webmini.trial.TrialQueryService;
+import com.skala.team6.webmini.trial.GuideAnswerService;
+import com.skala.team6.webmini.trial.TrialArgumentService;
+import com.skala.team6.webmini.trial.TrialStartService;
+import com.skala.team6.webmini.trial.TrialStatementService;
+import com.skala.team6.webmini.trial.TrialChatQueryService;
+import com.skala.team6.webmini.trial.TrialChatService;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.autoconfigure.exclude="
+        + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
+        + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
+        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration")
 @AutoConfigureMockMvc
 class ApiDocumentationSmokeTest {
+
+    @MockitoBean
+    private PostService postService;
+    @MockitoBean
+    private UserRepository userRepository;
+    @MockitoBean
+    private PostRepository postRepository;
+    @MockitoBean
+    private TrialCreationService trialCreationService;
+    @MockitoBean
+    private TrialQueryService trialQueryService;
+    @MockitoBean
+    private TrialStatementService trialStatementService;
+    @MockitoBean
+    private GuideAnswerService guideAnswerService;
+    @MockitoBean
+    private TrialArgumentService trialArgumentService;
+    @MockitoBean
+    private TrialStartService trialStartService;
+    @MockitoBean
+    private TrialChatQueryService trialChatQueryService;
+    @MockitoBean
+    private TrialChatService trialChatService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -23,6 +61,8 @@ class ApiDocumentationSmokeTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/v1/posts']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/trials/{trialId}/parties/{side}/statement']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/mock-ai/lawyer/questions']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/mock-ai/lawyer/argument']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/mock-ai/judge/verdict']").exists())
                 .andExpect(jsonPath("$.components.securitySchemes.demoUserHeader").exists());
     }
