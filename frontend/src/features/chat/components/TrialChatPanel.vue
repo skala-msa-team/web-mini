@@ -1,14 +1,18 @@
 <script setup>
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { MessageSquare, Send } from '@lucide/vue'
 
 const props = defineProps({
   initialMessages: { type: Array, required: true },
+  messages: { type: Array, default: null },
   audienceCount: { type: Number, required: true },
   headerLabel: { type: String, default: '' },
   disabled: { type: Boolean, default: false },
   disabledMessage: { type: String, default: '현재 채팅을 사용할 수 없습니다.' },
+  onSend: { type: Function, default: null },
 })
+
+const emit = defineEmits(['send'])
 
 const messages = ref([...props.initialMessages])
 const draft = ref('')
@@ -16,19 +20,32 @@ const messageList = ref(null)
 const formattedAudienceCount = computed(() => props.audienceCount.toLocaleString('ko-KR'))
 const displayedHeaderLabel = computed(() => props.headerLabel || `${formattedAudienceCount.value}명`)
 
+watch(
+  () => props.messages,
+  (nextMessages) => {
+    if (nextMessages) messages.value = [...nextMessages]
+  },
+  { deep: true },
+)
+
 async function submitMessage() {
   if (props.disabled) return
 
   const message = draft.value.trim()
   if (!message) return
 
-  messages.value.push({
-    id: Date.now(),
-    avatar: '나',
-    nickname: '나의 의견',
-    message,
-    tone: 'navy',
-  })
+  const sent = props.onSend ? props.onSend(message) : true
+  if (sent === false) return
+  if (!props.onSend) {
+    messages.value.push({
+      id: Date.now(),
+      avatar: '나',
+      nickname: '나의 의견',
+      message,
+      tone: 'navy',
+    })
+  }
+  emit('send', message)
   draft.value = ''
   await nextTick()
   messageList.value?.lastElementChild?.scrollIntoView({ behavior: 'smooth' })

@@ -1,6 +1,6 @@
 # Frontend
 
-Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vue 사용 기반, Justice & Empathy 디자인 토큰, Vue Router가 설정되어 있습니다. STOMP와 도메인별 API·화면은 계약과 담당 Issue가 확정된 뒤 추가합니다. 상태 관리 Library는 미정입니다.
+Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vue 사용 기반, Justice & Empathy 디자인 토큰, Vue Router와 승인된 실시간 재판용 STOMP 연결 구성이 설정되어 있습니다. 상태 관리 Library와 HTTP Client는 미정입니다.
 
 ## 책임별 구조
 
