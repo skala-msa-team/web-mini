@@ -8,9 +8,8 @@ const props = defineProps({
 })
 
 const resultsAgree = computed(() => {
-  const aiWinner = props.aiResult.sideA >= props.aiResult.sideB ? 'A' : 'B'
-  const juryWinner = props.juryResult.sideA >= props.juryResult.sideB ? 'A' : 'B'
-  return aiWinner === juryWinner
+  if (!props.aiResult.winnerSide || !props.juryResult.winnerSide) return null
+  return props.aiResult.winnerSide === props.juryResult.winnerSide
 })
 </script>
 
@@ -22,7 +21,7 @@ const resultsAgree = computed(() => {
         <h2 id="comparison-title">판결 결과 비교 <small>(AI vs 배심원)</small></h2>
       </div>
       <span class="comparison-badge" :class="{ 'comparison-badge--agree': resultsAgree }">
-        {{ resultsAgree ? '판단 일치' : '판단 불일치' }}
+        {{ resultsAgree === null ? '판단 비교 불가' : resultsAgree ? '판단 일치' : '판단 불일치' }}
       </span>
     </header>
 

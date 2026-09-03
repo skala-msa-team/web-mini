@@ -27,11 +27,11 @@ defineProps({
     <div class="ratio-labels">
       <div>
         <strong>A측</strong>
-        <span>{{ ratio.sideAReason }}</span>
+        <span><b>A측 개선 행동:</b> {{ ratio.aRecommendation }}</span>
       </div>
       <div>
         <strong>B측</strong>
-        <span>{{ ratio.sideBReason }}</span>
+        <span><b>B측 개선 행동:</b> {{ ratio.bRecommendation }}</span>
       </div>
     </div>
   </section>
