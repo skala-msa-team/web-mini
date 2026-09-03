@@ -100,5 +100,31 @@ class TrialCreationAcceptanceTest {
         mockMvc.perform(get("/api/v1/trials/{trialId}", Long.MAX_VALUE))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
+
+        mockMvc.perform(post("/api/v1/posts/{postId}/trials", Long.MAX_VALUE)
+                        .contentType("application/json")
+                        .content("""
+                                {"visibility":"PUBLIC","aDisplayName":"A측","bDisplayName":"B측"}
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("DEMO_USER_REQUIRED"));
+
+        mockMvc.perform(post("/api/v1/posts/{postId}/trials", Long.MAX_VALUE)
+                        .header("X-Demo-User-Id", UUID.randomUUID())
+                        .contentType("application/json")
+                        .content("""
+                                {"visibility":"PRIVATE","aDisplayName":"A측","bDisplayName":"B측"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        mockMvc.perform(post("/api/v1/posts/{postId}/trials", Long.MAX_VALUE)
+                        .header("X-Demo-User-Id", UUID.randomUUID())
+                        .contentType("application/json")
+                        .content("""
+                                {"visibility":"PUBLIC","aDisplayName":"   ","bDisplayName":"B측"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 }

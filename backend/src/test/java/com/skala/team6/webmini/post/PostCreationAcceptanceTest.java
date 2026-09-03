@@ -58,6 +58,28 @@ class PostCreationAcceptanceTest {
         createPost(UUID.randomUUID().toString(), "   ")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        createPost(UUID.randomUUID().toString(), "x".repeat(151))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        mockMvc.perform(post("/api/v1/posts")
+                        .header("X-Demo-User-Id", UUID.randomUUID())
+                        .contentType("application/json")
+                        .content("""
+                                {"title":"게시글","content":"%s","relationshipType":"COUPLE","trialRequested":true}
+                                """.formatted("x".repeat(5001))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        mockMvc.perform(post("/api/v1/posts")
+                        .header("X-Demo-User-Id", UUID.randomUUID())
+                        .contentType("application/json")
+                        .content("""
+                                {"title":"게시글","content":"내용","relationshipType":"INVALID","trialRequested":true}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 
     private org.springframework.test.web.servlet.ResultActions createPost(
