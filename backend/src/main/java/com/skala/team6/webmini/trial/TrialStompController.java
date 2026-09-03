@@ -11,28 +11,24 @@ import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 
 import java.security.Principal;
-import java.time.Instant;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Controller
 @Validated
 public class TrialStompController {
 
-    private final SimpMessagingTemplate messagingTemplate;
     private final StompExceptionHandler stompExceptionHandler;
-    private final AtomicLong messageSequence = new AtomicLong(0);
+    private final TrialChatService trialChatService;
 
     public TrialStompController(
-            SimpMessagingTemplate messagingTemplate,
-            StompExceptionHandler stompExceptionHandler
+            StompExceptionHandler stompExceptionHandler,
+            TrialChatService trialChatService
     ) {
-        this.messagingTemplate = messagingTemplate;
         this.stompExceptionHandler = stompExceptionHandler;
+        this.trialChatService = trialChatService;
     }
 
     @MessageMapping("/trials/{trialId}/chat")
@@ -45,17 +41,7 @@ public class TrialStompController {
             throw new ApiException(ErrorCode.DEMO_USER_REQUIRED);
         }
 
-        long sequence = messageSequence.incrementAndGet();
-        TrialChatMessagePayload payload = new TrialChatMessagePayload(
-                sequence,
-                sequence,
-                trialId,
-                new TrialMessageSender(principal.getName(), "Demo-" + principal.getName().substring(0, 8)),
-                request.content(),
-                Instant.now().toString()
-        );
-
-        messagingTemplate.convertAndSend("/topic/trials/" + trialId + "/chat", payload);
+        trialChatService.send(trialId, principal.getName(), request.content());
     }
 
     @MessageExceptionHandler(ApiException.class)

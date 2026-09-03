@@ -53,4 +53,20 @@ public class ChatMessageEntity {
     public long getSequenceNo() {
         return sequenceNo;
     }
+
+    public TrialEntity getTrial() {
+        return trial;
+    }
+
+    public UserEntity getSender() {
+        return sender;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

@@ -39,4 +39,8 @@ public class UserEntity {
     public String getDemoKey() {
         return demoKey;
     }
+
+    public String getNickname() {
+        return nickname;
+    }
 }

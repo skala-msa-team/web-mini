@@ -35,19 +35,22 @@ public class TrialController {
     private final GuideAnswerService guideAnswerService;
     private final TrialArgumentService trialArgumentService;
     private final TrialStartService trialStartService;
+    private final TrialChatQueryService trialChatQueryService;
 
     public TrialController(
             TrialQueryService trialQueryService,
             TrialStatementService trialStatementService,
             GuideAnswerService guideAnswerService,
             TrialArgumentService trialArgumentService,
-            TrialStartService trialStartService
+            TrialStartService trialStartService,
+            TrialChatQueryService trialChatQueryService
     ) {
         this.trialQueryService = trialQueryService;
         this.trialStatementService = trialStatementService;
         this.guideAnswerService = guideAnswerService;
         this.trialArgumentService = trialArgumentService;
         this.trialStartService = trialStartService;
+        this.trialChatQueryService = trialChatQueryService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -284,22 +287,8 @@ public class TrialController {
             @RequestParam(defaultValue = "0") @Min(0) long afterSequence,
             @RequestParam(defaultValue = "100") @Min(1) @Max(200) int size
     ) {
-        TrialMessagesResponse response = new TrialMessagesResponse(
-                List.of(new TrialMessageItem(
-                        9001L,
-                        15,
-                        trialId,
-                        new TrialMessageSender(
-                                "7f33baf1-74aa-4eaf-8750-139f6324784f",
-                                "관전자1"
-                        ),
-                        "A측의 설명도 이해됩니다.",
-                        "2026-09-03T03:05:00Z"
-                )),
-                15,
-                false
-        );
-        return ResponseEntity.ok(ApiResponse.of(response));
+        return ResponseEntity.ok(ApiResponse.of(
+                trialChatQueryService.findMessages(trialId, afterSequence, size)));
     }
 
     @Operation(summary = "승소 투표")
