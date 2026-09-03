@@ -3,6 +3,7 @@ package com.skala.team6.webmini.trial;
 import com.skala.team6.webmini.common.exception.ApiException;
 import com.skala.team6.webmini.common.exception.ErrorCode;
 import com.skala.team6.webmini.database.entity.TrialEntity;
+import com.skala.team6.webmini.database.entity.TrialEventEntity;
 import com.skala.team6.webmini.database.entity.TrialPartyEntity;
 import com.skala.team6.webmini.database.repository.TrialPartyRepository;
 import com.skala.team6.webmini.database.repository.TrialRepository;
@@ -95,6 +96,16 @@ public class TrialQueryService {
                 trialEventRepository.findLatestSequenceByTrialId(trialId),
                 chatMessageRepository.findLatestSequenceByTrialId(trialId)
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrialEventEntity> findEventsAfter(Long trialId, long afterSequence) {
+        if (!trialRepository.existsById(trialId)) {
+            throw new ApiException(ErrorCode.TRIAL_NOT_FOUND);
+        }
+        return trialEventRepository
+                .findByTrialIdAndSequenceNoGreaterThanOrderBySequenceNoAsc(
+                        trialId, afterSequence);
     }
 
     private TrialListEntry toListEntry(

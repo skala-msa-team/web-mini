@@ -117,6 +117,36 @@ class TrialRecoveryAcceptanceTest {
                 .andExpect(jsonPath("$.data.ended").value(false));
     }
 
+    @Test
+    void returnsOnlyEventsAfterCursorInSequenceOrder() throws Exception {
+        TrialEntity trial = createTrial("이벤트 재판", TrialStatus.INTRODUCTION);
+        trialEventRepository.save(new TrialEventEntity(
+                trial, 1, "TRIAL_STARTED", TrialSpeaker.SYSTEM, null,
+                "{\"status\":\"INTRODUCTION\"}"));
+        trialEventRepository.save(new TrialEventEntity(
+                trial, 2, "JUDGE_INTRODUCED", TrialSpeaker.JUDGE, "소개", "{}"));
+        trialEventRepository.save(new TrialEventEntity(
+                trial, 3, "ARGUMENT_PRESENTED", TrialSpeaker.A_LAWYER, "A 변론", "{\"side\":\"A\"}"));
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}/events", trial.getId())
+                        .param("afterSequence", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].sequence").value(2))
+                .andExpect(jsonPath("$.data[0].eventType").value("JUDGE_INTRODUCED"))
+                .andExpect(jsonPath("$.data[1].sequence").value(3))
+                .andExpect(jsonPath("$.data[1].payload").value("{\"side\":\"A\"}"));
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}/events", trial.getId())
+                        .param("afterSequence", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isEmpty());
+
+        mockMvc.perform(get("/api/v1/trials/{trialId}/events", Long.MAX_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
+    }
+
     private TrialEntity createTrial(String title, TrialStatus status) {
         UserEntity user = userRepository.save(
                 new UserEntity(UUID.randomUUID().toString(), "작성자"));

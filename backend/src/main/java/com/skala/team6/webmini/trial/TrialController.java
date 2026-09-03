@@ -264,9 +264,16 @@ public class TrialController {
             @PathVariable @Min(1) Long trialId,
             @RequestParam(defaultValue = "0") @Min(0) long afterSequence
     ) {
-        List<TrialEventResponse> response = List.of(
-                new TrialEventResponse(1, "TRIAL_STARTED", "{\"status\":\"INTRODUCTION\"}", "2026-09-03T03:00:00Z")
-        );
+        List<TrialEventResponse> response = trialQueryService
+                .findEventsAfter(trialId, afterSequence)
+                .stream()
+                .map(event -> new TrialEventResponse(
+                        event.getSequenceNo(),
+                        event.getEventType(),
+                        event.getPayload(),
+                        event.getCreatedAt().toString()
+                ))
+                .toList();
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
