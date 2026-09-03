@@ -1,8 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { ArrowLeft, Check, Share2 } from '@lucide/vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
-import AppHeader from '@/components/layout/AppHeader.vue'
 import FaultRatioCard from '@/features/verdict/components/FaultRatioCard.vue'
 import JudgmentGrounds from '@/features/verdict/components/JudgmentGrounds.vue'
 import VerdictComparison from '@/features/verdict/components/VerdictComparison.vue'
@@ -32,8 +30,6 @@ async function shareResult() {
 
 <template>
   <div class="result-page">
-    <AppHeader />
-
     <main class="result-shell">
       <section class="result-hero" aria-labelledby="result-title">
         <span class="final-badge"><i aria-hidden="true"></i>최종 판결</span>
@@ -72,7 +68,6 @@ async function shareResult() {
       </p>
     </main>
 
-    <AppFooter />
   </div>
 </template>
 
