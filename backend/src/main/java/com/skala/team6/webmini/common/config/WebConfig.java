@@ -14,6 +14,7 @@ import java.util.List;
         CorsProperties.class,
         DemoUserProperties.class,
         AppAiProperties.class,
+        TrialTimingProperties.class,
 })
 public class WebConfig implements WebMvcConfigurer {
 

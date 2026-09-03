@@ -242,8 +242,17 @@ public class TrialController {
             )
             @DemoUserId DemoUserContext demoUser
     ) {
-        trialStartService.validateReady(trialId);
-        return ResponseEntity.ok(ApiResponse.of(sampleSnapshot(TrialStatus.INTRODUCTION)));
+        TrialStartService.StartedTrial started = trialStartService.start(trialId);
+        var trial = started.trial();
+        return ResponseEntity.ok(ApiResponse.of(new TrialSnapshotResponse(
+                trial.getStatus(),
+                formatTime(trial.getPhaseStartedAt()),
+                formatTime(trial.getPhaseEndsAt()),
+                formatTime(trial.getScheduledEndAt()),
+                started.latestEventSequence(),
+                0,
+                false,
+                false)));
     }
 
     @Operation(summary = "현재 상태 스냅샷 조회")
