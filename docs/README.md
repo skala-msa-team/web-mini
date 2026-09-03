@@ -12,6 +12,10 @@
 
 Architecture, ERD, API 명세, AI Prompt/JSON Schema와 QA 결과는 팀 Review로 내용이 확정된 뒤 별도 Issue에서 추가합니다. 빈 문서나 추정한 계약은 만들지 않습니다.
 
+## AI Prompt
+
+- [AI Prompt 목록](ai/prompts/README.md)
+
 ## GitHub 가이드 이미지
 
 `assets/github-guide/`의 이미지는 Notion의 GitHub Issue · PR 사용 가이드에서 `main` Branch의 Raw URL로 사용합니다. 이미지 이름이나 경로를 바꾸거나 삭제할 때는 Notion의 연결 주소도 같은 작업에서 갱신하고 확인해야 합니다.
