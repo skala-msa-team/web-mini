@@ -3,7 +3,7 @@ import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
 import { STOMP_DESTINATION } from './stompDestinations.js'
 
 const HEARTBEAT_MS = 10_000
-const RECONNECT_DELAY_MS = 5_000
+const RECONNECT_DELAYS_MS = Object.freeze([1_000, 2_000, 5_000])
 
 function defaultBrokerUrl() {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin
@@ -28,16 +28,43 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
   let status = CONNECTION_STATUS.CONNECTING
   let hasConnected = false
   let lastError = null
+  let shouldReconnect = false
+  let reconnectAttempt = 0
+  let reconnectTimer = null
+
+  function clearReconnectTimer() {
+    if (reconnectTimer === null) return
+    window.clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+
+  function scheduleReconnect() {
+    if (!shouldReconnect || reconnectTimer !== null) return
+
+    const delay = RECONNECT_DELAYS_MS[
+      Math.min(reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)
+    ]
+    reconnectAttempt += 1
+    reconnectTimer = window.setTimeout(async () => {
+      reconnectTimer = null
+      if (!shouldReconnect) return
+
+      await client.deactivate({ force: true })
+      if (shouldReconnect) client.activate()
+    }, delay)
+  }
 
   const client = new Client({
     brokerURL,
     connectHeaders: { 'X-Demo-User-Id': userId },
     heartbeatIncoming: HEARTBEAT_MS,
     heartbeatOutgoing: HEARTBEAT_MS,
-    reconnectDelay: RECONNECT_DELAY_MS,
+    reconnectDelay: 0,
     onConnect: () => {
       const reconnected = hasConnected
       hasConnected = true
+      reconnectAttempt = 0
+      clearReconnectTimer()
       lastError = null
       subscriptions.forEach((entry) => {
         entry.subscription = client.subscribe(entry.destination, entry.handler)
@@ -46,7 +73,9 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
       connectedListeners.forEach((listener) => listener({ reconnected }))
     },
     onWebSocketClose: () => {
-      if (client.active) updateStatus(CONNECTION_STATUS.RECONNECTING)
+      if (!shouldReconnect) return
+      updateStatus(CONNECTION_STATUS.RECONNECTING)
+      scheduleReconnect()
     },
     onStompError: (frame) => {
       lastError = readMessage(frame)
@@ -82,11 +111,15 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
 
   function activate() {
     if (client.active) return
+    shouldReconnect = true
     updateStatus(hasConnected ? CONNECTION_STATUS.RECONNECTING : CONNECTION_STATUS.CONNECTING)
     client.activate()
   }
 
   async function deactivate() {
+    shouldReconnect = false
+    reconnectAttempt = 0
+    clearReconnectTimer()
     subscriptions.forEach((entry) => entry.subscription?.unsubscribe())
     subscriptions.clear()
     await client.deactivate()

@@ -1,7 +1,9 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { Search } from "@lucide/vue";
 
+import { trialApi } from "@/api/trialApi.js";
+import { TRIAL_STATUS_LABEL } from "@/constants/trialStatus.js";
 import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
 import EmptyPosts from "@/features/community/components/EmptyPosts.vue";
 import LiveTrialCard from "@/features/community/components/LiveTrialCard.vue";
@@ -9,7 +11,6 @@ import PostCard from "@/features/community/components/PostCard.vue";
 import { useCommunityStore } from "@/features/community/stores/communityStore.js";
 import {
   categoryTypes,
-  liveTrials,
   relationshipTypes,
 } from "@/features/community/mock/communityData.js";
 
@@ -19,6 +20,29 @@ const selectedRelationship = ref("전체 관계");
 const currentPage = ref(1);
 const pageSize = 3;
 const { state } = useCommunityStore();
+const liveTrials = ref([]);
+const liveTrialsLoading = ref(true);
+const liveTrialsError = ref("");
+
+async function loadLiveTrials() {
+  liveTrialsLoading.value = true;
+  liveTrialsError.value = "";
+
+  try {
+    const response = await trialApi.getTrials({ page: 0, size: 3 });
+    liveTrials.value = (response.items || []).map((trial) => ({
+      id: trial.trialId,
+      title: trial.title,
+      statusLabel: TRIAL_STATUS_LABEL[trial.status] || "공개 재판 진행 중",
+    }));
+  } catch (error) {
+    liveTrialsError.value = error.message || "Live 재판 목록을 불러오지 못했습니다.";
+  } finally {
+    liveTrialsLoading.value = false;
+  }
+}
+
+onMounted(loadLiveTrials);
 
 const filteredPosts = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
@@ -102,11 +126,18 @@ function resetFilters() {
           <a href="#">전체보기</a>
         </div>
         <div class="live-trial-grid">
-          <LiveTrialCard
-            v-for="trial in liveTrials"
-            :key="trial.id"
-            :trial="trial"
-          />
+          <p v-if="liveTrialsLoading" class="live-trial-feedback">Live 재판을 불러오는 중입니다.</p>
+          <p v-else-if="liveTrialsError" class="live-trial-feedback" role="alert">
+            {{ liveTrialsError }}
+          </p>
+          <template v-else-if="liveTrials.length">
+            <LiveTrialCard
+              v-for="trial in liveTrials"
+              :key="trial.id"
+              :trial="trial"
+            />
+          </template>
+          <p v-else class="live-trial-feedback">현재 진행 중인 공개 재판이 없습니다.</p>
         </div>
       </section>
 
@@ -153,3 +184,17 @@ function resetFilters() {
     </section>
   </CommunityLayout>
 </template>
+
+<style scoped>
+.live-trial-feedback {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 30px 18px;
+  border: 1px solid var(--ds-color-card-border);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-color-surface-container-lowest);
+  color: var(--ds-color-on-surface-variant);
+  font-size: 0.82rem;
+  text-align: center;
+}
+</style>

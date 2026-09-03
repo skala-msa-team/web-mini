@@ -3,45 +3,25 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Clock3, Eye, UsersRound } from '@lucide/vue'
 import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
-import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
+import { TRIAL_STATUS } from '@/constants/trialStatus.js'
+import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
-import { trialApi } from '@/api/trialApi.js'
 import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
 import ArgumentTimeline from '@/features/trial/components/ArgumentTimeline.vue'
 import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
 import TrialStage from '@/features/trial/components/TrialStage.vue'
-import { recoverLiveTrial } from '@/realtime/liveTrialRecovery.js'
 import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
-import { getLiveTrialTimelineMock } from '@/features/trial/liveTrialTimelineMock.js'
 import {
-  LIVE_TRIAL_MOCK_SCENARIO,
-  LIVE_TRIAL_TIMING,
-} from '@/features/trial/liveTrialStateMock.js'
+  getTrialPhaseLabel,
+  getTrialWaitingMessage,
+} from '@/features/trial/liveTrialPresentation.js'
 import { mergeMessages } from '@/utils/messageMerge.js'
+import { toTimelineEvents } from '@/utils/trialEvent.js'
 
 const route = useRoute()
 const router = useRouter()
-const trialId = computed(() => route.params.trialId ?? liveTrialMock.id)
+const trialId = computed(() => route.params.trialId)
 const liveMessages = ref([...liveTrialMock.messages])
-const realtimeSnapshot = ref(null)
-const realtimeEvents = ref([])
-const trialDetail = ref(null)
-const trialTitle = computed(() => trialDetail.value?.title ?? liveTrialMock.title)
-const trialParticipants = computed(() => liveTrialMock.participants.map((participant) => {
-  if (participant.position === 'left' && trialDetail.value?.aParty) {
-    return { ...participant, name: `${trialDetail.value.aParty.displayName} AI 변호사` }
-  }
-  if (participant.position === 'right' && trialDetail.value?.bParty) {
-    return { ...participant, name: `${trialDetail.value.bParty.displayName} AI 변호사` }
-  }
-  return participant
-}))
-
-const {
-  state: trialState,
-  interactionDisabledMessage: stateInteractionDisabledMessage,
-} = useLiveTrialMockState(LIVE_TRIAL_MOCK_SCENARIO.ARGUMENT)
 
 function toChatMessage(payload) {
   const sender = payload.sender || {}
@@ -58,69 +38,57 @@ function appendMessage(payload) {
   liveMessages.value = mergeMessages(liveMessages.value, [toChatMessage(payload)])
 }
 
-function appendEvent(event) {
-  if (!realtimeEvents.value.some((savedEvent) => savedEvent.sequence === event.sequence)) {
-    realtimeEvents.value.push(event)
-  }
-}
-
-async function recoverConnection({ trialId: currentTrialId }) {
-  const [detail] = await Promise.all([
-    trialApi.getTrial(currentTrialId),
-    recoverLiveTrial({
-      trialId: currentTrialId,
-      onSnapshot: (snapshot) => { realtimeSnapshot.value = snapshot },
-      onEvent: appendEvent,
-      onMessage: appendMessage,
-    }),
-  ])
-  trialDetail.value = detail
-}
-
-const realtime = useLiveTrialRealtime(trialId, {
-  onConnected: recoverConnection,
-  onReconnect: recoverConnection,
-  onEvent: appendEvent,
+const session = useLiveTrialSession(trialId, {
   onMessage: appendMessage,
 })
-const realtimeConnection = realtime.connection
-const realtimeErrors = realtime.userErrors
-const sendChat = realtime.sendChat
-const reconnect = realtime.reconnect
 
-const currentSnapshot = computed(() => realtimeSnapshot.value || trialState.value.snapshot)
-const trialEndsAt = computed(() => currentSnapshot.value?.scheduledEndAt)
-const { remainingSeconds, formattedRemainingTime, isExpired } = useTrialCountdown(trialEndsAt)
-const trialEnded = computed(() => Boolean(currentSnapshot.value?.ended || isExpired.value))
-const timeline = computed(() => getLiveTrialTimelineMock(remainingSeconds.value))
-const phaseLabel = computed(() => {
-  if (trialEnded.value) return '재판 종료'
-  return timeline.value.phase
-})
+const trialTitle = computed(() => session.detail.value?.title ?? '재판 정보를 불러오는 중입니다')
+const trialParticipants = computed(() => liveTrialMock.participants.map((participant) => {
+  if (participant.position === 'left' && session.detail.value?.aParty) {
+    return { ...participant, name: `${session.detail.value.aParty.displayName} AI 변호사` }
+  }
+  if (participant.position === 'right' && session.detail.value?.bParty) {
+    return { ...participant, name: `${session.detail.value.bParty.displayName} AI 변호사` }
+  }
+  return participant
+}))
+const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value))
+const waitingMessage = computed(() => getTrialWaitingMessage(session.status.value))
+const timelineEvents = computed(() => toTimelineEvents(session.events.value))
+const phaseEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt)
+const { formattedRemainingTime } = useTrialCountdown(phaseEndsAt)
+const trialEnded = computed(
+  () => session.status.value === TRIAL_STATUS.ENDED || session.currentSnapshot.value?.ended,
+)
+const chatAllowed = computed(() => [
+  TRIAL_STATUS.INTRODUCTION,
+  TRIAL_STATUS.A_ARGUMENT,
+  TRIAL_STATUS.B_ARGUMENT,
+  TRIAL_STATUS.VOTING,
+  TRIAL_STATUS.VERDICT,
+].includes(session.status.value))
 const interactionsDisabled = computed(
-  () => realtime.connection.value.status !== CONNECTION_STATUS.CONNECTED || isExpired.value,
+  () => session.connection.value.status !== CONNECTION_STATUS.CONNECTED || !chatAllowed.value,
 )
-const interactionDisabledMessage = computed(() =>
-  isExpired.value ? '재판 시간이 종료되었습니다.' : stateInteractionDisabledMessage.value,
-)
+const interactionDisabledMessage = computed(() => {
+  if (trialEnded.value) return '재판이 종료되었습니다.'
+  if (session.connection.value.status !== CONNECTION_STATUS.CONNECTED) {
+    return '재판 연결을 복구한 뒤 다시 시도해 주세요.'
+  }
+  return '현재 단계에서는 채팅을 사용할 수 없습니다.'
+})
 
 watch(
-  remainingSeconds,
-  (seconds) => {
-    if (
-      seconds === null ||
-      realtime.connection.value.status !== CONNECTION_STATUS.CONNECTED ||
-      currentSnapshot.value?.ended
-    ) {
-      return
-    }
+  [() => session.status.value, () => session.restoring.value],
+  ([status, restoring]) => {
+    if (restoring) return
 
-    if (seconds === 0) {
+    if (status === TRIAL_STATUS.ENDED) {
       router.replace({ name: 'trial-result', params: { trialId: route.params.trialId } })
       return
     }
 
-    if (seconds <= LIVE_TRIAL_TIMING.VOTING_SECONDS) {
+    if (status === TRIAL_STATUS.VOTING) {
       router.replace({ name: 'trial-voting', params: { trialId: route.params.trialId } })
     }
   },
@@ -132,13 +100,13 @@ watch(
   <div id="live-trial" class="live-trial-page">
     <main class="page-shell">
       <TrialConnectionStatus
-        :connection="realtimeConnection"
+        :connection="session.connection.value"
         :ended="trialEnded"
-        @retry="reconnect"
+        @retry="session.reconnect"
       />
 
-      <p v-if="realtimeErrors.length" class="realtime-error" role="alert">
-        {{ realtimeErrors.at(-1)?.message || '실시간 요청을 처리하지 못했습니다.' }}
+      <p v-if="session.userErrors.value.length" class="realtime-error" role="alert">
+        {{ session.userErrors.value.at(-1)?.message || '실시간 요청을 처리하지 못했습니다.' }}
       </p>
 
       <section class="trial-summary" aria-labelledby="trial-title">
@@ -156,7 +124,7 @@ watch(
           <div class="stat-card timer-card">
             <Clock3 :size="21" />
             <span>
-              <small>{{ liveTrialMock.sessionTime }}</small>
+              <small>{{ phaseLabel }}</small>
               <strong>{{ formattedRemainingTime }}</strong>
             </span>
           </div>
@@ -175,11 +143,8 @@ watch(
           <TrialStage :participants="trialParticipants" />
           <ArgumentTimeline
             :phase="phaseLabel"
-            :notice="timeline.notice"
-            :argument="timeline.argument"
-            :summary="timeline.summary"
-            :current-label="timeline.currentLabel"
-            :waiting-message="timeline.waitingMessage"
+            :events="timelineEvents"
+            :waiting-message="waitingMessage"
           />
 
         </div>
@@ -191,7 +156,7 @@ watch(
           :header-label="trialEnded ? '종료' : ''"
           :disabled="interactionsDisabled"
           :disabled-message="interactionDisabledMessage"
-          :on-send="sendChat"
+          :on-send="session.sendChat"
         />
       </div>
     </main>
