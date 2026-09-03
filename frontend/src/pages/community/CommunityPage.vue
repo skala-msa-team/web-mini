@@ -1,14 +1,14 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { Search } from "@lucide/vue";
 
 import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
 import EmptyPosts from "@/features/community/components/EmptyPosts.vue";
 import LiveTrialCard from "@/features/community/components/LiveTrialCard.vue";
 import PostCard from "@/features/community/components/PostCard.vue";
+import { useCommunityStore } from "@/features/community/stores/communityStore.js";
 import {
   categoryTypes,
-  communityPosts,
   liveTrials,
   relationshipTypes,
 } from "@/features/community/mock/communityData.js";
@@ -17,10 +17,12 @@ const searchQuery = ref("");
 const selectedCategory = ref("전체");
 const selectedRelationship = ref("전체 관계");
 const currentPage = ref(1);
+const pageSize = 3;
+const { state } = useCommunityStore();
 
 const filteredPosts = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
-  return communityPosts.filter((post) => {
+  return state.posts.filter((post) => {
     const matchesCategory =
       selectedCategory.value === "전체" ||
       post.category === selectedCategory.value;
@@ -32,6 +34,20 @@ const filteredPosts = computed(() => {
     return matchesCategory && matchesRelationship && matchesQuery;
   });
 });
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(filteredPosts.value.length / pageSize)),
+);
+const paginatedPosts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return filteredPosts.value.slice(start, start + pageSize);
+});
+
+watch(
+  [searchQuery, selectedCategory, selectedRelationship],
+  () => {
+    currentPage.value = 1;
+  },
+);
 
 function resetFilters() {
   searchQuery.value = "";
@@ -96,8 +112,8 @@ function resetFilters() {
 
       <section id="popular-posts">
         <div class="section-title-row"><h2>인기게시글</h2></div>
-        <div v-if="filteredPosts.length" class="post-list">
-          <PostCard v-for="post in filteredPosts" :key="post.id" :post="post" />
+        <div v-if="paginatedPosts.length" class="post-list">
+          <PostCard v-for="post in paginatedPosts" :key="post.id" :post="post" />
         </div>
         <EmptyPosts v-else @reset="resetFilters" />
       </section>
@@ -112,7 +128,7 @@ function resetFilters() {
           ‹
         </button>
         <button
-          v-for="page in 3"
+          v-for="page in pageCount"
           :key="page"
           type="button"
           :class="{ pagination__active: currentPage === page }"
@@ -123,7 +139,7 @@ function resetFilters() {
         <button
           type="button"
           aria-label="다음 페이지"
-          :disabled="currentPage === 3"
+          :disabled="currentPage === pageCount"
           @click="currentPage += 1"
         >
           ›

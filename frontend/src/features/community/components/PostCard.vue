@@ -16,7 +16,12 @@ defineProps({
       <span v-if="post.isLive" class="live-badge">● LIVE</span>
       <time>{{ post.createdAt }}</time>
     </div>
-    <h3 class="post-card__title">{{ post.title }}</h3>
+    <RouterLink
+      class="post-card__title"
+      :to="{ name: 'post-detail', params: { postId: post.id } }"
+    >
+      {{ post.title }}
+    </RouterLink>
     <p class="post-card__summary">{{ post.summary }}</p>
     <div class="post-card__stats">
       <span><ThumbsUp :size="15" /> {{ post.likeCount }}</span>
