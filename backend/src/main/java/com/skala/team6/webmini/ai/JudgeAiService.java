@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class JudgeAiService {
@@ -21,23 +22,57 @@ public class JudgeAiService {
 
     public Verdict createVerdict(Long trialId, String postSummary,
                                  Map<TrialSide, String> arguments) {
-        JudgeVerdictResponse response = aiClient.createVerdict(
-                new AiRequestContext("trial-verdict-" + trialId, properties.promptVersion()),
-                new JudgeVerdictRequest(trialId, postSummary, arguments, properties.promptVersion()));
-        if (response.winnerSide() == null
-                || response.aFaultRatio() + response.bFaultRatio() != 100
-                || response.summary() == null || response.summary().isBlank()
-                || response.grounds() == null || response.grounds().isEmpty()
-                || response.recommendations() == null) {
-            throw new ApiException(ErrorCode.MOCK_AI_RESPONSE_INVALID);
+        if (arguments == null || arguments.size() != 2
+                || !arguments.keySet().containsAll(List.of(TrialSide.A, TrialSide.B))
+                || arguments.values().stream().anyMatch(value -> value == null || value.isBlank())) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR);
         }
-        return new Verdict(response.winnerSide(), response.aFaultRatio(), response.bFaultRatio(),
-                response.summary(), response.grounds(), response.recommendations().a(),
-                response.recommendations().b(), response.promptVersion());
+        AiRequestContext context = new AiRequestContext(UUID.randomUUID().toString(), properties.promptVersion());
+        JudgeVerdictRequest request = new JudgeVerdictRequest(
+                trialId, postSummary, arguments, properties.promptVersion());
+        for (int attempt = 0; attempt < 2; attempt++) {
+            try {
+                JudgeVerdictResponse response = aiClient.createVerdict(context, request);
+                if (isValid(response)) {
+                    return new Verdict(response.winnerSide(), response.aFaultRatio(), response.bFaultRatio(),
+                            response.summary().trim(), response.grounds().stream().map(String::trim).toList(),
+                            response.recommendations().a().trim(), response.recommendations().b().trim(),
+                            response.promptVersion());
+                }
+            } catch (RuntimeException ignored) {
+                // A Mock adapter failure is retried once before exposing a stable API error.
+            }
+        }
+        throw new ApiException(ErrorCode.MOCK_AI_RESPONSE_INVALID);
+    }
+
+    private boolean isValid(JudgeVerdictResponse response) {
+        return response != null
+                && "1.0".equals(response.schemaVersion())
+                && response.winnerSide() != null
+                && response.aFaultRatio() >= 0 && response.aFaultRatio() <= 100
+                && response.bFaultRatio() >= 0 && response.bFaultRatio() <= 100
+                && response.aFaultRatio() + response.bFaultRatio() == 100
+                && hasText(response.summary())
+                && response.grounds() != null
+                && !response.grounds().isEmpty()
+                && response.grounds().stream().allMatch(this::hasText)
+                && response.recommendations() != null
+                && hasText(response.recommendations().a())
+                && hasText(response.recommendations().b())
+                && hasText(response.promptVersion());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     public record Verdict(TrialSide winnerSide, int aFaultRatio, int bFaultRatio,
                           String summary, List<String> grounds, String aRecommendation,
                           String bRecommendation, String promptVersion) {
+        JudgeVerdictResponse toResponse() {
+            return new JudgeVerdictResponse(winnerSide, aFaultRatio, bFaultRatio, summary,
+                    grounds, new RecommendationPair(aRecommendation, bRecommendation), "1.0", promptVersion);
+        }
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.UUID;
 
@@ -18,9 +19,17 @@ import java.util.UUID;
 public class MockAiController {
 
     private final AiClient aiClient;
+    private final JudgeAiService judgeAiService;
 
     public MockAiController(AiClient aiClient) {
         this.aiClient = aiClient;
+        this.judgeAiService = null;
+    }
+
+    @Autowired
+    public MockAiController(AiClient aiClient, JudgeAiService judgeAiService) {
+        this.aiClient = aiClient;
+        this.judgeAiService = judgeAiService;
     }
 
     @Operation(summary = "안내 질문 생성")
@@ -46,7 +55,11 @@ public class MockAiController {
     public ResponseEntity<ApiResponse<JudgeVerdictResponse>> createVerdict(
             @Valid @RequestBody JudgeVerdictRequest request
     ) {
-        AiRequestContext context = new AiRequestContext(UUID.randomUUID().toString(), request.promptVersion());
-        return ResponseEntity.ok(ApiResponse.of(aiClient.createVerdict(context, request)));
+        if (judgeAiService == null) {
+            AiRequestContext context = new AiRequestContext(UUID.randomUUID().toString(), request.promptVersion());
+            return ResponseEntity.ok(ApiResponse.of(aiClient.createVerdict(context, request)));
+        }
+        return ResponseEntity.ok(ApiResponse.of(judgeAiService.createVerdict(
+                request.trialId(), request.postSummary(), request.arguments()).toResponse()));
     }
 }
