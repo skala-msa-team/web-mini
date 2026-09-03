@@ -7,6 +7,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -70,6 +71,21 @@ public class GlobalExceptionHandler {
                         ErrorCode.VALIDATION_ERROR.name(),
                         ErrorCode.VALIDATION_ERROR.message(),
                         fieldErrors,
+                        Instant.now().toString(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ErrorResponse> handleUnreadableMessage(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request
+    ) {
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(
+                        ErrorCode.VALIDATION_ERROR.name(),
+                        ErrorCode.VALIDATION_ERROR.message(),
+                        Collections.emptyList(),
                         Instant.now().toString(),
                         request.getRequestURI()
                 ));

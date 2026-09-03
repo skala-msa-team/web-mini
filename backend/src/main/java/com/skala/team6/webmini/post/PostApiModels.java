@@ -19,7 +19,8 @@ record CreatePostRequest(
         String content,
         @NotNull
         RelationshipType relationshipType,
-        boolean trialRequested
+        @NotNull
+        Boolean trialRequested
 ) {
 }
 
@@ -38,9 +39,11 @@ record CreateTrialRequest(
         Visibility visibility,
         @Schema(example = "A측")
         @NotBlank
+        @Size(max = 50)
         String aDisplayName,
         @Schema(example = "B측")
         @NotBlank
+        @Size(max = 50)
         String bDisplayName
 ) {
 }

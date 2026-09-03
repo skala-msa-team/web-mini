@@ -35,4 +35,8 @@ public class UserEntity {
     public Long getId() {
         return id;
     }
+
+    public String getDemoKey() {
+        return demoKey;
+    }
 }
