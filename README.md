@@ -2,7 +2,7 @@
 
 SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로젝트 저장소입니다.
 
-현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. 확정된 필수 Library는 의존성만 추가했으며 Database, Docker, Library 설정 및 기능 코드는 아직 추가하지 않았습니다.
+현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. Frontend에는 확정된 디자인 시스템과 shadcn-vue 사용 기반이 설정되어 있으며, 화면과 개별 UI 컴포넌트는 담당 Issue에서 추가합니다. Database, Docker 및 기능 코드는 아직 추가하지 않았습니다.
 
 ## 프로젝트 자료
 
@@ -18,15 +18,17 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 
 | 영역 | 방향 |
 | --- | --- |
-| Frontend | Vue 3, Vite, JavaScript, Vue Router, Axios, STOMP Client |
+| Frontend | Vue 3, Vite, JavaScript, Tailwind CSS 4, shadcn-vue, Vue Router, Axios, STOMP Client |
 | Backend | Java 21, Spring Boot, Gradle, Web, Validation, WebSocket |
 | Realtime | WebSocket, STOMP |
 | Database | PostgreSQL |
 | AI | Mock AI 우선, 추후 Amazon Bedrock 연동 |
-| Design | Google Stitch, Figma |
+| Design | Justice & Empathy 디자인 시스템, Google Stitch, Figma |
 | Lint | ESLint, Checkstyle |
 
 미정인 Library와 Version, API Path, STOMP Destination, Database Schema와 AI JSON은 담당 Issue에서 설계가 확정된 후 추가합니다.
+
+Frontend 공통 REST 처리는 `frontend/src/api/httpClient.js`와 Axios Interceptor에서 담당합니다. Backend에는 별도 Interceptor 계층을 두지 않으며, Demo 사용자 식별과 인증 방식은 Backend 계약이 확정될 때 별도 범위로 결정합니다.
 
 ## 저장소 구조
 
@@ -35,7 +37,12 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 ├── frontend/
 │   ├── .env.example    # Frontend 환경변수 예시
 │   ├── AGENTS.md       # Frontend 작업 규칙
-│   └── ...             # Vue 3 + Vite 최소 프로젝트
+│   ├── components.json # shadcn-vue CLI 설정
+│   ├── src/app/        # App 진입점과 Router
+│   ├── src/assets/     # 디자인 토큰과 공통 Style
+│   ├── src/components/ # shadcn 기본 UI와 공통 조합 UI
+│   ├── src/api/        # Axios Instance와 Interceptor
+│   └── ...             # Vue 3 + Vite 프로젝트
 ├── backend/
 │   ├── .env.example    # Backend 환경변수 예시
 │   ├── AGENTS.md       # Backend 작업 규칙
@@ -61,6 +68,8 @@ cp .env.example .env
 npm install
 npm run dev
 ```
+
+디자인 토큰과 shadcn-vue 컴포넌트 추가 방법은 [`frontend/README.md`](frontend/README.md)의 `디자인 시스템과 shadcn-vue` 항목을 따릅니다. shadcn-vue 초기화는 완료되어 있으므로 `init`을 다시 실행하지 않습니다.
 
 Backend:
 
@@ -196,6 +205,7 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - [x] Vue 3 + Vite 최소 Frontend 프로젝트 생성
 - [x] Java 21 + Spring Boot 최소 Backend 프로젝트 생성
 - [x] 확정된 Frontend·Backend 필수 Library 의존성 추가
+- [x] Justice & Empathy 디자인 토큰과 shadcn-vue 사용 기반 구성
 - [x] Frontend·Backend 환경변수 예시 작성
 - [x] ESLint·Checkstyle 설정
 - [ ] Database와 Docker 구성
