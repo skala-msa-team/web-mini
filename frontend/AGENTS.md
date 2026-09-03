@@ -4,9 +4,9 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 
 ## Current state
 
-- A minimal Vue 3 and Vite JavaScript project exists.
-- Vue Router and STOMP Client are installed as dependencies only; their application configuration is not implemented.
-- Axios는 현재 PR(#274) 범위에서 제거되었으며, 공통 HTTP 클라이언트/인터셉터는 계약 확정 후 별도 이슈에서 정의합니다.
+- A Vue 3 and Vite JavaScript project with the approved design-system foundation and Vue Router structure exists.
+- STOMP Client is installed as a dependency, but its application configuration is not implemented.
+- Axios is not installed. Do not select or implement a common HTTP client or interceptors without an explicit decision or Task.
 - Do not choose or install state-management, test, or other optional libraries without an explicit decision or Issue.
 
 ## Change boundaries

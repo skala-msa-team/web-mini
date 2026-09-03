@@ -1,8 +1,63 @@
-# AI-Ready Web Service Mini Project - 6조
+# 사랑과 전쟁터
 
-SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로젝트 저장소입니다.
+SKALA Full-Stack Engineering 과정의 6조 AI-Ready 웹 서비스 설계 프로젝트입니다.
+
+연인 간 갈등 당사자가 각자의 입장을 정리하고, Mock AI 변호사와 Mock AI 판사의 의견 및 관전자 투표를 참고해 해결 방향을 탐색하는 서비스입니다. 실제 법률 판결이나 법률 상담을 제공하지 않습니다.
 
 현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. Frontend에는 확정된 디자인 시스템과 shadcn-vue 사용 기반이 설정되어 있으며, 화면과 개별 UI 컴포넌트는 담당 Issue에서 추가합니다. Database, Docker 및 기능 코드는 아직 추가하지 않았습니다.
+
+## 범위와 구현 상태
+
+이 문서에서는 기능의 범위와 현재 구현 여부를 다음 상태로 구분합니다.
+
+| 상태 | 의미 |
+| --- | --- |
+| `현재 구현` | 현재 Repository에 실행 가능한 코드나 설정이 존재함 |
+| `Demo 개발 대상` | 이번 Local Live Demo에서 구현할 기능이며, 완료 여부는 아래 체크리스트와 GitHub Project에서 확인함 |
+| `Frontend만 개발` | 화면과 로컬 Mock 데이터만 구현하며 Backend·Database에는 연결하지 않음 |
+| `설계 완료·추후 개발` | 화면·ERD·API·권한 등 계약만 설계되었고 이번 Demo에서는 코드로 구현하지 않음 |
+
+Notion에 기능이 작성되어 있거나 관련 Issue가 닫혀 있어도 실제 코드가 존재한다는 뜻은 아닙니다. GitHub Issue의 `Completed`와 `Not planned`도 구분하며, 실제 구현 완료 여부는 Repository 코드와 검증 결과를 기준으로 판단합니다.
+
+자료가 서로 다를 때는 제품 범위·정책·인터페이스는 Notion, 담당자·Priority·Iteration·작업 상태는 GitHub Project, 실제 구현 여부는 Repository 코드와 실행된 검증 결과를 각각 기준으로 판단합니다.
+
+### Demo 개발 대상
+
+이번 Local Live Demo는 공개 재판의 다음 핵심 흐름을 개발 대상으로 합니다.
+
+- 갈등 게시글과 공개 재판 생성
+- 한 화면 흐름에서 A측 작성 후 B측 작성
+- Mock AI 안내 질문, 답변, 사실관계 요약과 변론문 생성
+- Backend 시간 기준 재판 단계 전이와 STOMP Event 전달
+- 이전 채팅 조회, 원본 채팅 저장과 실시간 채팅
+- 관전자당 한 번의 승소 투표
+- 양측 변론을 사용한 Mock AI 판결 생성과 결과 저장
+- AI 판결과 대중 투표 결과의 분리 표시
+
+Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사용하고 공개 재판만 동작시킵니다.
+
+### Frontend만 개발
+
+다음 일반 커뮤니티 기능은 Frontend 화면과 로컬 Mock 데이터로만 구현합니다. Backend API, Database 저장, 실제 인증과 권한 처리는 이번 Demo 범위가 아닙니다.
+
+- 홈·인기 게시글·Live 재판·커뮤니티 가이드라인 탭
+- 게시글 목록·상세·작성·수정·삭제 화면
+- 관계 유형·갈등 사유 필터와 페이지 선택
+- 댓글·답글·좋아요·신고 화면 및 로컬 상호작용
+
+### 설계 완료·추후 개발
+
+다음 기능은 전체 서비스 설계에는 포함되지만 이번 Demo에서는 구현하지 않습니다.
+
+| 순서 | 기능 | 이번 Demo 처리 |
+| --- | --- | --- |
+| Future 1 | 회원가입·로그인·로그아웃·회원탈퇴, JWT 인증, 마이페이지 | Demo 사용자 식별값으로 대체 |
+| Future 2 | 재판 중 AI 추가 질문과 지정 당사자 답변 | 상태·화면·API·STOMP·AI 계약만 설계 |
+| Future 3 | 재판 등록 당사자의 강제 종료 | 종료 Event·권한·삭제 정책만 설계 |
+| Future 4 | 비공개 재판 | 선택 UI를 제공하되 추후 개발로 안내 |
+| Future 5 | 서로 다른 A측·B측 사용자의 독립 Form 참여 | Demo에서는 한 사용자가 A측 후 B측을 순차 작성 |
+
+추가로 일반 커뮤니티 Backend와 Database 처리, 게시글·댓글·답글·좋아요·신고 권한, 실제 Amazon Bedrock 연동도 설계 또는 확장 지점만 유지하고 이번 Demo에서는 구현하지 않습니다.
 
 ## 프로젝트 자료
 
@@ -14,11 +69,20 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 
 기획, Actor 중심 Use Case, 화면 흐름, 기술 결정, ERD, API 및 AI JSON 계약은 Notion에서 관리합니다. 담당자, Priority, Iteration과 상태는 GitHub Project에서 관리합니다.
 
+### 확정 설계 문서
+
+- [사용자 흐름](https://confused-dietician-c17.notion.site/3cf7caa087bd8148b2d1f56e4245e0e3?pvs=25)
+- [기능 명세서](https://confused-dietician-c17.notion.site/3cf7caa087bd8061a61dfae752a62ddc?pvs=25)
+- [Demo ERD](https://confused-dietician-c17.notion.site/Demo-ERD-3d07caa087bd81918fb3d21eef3f9066?pvs=25)
+- [Demo API 명세서](https://confused-dietician-c17.notion.site/Demo-API-3d07caa087bd8171aaa1fa90ba18db5f?pvs=25)
+- [시스템 아키텍처](https://confused-dietician-c17.notion.site/8e27caa087bd83fba11a811959a760af?pvs=25)
+- [실시간 AI 재판 구현 방식](https://confused-dietician-c17.notion.site/p/3d07caa087bd8001a677ff2486dd8c6c?pvs=25)
+
 ## 현재 확정된 방향
 
 | 영역 | 방향 |
 | --- | --- |
-| Frontend | Vue 3, Vite, JavaScript, Tailwind CSS 4, shadcn-vue, Vue Router, STOMP Client |
+| Frontend | Vue 3, Vite, JavaScript, Tailwind CSS 4, shadcn-vue, Vue Router, STOMP Client; HTTP Client 미정 |
 | Backend | Java 21, Spring Boot, Gradle, Web, Validation, WebSocket |
 | Realtime | WebSocket, STOMP |
 | Database | PostgreSQL |
@@ -26,9 +90,22 @@ SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로�
 | Design | Justice & Empathy 디자인 시스템, Google Stitch, Figma |
 | Lint | ESLint, Checkstyle |
 
-미정인 Library와 Version, API Path, STOMP Destination, Database Schema와 AI JSON은 담당 Issue에서 설계가 확정된 후 추가합니다.
+REST API, STOMP Destination, Database Schema, Demo 사용자 식별 방식과 AI 입출력 JSON 계약은 위 Notion 문서에서 확정되었습니다. 상태 관리·HTTP Client·Migration·API 문서화 등 확정되지 않은 Library는 도입하지 않습니다.
 
-Frontend 공통 REST 처리와 인증 규칙은 아직 미정이며, 계약 확정 전에는 문서상 디렉토리만 준비합니다. Demo 사용자 식별과 인증 방식도 Backend 계약 확정 시 별도 범위로 결정합니다.
+## 핵심 아키텍처 원칙
+
+- Frontend는 Backend의 REST API와 WebSocket·STOMP만 사용하며 AI Provider와 Database를 직접 호출하지 않습니다.
+- Backend가 재판 상태와 단계 시간을 관리하고 Frontend는 `phaseEndsAt`을 기준으로 남은 시간을 표시합니다.
+- 재판 Event와 채팅은 Database Transaction Commit 이후 STOMP로 전송합니다.
+- 최초 입장과 재연결 시 Topic을 먼저 구독한 뒤 Snapshot과 Sequence 이후 이력을 조회해 누락과 중복을 방지합니다.
+- `AiClient` 계약을 유지한 채 Demo의 Mock AI를 향후 Amazon Bedrock Adapter로 교체합니다.
+- 관전자 채팅과 투표는 AI 판결 입력에 포함하지 않고 결과 화면에서도 AI 판결과 대중 투표를 분리합니다.
+
+Demo 재판 상태는 다음 순서를 사용합니다.
+
+```text
+PREPARING → INTRODUCTION → A_ARGUMENT → B_ARGUMENT → VOTING → VERDICT → ENDED
+```
 
 ## 저장소 구조
 
@@ -58,7 +135,11 @@ Frontend 공통 REST 처리와 인증 규칙은 아직 미정이며, 계약 확�
 
 ## 로컬 실행
 
-사전 준비: Node.js, npm, Java 21
+사전 준비:
+
+- Node.js `^20.19.0 || ^22.13.0 || >=24`
+- npm
+- Java 21
 
 Frontend:
 
@@ -104,6 +185,8 @@ cd backend
 5. `dev` 대상 PR은 최소 1명의 승인을 받은 뒤 병합합니다.
 6. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
 7. Review와 검증 후 Squash and merge합니다.
+
+초기 Repository 부트스트랩 Issue는 위 협업 규칙 확정 전에 직접 반영되었습니다. 이후 기능 작업부터 Issue·Branch·PR 연결과 Review 규칙을 적용합니다.
 
 ## 협업 컨벤션
 
@@ -208,5 +291,9 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - [x] Justice & Empathy 디자인 토큰과 shadcn-vue 사용 기반 구성
 - [x] Frontend·Backend 환경변수 예시 작성
 - [x] ESLint·Checkstyle 설정
+- [x] REST API·공통 응답·오류 계약 확정
+- [x] Demo ERD와 Database 제약조건 확정
+- [x] 재판 상태·STOMP Message 계약 확정
+- [x] Mock AI 입출력 JSON 계약 확정
 - [ ] Database와 Docker 구성
 - [ ] API, WebSocket/STOMP, Mock AI와 기능 구현
