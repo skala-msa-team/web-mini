@@ -15,7 +15,10 @@ defineProps({
       <p>양측의 진술과 변론 내용을 바탕으로 산정했습니다.</p>
     </div>
 
-    <div class="ratio-bar" aria-label="A측 과실 30퍼센트, B측 과실 70퍼센트">
+    <div
+      class="ratio-bar"
+      :aria-label="`A측 과실 ${ratio.sideA}퍼센트, B측 과실 ${ratio.sideB}퍼센트`"
+    >
       <span class="side-a" :style="{ width: `${ratio.sideA}%` }">
         A측 {{ ratio.sideA }}%
       </span>

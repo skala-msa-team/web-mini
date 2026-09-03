@@ -28,14 +28,11 @@ const resultsAgree = computed(() => {
     <div class="comparison-grid">
       <article class="result-column">
         <h3><Scale :size="18" /> AI 판결</h3>
-        <div class="result-row">
-          <div><span>A측 승소</span><strong>{{ aiResult.sideA }}%</strong></div>
-          <div class="track"><span class="ai-side-a" :style="{ width: `${aiResult.sideA}%` }"></span></div>
+        <div class="ai-winner" role="status">
+          <span>승소 측</span>
+          <strong>{{ aiResult.winnerSide ? `${aiResult.winnerSide}측` : '미정' }}</strong>
         </div>
-        <div class="result-row">
-          <div><span>B측 승소</span><strong>{{ aiResult.sideB }}%</strong></div>
-          <div class="track"><span class="ai-side-b" :style="{ width: `${aiResult.sideB}%` }"></span></div>
-        </div>
+        <p class="ai-note">과실 비율은 위의 AI 판단 과실 비율 카드에서 확인할 수 있습니다.</p>
       </article>
 
       <article class="result-column jury-column">
@@ -162,17 +159,35 @@ h3 {
   border-radius: inherit;
 }
 
-.ai-side-a,
 .jury-side-a {
   background: var(--ds-color-justice-blue);
 }
 
-.ai-side-b {
-  background: var(--ds-color-primary);
-}
-
 .jury-side-b {
   background: #8a95a5;
+}
+
+.ai-winner {
+  min-height: 92px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--ds-radius-default);
+  background: #eef4ff;
+  color: var(--ds-color-on-surface-variant);
+}
+
+.ai-winner strong {
+  color: var(--ds-color-justice-blue);
+  font-size: 1.45rem;
+}
+
+.ai-note {
+  margin: 14px 0 0;
+  color: #7e8896;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .jury-column > p {
