@@ -140,6 +140,7 @@ watch(
 
         <TrialChatPanel
           :messages="session.messages.value"
+          :current-user-id="session.demoUserId"
           :audience-count="liveTrialMock.audienceCount"
           :header-label="trialEnded ? '종료' : ''"
           :disabled="interactionsDisabled"

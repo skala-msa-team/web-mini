@@ -153,6 +153,7 @@ async function submitVote() {
 
         <TrialChatPanel
           :messages="session.messages.value"
+          :current-user-id="session.demoUserId"
           :audience-count="finalVoteMock.viewerCount"
           :header-label="trialEnded ? '종료' : '실시간'"
           :disabled="interactionsDisabled"

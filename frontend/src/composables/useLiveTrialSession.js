@@ -141,6 +141,7 @@ export function useLiveTrialSession(trialId, options = {}) {
   })
 
   return {
+    demoUserId,
     detail,
     snapshot,
     events,
