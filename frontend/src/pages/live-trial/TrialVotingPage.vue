@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Eye } from '@lucide/vue'
-import { VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { CONNECTION_STATUS, VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
 import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
 import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
