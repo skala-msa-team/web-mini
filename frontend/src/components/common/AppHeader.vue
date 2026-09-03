@@ -34,200 +34,42 @@ const navigation = computed(() => [
 </script>
 
 <template>
-  <header class="app-header">
-    <div class="header-inner">
+  <header class="sticky top-0 z-20 border-b border-border bg-white/90 backdrop-blur-xl">
+    <div class="mx-auto grid min-h-[72px] w-[min(calc(100%-2rem),var(--ds-container-max))] grid-cols-[minmax(190px,1fr)_auto_minmax(190px,1fr)] items-center gap-6 max-[960px]:grid-cols-[1fr_auto] max-[960px]:gap-3 max-[960px]:py-3">
       <RouterLink
-        class="brand"
+        class="inline-flex w-fit items-center gap-2.5 font-heading text-xl font-bold text-[var(--ds-color-verdict-blue)]"
         :to="{ name: 'home' }"
         aria-label="사랑과 전쟁터 홈"
       >
-        <Scale class="brand-logo" :size="24" stroke-width="2.4" />
+        <Scale :size="24" stroke-width="2.4" />
         <span>사랑과 전쟁터</span>
       </RouterLink>
 
-      <nav class="primary-nav" aria-label="주 메뉴">
+      <nav class="flex h-full items-stretch gap-2 max-[960px]:col-span-2 max-[960px]:row-start-2 max-[960px]:-mx-4 max-[960px]:min-h-11 max-[960px]:overflow-x-auto max-[960px]:px-4" aria-label="주 메뉴">
         <component
           v-for="item in navigation"
           :key="item.label"
           :is="item.to ? 'RouterLink' : 'a'"
           :to="item.to"
           :href="item.href"
-          class="nav-link"
-          :class="{ active: item.active }"
+          class="relative inline-flex items-center whitespace-nowrap px-3 text-sm font-semibold text-muted-foreground transition hover:text-primary"
+          :class="item.active ? 'text-primary after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-t-full after:bg-primary' : ''"
           :aria-current="item.active ? 'page' : undefined"
         >
           {{ item.label }}
         </component>
       </nav>
 
-      <div class="header-actions" aria-label="사용자 메뉴">
-        <button class="icon-button" type="button" aria-label="알림">
+      <div class="flex items-center justify-end gap-2.5" aria-label="사용자 메뉴">
+        <button class="relative grid size-10 place-items-center rounded-full border-0 bg-muted text-primary transition hover:bg-accent" type="button" aria-label="알림">
           <Bell :size="20" />
-          <span class="notification-dot" aria-hidden="true"></span>
+          <span class="absolute right-2 top-2 size-1.5 rounded-full border border-white bg-red-400" aria-hidden="true"></span>
         </button>
-        <button class="profile-button" type="button">
+        <button class="inline-flex min-h-10 items-center gap-2 rounded-lg border-0 bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 max-[560px]:size-10 max-[560px]:justify-center max-[560px]:px-0" type="button">
           <UserRound :size="17" />
-          <span>내 정보</span>
+          <span class="max-[560px]:sr-only">내 정보</span>
         </button>
       </div>
     </div>
   </header>
 </template>
-
-<style scoped>
-.app-header {
-  border-bottom: 1px solid var(--ds-color-card-border);
-  background: rgb(255 255 255 / 92%);
-  backdrop-filter: blur(12px);
-}
-
-.header-inner {
-  width: min(calc(100% - 32px), var(--ds-container-max));
-  min-height: 72px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
-  align-items: center;
-  gap: 24px;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  width: fit-content;
-  color: var(--ds-color-verdict-blue);
-  font-family: var(--ds-font-heading);
-  font-size: 1.35rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.brand-logo {
-  color: var(--ds-color-verdict-blue);
-}
-
-.primary-nav {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  align-self: stretch;
-}
-
-.nav-link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 12px;
-  color: var(--ds-color-on-surface-variant);
-  font-size: 1rem;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  right: 12px;
-  bottom: 0;
-  left: 12px;
-  height: 3px;
-  border-radius: 999px 999px 0 0;
-  background: transparent;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  color: var(--ds-color-justice-blue);
-}
-
-.nav-link.active::after {
-  background: var(--ds-color-justice-blue);
-}
-
-.header-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-}
-
-.icon-button,
-.profile-button {
-  border: 0;
-  cursor: pointer;
-}
-
-.icon-button {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--ds-color-surface-container-low);
-  color: var(--ds-color-primary);
-}
-
-.notification-dot {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  width: 6px;
-  height: 6px;
-  border: 1.5px solid white;
-  border-radius: 50%;
-  background: var(--ds-color-accent-red);
-}
-
-.profile-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 40px;
-  padding: 0 16px;
-  border-radius: var(--ds-radius-default);
-  background: var(--ds-color-primary);
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-@media (max-width: 960px) {
-  .header-inner {
-    grid-template-columns: 1fr auto;
-    padding: 12px 0 0;
-  }
-
-  .primary-nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    overflow-x: auto;
-    justify-content: flex-start;
-    min-height: 44px;
-    margin: 0 -16px;
-    padding: 0 16px;
-  }
-}
-
-@media (max-width: 560px) {
-  .header-inner {
-    width: min(calc(100% - 24px), var(--ds-container-max));
-  }
-
-  .profile-button {
-    width: 40px;
-    padding: 0;
-    justify-content: center;
-  }
-
-  .profile-button span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-}
-</style>
