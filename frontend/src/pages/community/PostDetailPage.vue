@@ -2,8 +2,8 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Flag, MessageCircle, Reply, ThumbsUp } from '@lucide/vue'
-import CommunityLayout from '@/features/community/components/CommunityLayout.vue'
-import { useCommunityStore } from '@/features/community/stores/communityStore.js'
+import CommunityLayout from '@/components/community/CommunityLayout.vue'
+import { useCommunityStore } from '@/stores/communityStore.js'
 
 const route = useRoute()
 const {

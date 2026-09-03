@@ -1,9 +1,8 @@
 <script setup>
 import { onBeforeUnmount, ref } from 'vue'
-import { fetchTrialList } from '@/api/integrationSpikeApi.js'
+import { getTrials } from '@/apis/trialApi.js'
 import { useDemoUser } from '@/composables/useDemoUser.js'
-import { createStompClient, readMessage } from '@/realtime/stompClient.js'
-import { STOMP_DESTINATION } from '@/realtime/stompDestinations.js'
+import { createStompClient, readMessage, STOMP_DESTINATION } from '@/lib/realtime.js'
 
 const trialId = ref('1')
 const restState = ref('대기 중')
@@ -19,7 +18,7 @@ async function callRest() {
   restState.value = '호출 중'
   restError.value = ''
   try {
-    restResponse.value = await fetchTrialList()
+    restResponse.value = await getTrials()
     restState.value = '성공'
   } catch (error) {
     restState.value = '실패'

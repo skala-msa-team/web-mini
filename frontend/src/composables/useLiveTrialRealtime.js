@@ -1,8 +1,6 @@
 import { onBeforeUnmount, onMounted, ref, unref } from 'vue'
-import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { subscribeLiveTrial } from '@/realtime/liveTrialSubscriptions.js'
-import { createStompClient, readMessage } from '@/realtime/stompClient.js'
-import { STOMP_DESTINATION } from '@/realtime/stompDestinations.js'
+import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { createStompClient, readMessage, STOMP_DESTINATION, subscribeLiveTrial } from '@/lib/realtime.js'
 import { useDemoUser } from './useDemoUser.js'
 
 export function useLiveTrialRealtime(trialId, options = {}) {

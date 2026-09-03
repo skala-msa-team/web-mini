@@ -2,15 +2,15 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Eye } from '@lucide/vue'
-import { CONNECTION_STATUS, VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { TRIAL_STATUS } from '@/constants/trialStatus.js'
-import { trialApi } from '@/api/trialApi.js'
+import { CONNECTION_STATUS, VOTE_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { TRIAL_STATUS } from '@/consts/trialStatus.js'
+import { submitVote as submitVoteRequest } from '@/apis/trialApi.js'
 import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
-import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
-import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
-import FinalVerdictVote from '@/features/vote/components/FinalVerdictVote.vue'
-import { finalVoteMock } from '@/features/vote/finalVoteMock.js'
+import TrialChatPanel from '@/components/chat/TrialChatPanel.vue'
+import TrialConnectionStatus from '@/components/trial/TrialConnectionStatus.vue'
+import FinalVerdictVote from '@/components/vote/FinalVerdictVote.vue'
+import { finalVoteMock } from '@/mock/vote/finalVoteMock.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,7 +91,7 @@ async function submitVote() {
 
   try {
     submittedVote.value = Object.freeze(
-      await trialApi.submitVote(
+      await submitVoteRequest(
         trialId.value,
         selectedChoice.value.replace('SIDE_', ''),
       ),
