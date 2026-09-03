@@ -1,15 +1,80 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Eye } from '@lucide/vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import { VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
+import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
 import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
+import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
+import {
+  LIVE_TRIAL_MOCK_SCENARIO,
+  LIVE_TRIAL_TIMING,
+} from '@/features/trial/liveTrialStateMock.js'
 import FinalVerdictVote from '@/features/vote/components/FinalVerdictVote.vue'
 import { finalVoteMock } from '@/features/vote/finalVoteMock.js'
 
-const selectedChoice = ref(null)
+const route = useRoute()
+const router = useRouter()
+
+const {
+  state: trialState,
+  interactionsDisabled: stateInteractionsDisabled,
+  interactionDisabledMessage: stateInteractionDisabledMessage,
+  retryConnection,
+} = useLiveTrialMockState(LIVE_TRIAL_MOCK_SCENARIO.VOTE_OPEN)
+
+const trialEndsAt = computed(() => {
+  const scheduledEndAt = trialState.value.snapshot?.scheduledEndAt
+  if (!scheduledEndAt) return null
+
+  const scheduledEndTimestamp = new Date(scheduledEndAt).getTime()
+  const directVoteEndTimestamp = Date.now() + LIVE_TRIAL_TIMING.VOTING_SECONDS * 1000
+  return new Date(Math.min(scheduledEndTimestamp, directVoteEndTimestamp)).toISOString()
+})
+const { formattedRemainingTime, isExpired } = useTrialCountdown(trialEndsAt)
+const trialEnded = computed(() => Boolean(trialState.value.snapshot?.ended || isExpired.value))
+const interactionsDisabled = computed(
+  () => stateInteractionsDisabled.value || isExpired.value,
+)
+const interactionDisabledMessage = computed(() =>
+  isExpired.value ? '재판 시간이 종료되었습니다.' : stateInteractionDisabledMessage.value,
+)
+const selectedChoice = ref(toChoiceId(trialState.value.vote.selectedSide))
+const voteDisabled = computed(
+  () => interactionsDisabled.value || trialState.value.vote.status !== VOTE_STATUS.OPEN,
+)
+const voteDisabledMessage = computed(() => {
+  if (interactionsDisabled.value) return interactionDisabledMessage.value
+  if (trialState.value.vote.status === VOTE_STATUS.WAITING) return '최종 투표가 아직 시작되지 않았습니다.'
+  if (trialState.value.vote.status === VOTE_STATUS.SUBMITTED) return '투표 제출이 완료되었습니다.'
+  return ''
+})
+
+watch(
+  () => trialState.value.vote.selectedSide,
+  (selectedSide) => {
+    selectedChoice.value = toChoiceId(selectedSide)
+  },
+)
+
+watch(
+  isExpired,
+  (expired) => {
+    if (!expired || trialState.value.snapshot?.ended) return
+    router.replace({ name: 'trial-result', params: { trialId: route.params.trialId } })
+  },
+  { immediate: true },
+)
+
+function toChoiceId(side) {
+  return side ? `SIDE_${side}` : null
+}
 
 function selectChoice(choiceId) {
+  if (voteDisabled.value) return
   selectedChoice.value = choiceId
 }
 </script>
@@ -19,13 +84,19 @@ function selectChoice(choiceId) {
     <AppHeader />
 
     <main class="voting-shell">
+      <TrialConnectionStatus
+        :connection="trialState.connection"
+        :ended="trialEnded"
+        @retry="retryConnection"
+      />
+
       <div class="voting-layout">
         <div class="voting-main">
           <section class="courtroom-stream" aria-labelledby="stream-title">
             <img src="/images/final-vote-courtroom.png" alt="최종 투표를 진행 중인 AI 재판장" />
-            <div class="live-indicator">
+            <div class="live-indicator" :class="{ ended: trialEnded }">
               <i aria-hidden="true"></i>
-              <span>LIVE</span>
+              <span>{{ trialEnded ? 'ENDED' : 'LIVE' }}</span>
               <Eye :size="14" />
               <strong>{{ finalVoteMock.viewerCount.toLocaleString('ko-KR') }}</strong>
             </div>
@@ -38,8 +109,10 @@ function selectChoice(choiceId) {
 
           <FinalVerdictVote
             :choices="finalVoteMock.choices"
-            :remaining-time="finalVoteMock.remainingTime"
+            :remaining-time="formattedRemainingTime"
             :selected-choice="selectedChoice"
+            :disabled="voteDisabled"
+            :disabled-message="voteDisabledMessage"
             @select="selectChoice"
           />
         </div>
@@ -47,7 +120,9 @@ function selectChoice(choiceId) {
         <TrialChatPanel
           :initial-messages="finalVoteMock.messages"
           :audience-count="finalVoteMock.viewerCount"
-          header-label="실시간"
+          :header-label="trialEnded ? '종료' : '실시간'"
+          :disabled="interactionsDisabled"
+          :disabled-message="interactionDisabledMessage"
         />
       </div>
     </main>
@@ -128,6 +203,10 @@ function selectChoice(choiceId) {
   height: 7px;
   border-radius: 50%;
   background: white;
+}
+
+.live-indicator.ended {
+  background: #687486;
 }
 
 .live-indicator span,

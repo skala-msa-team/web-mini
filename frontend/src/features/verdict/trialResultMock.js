@@ -1,4 +1,10 @@
+import {
+  LIVE_TRIAL_MOCK_SCENARIO,
+  getLiveTrialStateMock,
+} from '@/features/trial/liveTrialStateMock.js'
+
 export const trialResultMock = Object.freeze({
+  state: getLiveTrialStateMock(LIVE_TRIAL_MOCK_SCENARIO.ENDED),
   caseNumber: '2026-LV-0145',
   title: '연락 빈도 문제로 인한 감정적 소모 및 신뢰 훼손 건',
   winner: 'B측',

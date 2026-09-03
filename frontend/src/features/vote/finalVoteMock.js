@@ -1,9 +1,14 @@
+import {
+  LIVE_TRIAL_MOCK_SCENARIO,
+  getLiveTrialStateMock,
+} from '@/features/trial/liveTrialStateMock.js'
+
 export const finalVoteMock = Object.freeze({
+  state: getLiveTrialStateMock(LIVE_TRIAL_MOCK_SCENARIO.VOTE_OPEN),
   caseNumber: 402,
   title: '연락 빈도를 둘러싼 갈등',
   subtitle: 'A측: 김지민 (연락 부족) vs B측: 이준호 (개인 시간 존중)',
   viewerCount: 12402,
-  remainingTime: '04:23',
   choices: [
     {
       id: 'SIDE_A',

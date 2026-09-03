@@ -1,11 +1,12 @@
+import { LIVE_TRIAL_MOCK_SCENARIO, getLiveTrialStateMock } from './liveTrialStateMock.js'
+
 export const liveTrialMock = Object.freeze({
-  id: 42,
+  id: 1,
+  state: getLiveTrialStateMock(LIVE_TRIAL_MOCK_SCENARIO.ARGUMENT),
   title: '남자친구가 여사친과 단둘이 술을 마신 사건',
   viewCount: 142,
-  sessionTime: '12:00 - 12:30',
-  remainingTime: '18:42',
+  sessionTime: '총 재판 시간 3분',
   audienceCount: 1284,
-  phase: '변론',
   participants: [
     { id: 'a-attorney', name: 'A측 AI 변호사', role: 'A측', position: 'left', tone: 'navy' },
     { id: 'judge', name: 'AI 판사', role: '재판 진행', position: 'center', tone: 'judge' },

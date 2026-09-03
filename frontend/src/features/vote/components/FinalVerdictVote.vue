@@ -1,10 +1,12 @@
 <script setup>
 import { Check, Clock3, Scale } from '@lucide/vue'
 
-defineProps({
+const props = defineProps({
   choices: { type: Array, required: true },
   remainingTime: { type: String, required: true },
   selectedChoice: { type: String, default: null },
+  disabled: { type: Boolean, default: false },
+  disabledMessage: { type: String, default: '현재 투표할 수 없습니다.' },
 })
 
 defineEmits(['select'])
@@ -38,6 +40,7 @@ defineEmits(['select'])
         class="choice-card"
         :class="{ selected: selectedChoice === choice.id }"
         :aria-pressed="selectedChoice === choice.id"
+        :disabled="disabled"
         @click="$emit('select', choice.id)"
       >
         <span class="choice-side">{{ choice.side }}</span>
@@ -50,7 +53,13 @@ defineEmits(['select'])
     </div>
 
     <p class="vote-help">
-      {{ selectedChoice ? '선택이 완료되었습니다. 투표 종료 전까지 변경할 수 있습니다.' : '두 입장을 검토한 뒤 한 쪽을 선택해 주세요.' }}
+      {{
+        props.disabled
+          ? props.disabledMessage
+          : selectedChoice
+            ? '선택이 완료되었습니다. 투표 종료 전까지 변경할 수 있습니다.'
+            : '두 입장을 검토한 뒤 한 쪽을 선택해 주세요.'
+      }}
     </p>
   </section>
 </template>
@@ -164,6 +173,15 @@ h1 {
 .choice-card:focus-visible {
   outline: 3px solid rgb(37 99 235 / 22%);
   outline-offset: 2px;
+}
+
+.choice-card:disabled {
+  border-color: var(--ds-color-outline-variant);
+  background: var(--ds-color-surface-container-low);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.68;
+  transform: none;
 }
 
 .choice-card.selected {

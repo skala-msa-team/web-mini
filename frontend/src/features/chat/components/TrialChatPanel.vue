@@ -6,6 +6,8 @@ const props = defineProps({
   initialMessages: { type: Array, required: true },
   audienceCount: { type: Number, required: true },
   headerLabel: { type: String, default: '' },
+  disabled: { type: Boolean, default: false },
+  disabledMessage: { type: String, default: '현재 채팅을 사용할 수 없습니다.' },
 })
 
 const messages = ref([...props.initialMessages])
@@ -15,6 +17,8 @@ const formattedAudienceCount = computed(() => props.audienceCount.toLocaleString
 const displayedHeaderLabel = computed(() => props.headerLabel || `${formattedAudienceCount.value}명`)
 
 async function submitMessage() {
+  if (props.disabled) return
+
   const message = draft.value.trim()
   if (!message) return
 
@@ -53,8 +57,14 @@ async function submitMessage() {
 
     <form class="chat-form" @submit.prevent="submitMessage">
       <label class="sr-only" for="chat-message">배심원 채팅 의견</label>
-      <input id="chat-message" v-model="draft" type="text" placeholder="의견을 남겨주세요..." />
-      <button type="submit" aria-label="메시지 보내기" :disabled="!draft.trim()">
+      <input
+        id="chat-message"
+        v-model="draft"
+        type="text"
+        :placeholder="disabled ? disabledMessage : '의견을 남겨주세요...'"
+        :disabled="disabled"
+      />
+      <button type="submit" aria-label="메시지 보내기" :disabled="disabled || !draft.trim()">
         <Send :size="18" />
       </button>
     </form>
@@ -206,6 +216,12 @@ header i {
 .chat-form input:focus {
   border-color: var(--ds-color-justice-blue);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+}
+
+.chat-form input:disabled {
+  background: var(--ds-color-surface-container-low);
+  color: var(--ds-color-on-surface-variant);
+  cursor: not-allowed;
 }
 
 .chat-form button {

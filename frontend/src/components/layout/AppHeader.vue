@@ -1,34 +1,49 @@
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { Bell, Gavel, UserRound } from '@lucide/vue'
 
-const navigation = [
+const route = useRoute()
+const trialId = computed(() => route.params.trialId ?? '1')
+
+const navigation = computed(() => [
   { label: '홈', href: '#home' },
   { label: '인기게시글', href: '#popular-posts' },
-  { label: 'Live 재판', href: '/live-trial', active: true },
+  {
+    label: 'Live 재판',
+    to: { name: 'live-trial', params: { trialId: trialId.value } },
+    active: true,
+  },
   { label: '커뮤니티 가이드라인', href: '#community-guide' },
   { label: '마이페이지', href: '#my-page' },
-]
+])
 </script>
 
 <template>
   <header class="app-header">
     <div class="header-inner">
-      <a class="brand" href="/live-trial" aria-label="사랑과 전쟁터 홈">
+      <RouterLink
+        class="brand"
+        :to="{ name: 'live-trial', params: { trialId } }"
+        aria-label="사랑과 전쟁터 홈"
+      >
         <span class="brand-mark"><Gavel :size="21" stroke-width="2.4" /></span>
         <span>사랑과 전쟁터</span>
-      </a>
+      </RouterLink>
 
       <nav class="primary-nav" aria-label="주 메뉴">
-        <a
+        <component
           v-for="item in navigation"
           :key="item.label"
+          :is="item.to ? 'RouterLink' : 'a'"
+          :to="item.to"
           :href="item.href"
           class="nav-link"
           :class="{ active: item.active }"
           :aria-current="item.active ? 'page' : undefined"
         >
           {{ item.label }}
-        </a>
+        </component>
       </nav>
 
       <div class="header-actions" aria-label="사용자 메뉴">

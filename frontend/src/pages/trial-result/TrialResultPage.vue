@@ -59,7 +59,12 @@ async function shareResult() {
           <Share2 v-else :size="17" />
           {{ shareCompleted ? '링크가 복사되었습니다' : '판결문 공유하기' }}
         </button>
-        <a class="list-button" href="/live-trial"><ArrowLeft :size="17" /> Live 재판으로 돌아가기</a>
+        <RouterLink
+          class="list-button"
+          :to="{ name: 'live-trial', params: { trialId: $route.params.trialId } }"
+        >
+          <ArrowLeft :size="17" /> Live 재판으로 돌아가기
+        </RouterLink>
       </div>
 
       <p class="legal-notice">

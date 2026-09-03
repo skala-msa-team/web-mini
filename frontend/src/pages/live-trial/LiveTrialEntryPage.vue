@@ -1,11 +1,69 @@
 <script setup>
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Clock3, Eye, UsersRound } from '@lucide/vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { TRIAL_STATUS_LABEL } from '@/constants/trialStatus.js'
+import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
+import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
 import TrialChatPanel from '@/features/chat/components/TrialChatPanel.vue'
 import ArgumentTimeline from '@/features/trial/components/ArgumentTimeline.vue'
+import TrialConnectionStatus from '@/features/trial/components/TrialConnectionStatus.vue'
 import TrialStage from '@/features/trial/components/TrialStage.vue'
 import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
+import {
+  LIVE_TRIAL_MOCK_SCENARIO,
+  LIVE_TRIAL_TIMING,
+} from '@/features/trial/liveTrialStateMock.js'
+
+const route = useRoute()
+const router = useRouter()
+
+const {
+  state: trialState,
+  interactionsDisabled: stateInteractionsDisabled,
+  interactionDisabledMessage: stateInteractionDisabledMessage,
+  retryConnection,
+} = useLiveTrialMockState(LIVE_TRIAL_MOCK_SCENARIO.ARGUMENT)
+
+const trialEndsAt = computed(() => trialState.value.snapshot?.scheduledEndAt)
+const { remainingSeconds, formattedRemainingTime, isExpired } = useTrialCountdown(trialEndsAt)
+const trialEnded = computed(() => Boolean(trialState.value.snapshot?.ended || isExpired.value))
+const phaseLabel = computed(() => {
+  if (trialEnded.value) return '재판 종료'
+  return TRIAL_STATUS_LABEL[trialState.value.snapshot?.status] ?? '상태 확인 중'
+})
+const interactionsDisabled = computed(
+  () => stateInteractionsDisabled.value || isExpired.value,
+)
+const interactionDisabledMessage = computed(() =>
+  isExpired.value ? '재판 시간이 종료되었습니다.' : stateInteractionDisabledMessage.value,
+)
+
+watch(
+  remainingSeconds,
+  (seconds) => {
+    if (
+      seconds === null ||
+      trialState.value.connection.status !== CONNECTION_STATUS.CONNECTED ||
+      trialState.value.snapshot?.ended
+    ) {
+      return
+    }
+
+    if (seconds === 0) {
+      router.replace({ name: 'trial-result', params: { trialId: route.params.trialId } })
+      return
+    }
+
+    if (seconds <= LIVE_TRIAL_TIMING.VOTING_SECONDS) {
+      router.replace({ name: 'trial-voting', params: { trialId: route.params.trialId } })
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -13,10 +71,18 @@ import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
     <AppHeader />
 
     <main class="page-shell">
+      <TrialConnectionStatus
+        :connection="trialState.connection"
+        :ended="trialEnded"
+        @retry="retryConnection"
+      />
+
       <section class="trial-summary" aria-labelledby="trial-title">
         <div class="summary-copy">
           <div class="summary-badges">
-            <span class="live-badge"><i aria-hidden="true"></i>실시간</span>
+            <span class="live-badge" :class="{ ended: trialEnded }">
+              <i aria-hidden="true"></i>{{ trialEnded ? '종료' : '실시간' }}
+            </span>
             <span class="view-badge"><Eye :size="14" />{{ liveTrialMock.viewCount }}</span>
           </div>
           <h1 id="trial-title">“{{ liveTrialMock.title }}”</h1>
@@ -27,7 +93,7 @@ import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
             <Clock3 :size="21" />
             <span>
               <small>{{ liveTrialMock.sessionTime }}</small>
-              <strong>{{ liveTrialMock.remainingTime }}</strong>
+              <strong>{{ formattedRemainingTime }}</strong>
             </span>
           </div>
           <div class="stat-card audience-card">
@@ -44,7 +110,7 @@ import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
         <div class="trial-main-column">
           <TrialStage :participants="liveTrialMock.participants" />
           <ArgumentTimeline
-            :phase="liveTrialMock.phase"
+            :phase="phaseLabel"
             :notice="liveTrialMock.judgeNotice"
             :argument="liveTrialMock.currentArgument"
             :summary="liveTrialMock.nextSummary"
@@ -55,6 +121,9 @@ import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
         <TrialChatPanel
           :initial-messages="liveTrialMock.messages"
           :audience-count="liveTrialMock.audienceCount"
+          :header-label="trialEnded ? '종료' : ''"
+          :disabled="interactionsDisabled"
+          :disabled-message="interactionDisabledMessage"
         />
       </div>
     </main>
@@ -109,6 +178,10 @@ import { liveTrialMock } from '@/features/trial/liveTrialMock.js'
 .live-badge {
   background: #ca2330;
   color: white;
+}
+
+.live-badge.ended {
+  background: #687486;
 }
 
 .live-badge i {
