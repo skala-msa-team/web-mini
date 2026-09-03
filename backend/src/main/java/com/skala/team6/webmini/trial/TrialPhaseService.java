@@ -100,7 +100,7 @@ public class TrialPhaseService {
                 result.summary(), objectMapper.writeValueAsString(result.grounds()),
                 result.aRecommendation(), result.bRecommendation(), result.promptVersion()));
         trial.startPhase(TrialStatus.VERDICT, now, now);
-        eventWriter.save(trial, "VERDICT_PUBLISHED", TrialSpeaker.JUDGE, result.summary(), Map.of(
+        eventWriter.save(trial, "VERDICT_ANNOUNCED", TrialSpeaker.JUDGE, result.summary(), Map.of(
                 "status", TrialStatus.VERDICT.name(), "verdictId", verdict.getId(),
                 "winnerSide", result.winnerSide().name(), "aFaultRatio", result.aFaultRatio(),
                 "bFaultRatio", result.bFaultRatio(), "publishedAt", now.toString()));
@@ -110,6 +110,6 @@ public class TrialPhaseService {
         trial.complete(now);
         eventWriter.save(trial, "TRIAL_ENDED", TrialSpeaker.SYSTEM, null, Map.of(
                 "status", TrialStatus.ENDED.name(), "endedAt", now.toString(),
-                "resultPath", "/trials/" + trial.getId() + "/result"));
+                "resultPath", "/api/v1/trials/" + trial.getId() + "/results"));
     }
 }

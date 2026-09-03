@@ -124,7 +124,7 @@ class TrialProgressAcceptanceTest {
                         org.assertj.core.groups.Tuple.tuple(3L, "A_ARGUMENT", "A측 최종 변론"),
                         org.assertj.core.groups.Tuple.tuple(4L, "B_ARGUMENT", "B측 최종 변론"),
                         org.assertj.core.groups.Tuple.tuple(5L, "VOTING_STARTED", null),
-                        org.assertj.core.groups.Tuple.tuple(6L, "VERDICT_PUBLISHED", "판결 요지"),
+                        org.assertj.core.groups.Tuple.tuple(6L, "VERDICT_ANNOUNCED", "판결 요지"),
                         org.assertj.core.groups.Tuple.tuple(7L, "TRIAL_ENDED", null));
     }
 

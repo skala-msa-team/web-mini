@@ -141,7 +141,7 @@ class TrialEventWebSocketIntegrationTest {
                 .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L);
         assertThat(receivedFirst).extracting(TrialEventMessage::type).containsExactly(
                 "TRIAL_STARTED", "JUDGE_INTRODUCTION", "A_ARGUMENT", "B_ARGUMENT",
-                "VOTING_STARTED", "VERDICT_PUBLISHED", "TRIAL_ENDED");
+                "VOTING_STARTED", "VERDICT_ANNOUNCED", "TRIAL_ENDED");
         assertThat(eventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId())).hasSize(7);
     }
 
