@@ -63,4 +63,16 @@ public class TrialEventEntity {
     public long getSequenceNo() {
         return sequenceNo;
     }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

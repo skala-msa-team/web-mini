@@ -96,6 +96,10 @@ public class TrialEntity {
         return phaseEndsAt;
     }
 
+    public OffsetDateTime getScheduledEndAt() {
+        return scheduledEndAt;
+    }
+
     public OffsetDateTime getCompletedAt() {
         return completedAt;
     }
@@ -109,5 +113,9 @@ public class TrialEntity {
     public void complete(OffsetDateTime completedAt) {
         this.status = TrialStatus.ENDED;
         this.completedAt = completedAt;
+    }
+
+    public void scheduleEnd(OffsetDateTime scheduledEndAt) {
+        this.scheduledEndAt = scheduledEndAt;
     }
 }

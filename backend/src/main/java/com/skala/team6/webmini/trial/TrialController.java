@@ -3,7 +3,6 @@ package com.skala.team6.webmini.trial;
 import com.skala.team6.webmini.common.api.ApiResponse;
 import com.skala.team6.webmini.common.model.TrialSide;
 import com.skala.team6.webmini.common.model.TrialStatus;
-import com.skala.team6.webmini.common.model.Visibility;
 import com.skala.team6.webmini.demo.DemoUserContext;
 import com.skala.team6.webmini.demo.DemoUserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,20 +57,24 @@ public class TrialController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
+        TrialQueryService.TrialList result =
+                trialQueryService.findPublicActiveTrials(status, page, size);
+        List<TrialListItem> items = result.entries().stream()
+                .map(entry -> new TrialListItem(
+                        entry.trial().getId(),
+                        entry.trial().getStatus(),
+                        entry.trial().getPost().getTitle(),
+                        entry.aDisplayName(),
+                        entry.bDisplayName(),
+                        entry.trial().getVisibility()
+                ))
+                .toList();
         TrialListResponse response = new TrialListResponse(
-                List.of(new TrialListItem(
-                        21L,
-                        status == null ? TrialStatus.PREPARING : status,
-                        "연락 문제로 다툰 사연",
-                        "A측",
-                        "B측",
-                        Visibility.PUBLIC
-                )),
-                page,
-                size,
-                1,
-                1
-        );
+                items,
+                result.page(),
+                result.size(),
+                result.totalElements(),
+                result.totalPages());
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -240,7 +243,19 @@ public class TrialController {
     public ResponseEntity<ApiResponse<TrialSnapshotResponse>> getSnapshot(
             @PathVariable @Min(1) Long trialId
     ) {
-        return ResponseEntity.ok(ApiResponse.of(sampleSnapshot(TrialStatus.INTRODUCTION)));
+        TrialQueryService.TrialSnapshot snapshot = trialQueryService.findSnapshot(trialId);
+        var trial = snapshot.trial();
+        TrialSnapshotResponse response = new TrialSnapshotResponse(
+                trial.getStatus(),
+                formatTime(trial.getPhaseStartedAt()),
+                formatTime(trial.getPhaseEndsAt()),
+                formatTime(trial.getScheduledEndAt()),
+                snapshot.latestEventSequence(),
+                snapshot.latestMessageSequence(),
+                trial.getStatus() == TrialStatus.VOTING,
+                trial.getStatus() == TrialStatus.ENDED
+        );
+        return ResponseEntity.ok(ApiResponse.of(response));
     }
 
     @Operation(summary = "재판 이벤트 조회")
@@ -249,9 +264,16 @@ public class TrialController {
             @PathVariable @Min(1) Long trialId,
             @RequestParam(defaultValue = "0") @Min(0) long afterSequence
     ) {
-        List<TrialEventResponse> response = List.of(
-                new TrialEventResponse(1, "TRIAL_STARTED", "{\"status\":\"INTRODUCTION\"}", "2026-09-03T03:00:00Z")
-        );
+        List<TrialEventResponse> response = trialQueryService
+                .findEventsAfter(trialId, afterSequence)
+                .stream()
+                .map(event -> new TrialEventResponse(
+                        event.getSequenceNo(),
+                        event.getEventType(),
+                        event.getPayload(),
+                        event.getCreatedAt().toString()
+                ))
+                .toList();
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -331,5 +353,9 @@ public class TrialController {
                 true,
                 false
         );
+    }
+
+    private String formatTime(java.time.OffsetDateTime value) {
+        return value == null ? null : value.toString();
     }
 }
