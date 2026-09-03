@@ -5,8 +5,8 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 ## Current state
 
 - A Vue 3 and Vite JavaScript project with the approved design-system foundation and Vue Router structure exists.
-- Shared live-trial STOMP connection and subscription helpers are implemented under `src/realtime/`.
-- Axios is not installed. Do not select or implement a common HTTP client or interceptors without an explicit decision or Task.
+- Shared live-trial STOMP connection, subscription, and recovery helpers are implemented under `src/lib/realtime.js`.
+- Axios is the approved REST client. Use the shared instance in `src/lib/http.js` and keep API request functions under `src/apis/`.
 - Do not choose or install state-management, test, or other optional libraries without an explicit decision or Issue.
 
 ## Change boundaries

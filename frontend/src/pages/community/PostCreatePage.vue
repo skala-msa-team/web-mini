@@ -3,10 +3,13 @@ import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { Bold, Image, Italic, Link, Scale } from "@lucide/vue";
 
-import { postApi } from "@/api/postApi.js";
-import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
-import { categoryTypes } from "@/features/community/mock/communityData.js";
-import { useCommunityStore } from "@/features/community/stores/communityStore.js";
+import { createPost } from "@/apis/postApi.js";
+import CommunityLayout from "@/components/community/CommunityLayout.vue";
+import Button from "@/components/ui/Button.vue";
+import Input from "@/components/ui/Input.vue";
+import Textarea from "@/components/ui/Textarea.vue";
+import { categoryTypes } from "@/mock/community/communityData.js";
+import { useCommunityStore } from "@/stores/communityStore.js";
 
 const TRIAL_DRAFT_STORAGE_KEY = "love-war:trial-draft";
 const relationshipOptions = [
@@ -40,7 +43,7 @@ async function submitPost() {
   submitError.value = "";
 
   try {
-    const createdPost = await postApi.createPost({
+    const createdPost = await createPost({
       title: title.value.trim(),
       content: content.value.trim(),
       relationshipType: relationshipType.value,
@@ -90,20 +93,21 @@ async function submitPost() {
 
 <template>
   <CommunityLayout>
-    <section class="post-editor">
-      <h1>글쓰기</h1>
-      <label class="form-field">
+    <section class="mx-auto max-w-3xl rounded-xl border border-border bg-card p-5 shadow-sm sm:p-8">
+      <h1 class="text-2xl font-bold tracking-tight">글쓰기</h1>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <label class="grid gap-2 text-sm font-semibold">
         <span>카테고리</span>
-        <select v-model="category">
+        <select class="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" v-model="category">
           <option value="" disabled>카테고리를 선택하세요</option>
           <option v-for="type in categoryTypes.slice(1)" :key="type">
             {{ type }}
           </option>
         </select>
       </label>
-      <label class="form-field">
+      <label class="grid gap-2 text-sm font-semibold">
         <span>관계 유형</span>
-        <select v-model="relationshipType">
+        <select class="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" v-model="relationshipType">
           <option value="" disabled>관계 유형을 선택하세요</option>
           <option
             v-for="option in relationshipOptions"
@@ -114,57 +118,40 @@ async function submitPost() {
           </option>
         </select>
       </label>
-      <input
+      </div>
+      <Input
         v-model="title"
-        class="post-editor__title"
+        class="mt-6 h-12 border-0 border-b border-border rounded-none px-0 text-lg shadow-none focus-visible:ring-0"
         placeholder="제목을 입력하세요."
       />
-      <div class="post-editor__toolbar" aria-label="글 편집 도구">
-        <button type="button" aria-label="굵게"><Bold :size="17" /></button
-        ><button type="button" aria-label="기울임"><Italic :size="17" /></button
-        ><button type="button" aria-label="이미지"><Image :size="17" /></button
-        ><button type="button" aria-label="링크"><Link :size="17" /></button>
+      <div class="mt-4 flex gap-1 rounded-lg border border-border bg-muted p-2" aria-label="글 편집 도구">
+        <button class="rounded-md p-2 transition hover:bg-card" type="button" aria-label="굵게"><Bold :size="17" /></button>
+        <button class="rounded-md p-2 transition hover:bg-card" type="button" aria-label="기울임"><Italic :size="17" /></button>
+        <button class="rounded-md p-2 transition hover:bg-card" type="button" aria-label="이미지"><Image :size="17" /></button>
+        <button class="rounded-md p-2 transition hover:bg-card" type="button" aria-label="링크"><Link :size="17" /></button>
       </div>
-      <textarea
+      <Textarea
         v-model="content"
-        class="post-editor__content"
+        class="mt-2 min-h-72 border-0 px-0 shadow-none focus-visible:ring-0"
         placeholder="당신의 이야기를 자세히 적어주세요. 판결에 도움이 될 구체적인 상황일수록 좋습니다."
       />
-      <label class="trial-request"
-        ><Scale :size="25" /><span
-          ><strong>재판 신청 (Request Trial)</strong
-          ><small
-            >게시글 등록과 동시에 AI 재판을 신청하시겠습니까? 신청 시 AI
-            변호사와 함께 재판을 준비하게 됩니다.</small
-          ></span
-        ><input v-model="requestTrial" type="checkbox"
-      /></label>
-      <p v-if="submitError" class="form-error" role="alert">
+      <label class="mt-4 flex items-start gap-3 rounded-xl border border-border bg-muted p-4">
+        <Scale class="mt-0.5 text-primary" :size="25" />
+        <span class="grid gap-1 text-sm"><strong>재판 신청 (Request Trial)</strong><small class="leading-5 text-muted-foreground">게시글 등록과 동시에 AI 재판을 신청하시겠습니까? 신청 시 AI 변호사와 함께 재판을 준비하게 됩니다.</small></span>
+        <input class="ml-auto mt-1 size-4 accent-primary" v-model="requestTrial" type="checkbox" />
+      </label>
+      <p v-if="submitError" class="mt-3 text-sm text-destructive" role="alert">
         {{ submitError }}
       </p>
-      <div class="form-actions">
-        <RouterLink to="/community">취소</RouterLink
-        ><button
-          class="button button--primary"
+      <div class="mt-6 flex items-center justify-end gap-4 border-t border-border pt-5">
+        <RouterLink class="text-sm font-semibold text-muted-foreground hover:text-foreground" to="/community">취소</RouterLink>
+        <Button
           type="button"
           :disabled="!canSubmit || submitPending"
           @click="submitPost"
         >
-          {{ submitPending ? "등록 중..." : "등록하기" }}
-        </button>
+          >{{ submitPending ? "등록 중..." : "등록하기" }}</Button>
       </div>
     </section>
   </CommunityLayout>
 </template>
-
-<style scoped>
-.form-field + .form-field {
-  margin-top: 12px;
-}
-
-.form-error {
-  margin: 12px 0 0;
-  color: var(--ds-color-error);
-  font-size: 16px;
-}
-</style>
