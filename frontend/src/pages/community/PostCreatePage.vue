@@ -3,10 +3,10 @@ import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { Bold, Image, Italic, Link, Scale } from "@lucide/vue";
 
-import { postApi } from "@/api/postApi.js";
-import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
-import { categoryTypes } from "@/features/community/mock/communityData.js";
-import { useCommunityStore } from "@/features/community/stores/communityStore.js";
+import { createPost } from "@/apis/postApi.js";
+import CommunityLayout from "@/components/community/CommunityLayout.vue";
+import { categoryTypes } from "@/mock/community/communityData.js";
+import { useCommunityStore } from "@/stores/communityStore.js";
 
 const TRIAL_DRAFT_STORAGE_KEY = "love-war:trial-draft";
 const relationshipOptions = [
@@ -40,7 +40,7 @@ async function submitPost() {
   submitError.value = "";
 
   try {
-    const createdPost = await postApi.createPost({
+    const createdPost = await createPost({
       title: title.value.trim(),
       content: content.value.trim(),
       relationshipType: relationshipType.value,

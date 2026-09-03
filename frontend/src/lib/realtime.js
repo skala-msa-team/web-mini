@@ -1,9 +1,17 @@
 import { Client } from '@stomp/stompjs'
-import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
-import { STOMP_DESTINATION } from './stompDestinations.js'
+import { getEvents, getMessages, getSnapshot } from '@/apis/trialApi.js'
+import { DEFAULT_MESSAGE_PAGE_SIZE } from '@/consts/api.js'
+import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
+import { STOMP_HEARTBEAT_MS, STOMP_RECONNECT_DELAYS_MS } from '@/consts/realtime.js'
+import { mergeMessages } from '@/utils/messageMerge.js'
 
-const HEARTBEAT_MS = 10_000
-const RECONNECT_DELAYS_MS = Object.freeze([1_000, 2_000, 5_000])
+export const STOMP_DESTINATION = Object.freeze({
+  endpoint: '/ws',
+  trialEvents: (trialId) => `/topic/trials/${trialId}/events`,
+  trialChat: (trialId) => `/topic/trials/${trialId}/chat`,
+  errors: '/user/queue/errors',
+  sendChat: (trialId) => `/app/trials/${trialId}/chat`,
+})
 
 function defaultBrokerUrl() {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin
@@ -13,7 +21,7 @@ function defaultBrokerUrl() {
   return brokerUrl.toString()
 }
 
-function readMessage(frame) {
+export function readMessage(frame) {
   try {
     return JSON.parse(frame.body)
   } catch {
@@ -40,15 +48,11 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
 
   function scheduleReconnect() {
     if (!shouldReconnect || reconnectTimer !== null) return
-
-    const delay = RECONNECT_DELAYS_MS[
-      Math.min(reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)
-    ]
+    const delay = STOMP_RECONNECT_DELAYS_MS[Math.min(reconnectAttempt, STOMP_RECONNECT_DELAYS_MS.length - 1)]
     reconnectAttempt += 1
     reconnectTimer = window.setTimeout(async () => {
       reconnectTimer = null
       if (!shouldReconnect) return
-
       await client.deactivate({ force: true })
       if (shouldReconnect) client.activate()
     }, delay)
@@ -57,8 +61,8 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
   const client = new Client({
     brokerURL,
     connectHeaders: { 'X-Demo-User-Id': userId },
-    heartbeatIncoming: HEARTBEAT_MS,
-    heartbeatOutgoing: HEARTBEAT_MS,
+    heartbeatIncoming: STOMP_HEARTBEAT_MS,
+    heartbeatOutgoing: STOMP_HEARTBEAT_MS,
     reconnectDelay: 0,
     onConnect: () => {
       const reconnected = hasConnected
@@ -94,11 +98,9 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
 
   function subscribe(destination, handler) {
     if (subscriptions.has(destination)) return () => unsubscribe(destination)
-
     const entry = { destination, handler, subscription: null }
     subscriptions.set(destination, entry)
     if (client.connected) entry.subscription = client.subscribe(destination, handler)
-
     return () => unsubscribe(destination)
   }
 
@@ -132,23 +134,11 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
   }
 
   return {
-    activate,
-    deactivate,
-    subscribe,
-    unsubscribe,
-    publish,
-    get connected() {
-      return client.connected
-    },
-    get active() {
-      return client.active
-    },
-    get status() {
-      return status
-    },
-    get lastError() {
-      return lastError
-    },
+    activate, deactivate, subscribe, unsubscribe, publish,
+    get connected() { return client.connected },
+    get active() { return client.active },
+    get status() { return status },
+    get lastError() { return lastError },
     onStatusChange(listener) {
       statusListeners.add(listener)
       return () => statusListeners.delete(listener)
@@ -160,4 +150,36 @@ export function createStompClient({ userId, brokerURL = defaultBrokerUrl() } = {
   }
 }
 
-export { readMessage }
+export function subscribeLiveTrial(client, trialId, handlers = {}) {
+  const subscriptions = [
+    [STOMP_DESTINATION.trialEvents(trialId), handlers.onEvent],
+    [STOMP_DESTINATION.trialChat(trialId), handlers.onMessage],
+    [STOMP_DESTINATION.errors, handlers.onError],
+  ].filter(([, handler]) => typeof handler === 'function')
+    .map(([destination, handler]) => client.subscribe(destination, handler))
+  return () => subscriptions.forEach((unsubscribe) => unsubscribe())
+}
+
+export async function recoverLiveTrial({ trialId, afterEventSequence = 0, onSnapshot, onEvent }) {
+  const snapshot = await getSnapshot(trialId)
+  onSnapshot?.(snapshot)
+  const events = (await getEvents(trialId, afterEventSequence)) || []
+  events.forEach((event) => onEvent?.(event))
+  return { snapshot, events }
+}
+
+export async function recoverLiveTrialChat({ trialId, afterMessageSequence = 0, pageSize = DEFAULT_MESSAGE_PAGE_SIZE }) {
+  let cursor = afterMessageSequence
+  let messages = []
+  let hasMore = true
+  while (hasMore) {
+    const response = await getMessages(trialId, cursor, pageSize)
+    const items = Array.isArray(response?.items) ? response.items : []
+    messages = mergeMessages(messages, items)
+    hasMore = response?.hasMore === true
+    const lastSequence = items.reduce((latest, message) => Math.max(latest, Number(message.messageSequence) || 0), cursor)
+    if (lastSequence <= cursor) break
+    cursor = lastSequence
+  }
+  return { messages, latestMessageSequence: cursor }
+}

@@ -2,17 +2,17 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { Search } from "@lucide/vue";
 
-import { trialApi } from "@/api/trialApi.js";
-import { TRIAL_STATUS_LABEL } from "@/constants/trialStatus.js";
-import CommunityLayout from "@/features/community/components/CommunityLayout.vue";
-import EmptyPosts from "@/features/community/components/EmptyPosts.vue";
-import LiveTrialCard from "@/features/community/components/LiveTrialCard.vue";
-import PostCard from "@/features/community/components/PostCard.vue";
-import { useCommunityStore } from "@/features/community/stores/communityStore.js";
+import { getTrials } from "@/apis/trialApi.js";
+import { TRIAL_STATUS_LABEL } from "@/consts/trialStatus.js";
+import CommunityLayout from "@/components/community/CommunityLayout.vue";
+import EmptyPosts from "@/components/community/EmptyPosts.vue";
+import LiveTrialCard from "@/components/community/LiveTrialCard.vue";
+import PostCard from "@/components/community/PostCard.vue";
+import { useCommunityStore } from "@/stores/communityStore.js";
 import {
   categoryTypes,
   relationshipTypes,
-} from "@/features/community/mock/communityData.js";
+} from "@/mock/community/communityData.js";
 
 const searchQuery = ref("");
 const selectedCategory = ref("전체");
@@ -29,7 +29,7 @@ async function loadLiveTrials() {
   liveTrialsError.value = "";
 
   try {
-    const response = await trialApi.getTrials({ page: 0, size: 3 });
+    const response = await getTrials({ page: 0, size: 3 });
     liveTrials.value = (response.items || []).map((trial) => ({
       id: trial.trialId,
       title: trial.title,
