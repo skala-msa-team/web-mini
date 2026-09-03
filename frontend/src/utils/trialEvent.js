@@ -104,7 +104,12 @@ export function applyEventsToSnapshot(snapshot, events = []) {
   return events
     .filter((event) => (Number(event.sequence) || 0) > snapshotSequence)
     .reduce((current, event) => {
-      const status = event.payload.status || current.status;
+      const votingOpened =
+        event.type === TRIAL_EVENT_TYPE.VOTING_OPENED ||
+        event.type === TRIAL_EVENT_TYPE.VOTING_STARTED;
+      const status = votingOpened
+        ? TRIAL_STATUS.VOTING
+        : event.payload.status || current.status;
       const phaseEndsAt =
         event.payload.phaseEndsAt ??
         event.payload.voteEndsAt ??
@@ -123,7 +128,7 @@ export function applyEventsToSnapshot(snapshot, events = []) {
           Number(current.latestEventSequence) || 0,
           Number(event.sequence) || 0,
         ),
-        voteOpen: status === TRIAL_STATUS.VOTING,
+        voteOpen: votingOpened || status === TRIAL_STATUS.VOTING,
         ended: status === TRIAL_STATUS.ENDED,
       };
     }, snapshot);
