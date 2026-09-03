@@ -3,7 +3,7 @@
 ## Project scope
 
 - This repository is for SKALA Full-Stack Engineering Mini Project Team 6.
-- The current phase includes collaboration documents, editor settings, and minimal Frontend and Backend project shells.
+- Follow the approved Notion documents for product scope and interfaces, the GitHub Project for work status, and Repository code plus executed verification for actual implementation state.
 - Do not add optional application dependencies, Docker configuration, environment-variable files, or feature code unless the user explicitly requests the relevant Task.
 - Treat undecided product features and interfaces as `미정`; do not infer them from examples.
 
@@ -30,10 +30,6 @@
 - Keep Issue ownership, priority, iteration, and status in GitHub Project.
 - Keep approved screen designs in Google Stitch and Figma.
 - Do not duplicate live progress in `AGENTS.md`; update a link only when its canonical resource changes.
-
-## Recent applied work (for review basis)
-
-- `feat/frontend-189-design-system` (PR #274): Frontend 기초 세팅 정비를 완료했으며, Axios 공통 인스턴스/인터셉터 및 `axios` 의존성을 제거한 상태에서 구조/디자인 토큰/문서를 정리했습니다.
 
 ## Repository boundaries
 
