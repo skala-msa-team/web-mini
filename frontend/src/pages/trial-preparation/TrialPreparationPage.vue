@@ -3,7 +3,6 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import PartyStatementStep from '@/features/trial/components/PartyStatementStep.vue'
 import TrialBasicInformation from '@/features/trial/components/TrialBasicInformation.vue'
 import TrialFinalConfirmation from '@/features/trial/components/TrialFinalConfirmation.vue'
-import TrialPreparationHeader from '@/features/trial/components/TrialPreparationHeader.vue'
 import TrialStepIndicator from '@/features/trial/components/TrialStepIndicator.vue'
 
 const currentStep = ref(1)
@@ -86,8 +85,6 @@ function goToStep(step) {
 
 <template>
   <div class="min-h-screen bg-background">
-    <TrialPreparationHeader />
-
     <main class="mx-auto max-w-[var(--ds-container-max)] px-4 py-10 sm:px-6 sm:py-14">
       <h1 class="mb-8 text-center font-heading text-heading-1 text-[var(--ds-color-primary)]">새로운 재판 열기</h1>
 
@@ -124,8 +121,5 @@ function goToStep(step) {
       </div>
     </main>
 
-    <footer class="mt-12 border-t border-border bg-card px-4 py-6 text-center text-xs text-muted-foreground">
-      © 2026 사랑과 전쟁터. 실제 법률 판결이나 상담을 제공하지 않습니다.
-    </footer>
   </div>
 </template>
