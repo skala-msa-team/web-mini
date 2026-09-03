@@ -1,0 +1,5 @@
+export const API_TIMEOUT_MS = 15_000
+export const DEFAULT_TRIAL_PAGE_SIZE = 10
+export const DEFAULT_MESSAGE_PAGE_SIZE = 100
+export const COMMUNITY_POST_PAGE_SIZE = 3
+export const COMMUNITY_LIVE_TRIAL_PAGE_SIZE = 3

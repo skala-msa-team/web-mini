@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
+import java.util.List;
 
 @Component
 public class TrialEventWriter {
@@ -32,5 +33,9 @@ public class TrialEventWriter {
                 saved.getId(), trial.getId(), sequence, type, speaker, content,
                 saved.getCreatedAt(), payload)));
         return saved;
+    }
+
+    public long countByTrialAndTypes(Long trialId, String... types) {
+        return repository.countByTrialIdAndEventTypeIn(trialId, List.of(types));
     }
 }

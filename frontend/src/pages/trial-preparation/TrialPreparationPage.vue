@@ -1,12 +1,21 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { postApi } from '@/api/postApi.js'
-import { trialApi } from '@/api/trialApi.js'
-import PartyStatementStep from '@/features/trial/components/PartyStatementStep.vue'
-import TrialBasicInformation from '@/features/trial/components/TrialBasicInformation.vue'
-import TrialFinalConfirmation from '@/features/trial/components/TrialFinalConfirmation.vue'
-import TrialStepIndicator from '@/features/trial/components/TrialStepIndicator.vue'
+import { createTrial } from '@/apis/postApi.js'
+import {
+  confirmArgument,
+  createArgumentDraft,
+  createGuideQuestions,
+  getTrial,
+  saveGuideAnswers,
+  saveStatement,
+  startTrial as startTrialRequest,
+  updateArgumentDraft,
+} from '@/apis/trialApi.js'
+import PartyStatementStep from '@/components/trial/PartyStatementStep.vue'
+import TrialBasicInformation from '@/components/trial/TrialBasicInformation.vue'
+import TrialFinalConfirmation from '@/components/trial/TrialFinalConfirmation.vue'
+import TrialStepIndicator from '@/components/trial/TrialStepIndicator.vue'
 
 const currentStep = ref(1)
 const TRIAL_DRAFT_STORAGE_KEY = 'love-war:trial-draft'
@@ -55,7 +64,7 @@ onMounted(async () => {
 
   preparationPending.value = true
   try {
-    const savedTrial = await trialApi.getTrial(trialId.value)
+    const savedTrial = await getTrial(trialId.value)
     trial.title = savedTrial.title
     trial.summary = savedTrial.content
     trial.aDisplayName = savedTrial.aParty.displayName
@@ -140,7 +149,7 @@ async function createTrialAndContinue() {
   preparationError.value = ''
 
   try {
-    const createdTrial = await postApi.createTrial(postId.value, {
+    const createdTrial = await createTrial(postId.value, {
       visibility: 'PUBLIC',
       aDisplayName: trial.aDisplayName.trim(),
       bDisplayName: trial.bDisplayName.trim(),
@@ -167,8 +176,8 @@ async function prepareParty(statement) {
   party.error = ''
 
   try {
-    await trialApi.saveStatement(trialId.value, side, statement)
-    const response = await trialApi.createGuideQuestions(trialId.value, side)
+    await saveStatement(trialId.value, side, statement)
+    const response = await createGuideQuestions(trialId.value, side)
     const guideQuestions = response?.questions ?? []
 
     Object.assign(party, {
@@ -201,7 +210,7 @@ async function generatePartyDraft(guideAnswers) {
 
   try {
     if (guideAnswers.length) {
-      const savedAnswers = await trialApi.saveGuideAnswers(trialId.value, side, {
+      const savedAnswers = await saveGuideAnswers(trialId.value, side, {
         answers: guideAnswers,
       })
 
@@ -210,7 +219,7 @@ async function generatePartyDraft(guideAnswers) {
       }
     }
 
-    const draft = await trialApi.createArgumentDraft(trialId.value, side)
+    const draft = await createArgumentDraft(trialId.value, side)
     Object.assign(party, {
       draftGenerated: true,
       caseOverview: draft.factSummary,
@@ -233,11 +242,11 @@ async function confirmParty() {
   party.error = ''
 
   try {
-    const updatedDraft = await trialApi.updateArgumentDraft(trialId.value, side, {
+    const updatedDraft = await updateArgumentDraft(trialId.value, side, {
       factSummary: party.caseOverview.trim(),
       argumentText: party.argumentText.trim(),
     })
-    const confirmation = await trialApi.confirmArgument(trialId.value, side)
+    const confirmation = await confirmArgument(trialId.value, side)
 
     party.caseOverview = updatedDraft.factSummary
     party.argumentText = updatedDraft.argumentText
@@ -276,7 +285,7 @@ async function startTrial() {
   startError.value = ''
 
   try {
-    await trialApi.startTrial(trialId.value)
+    await startTrialRequest(trialId.value)
     sessionStorage.removeItem(TRIAL_DRAFT_STORAGE_KEY)
     await router.push({ name: 'live-trial', params: { trialId: trialId.value } })
   } catch (error) {
