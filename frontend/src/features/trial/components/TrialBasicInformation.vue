@@ -6,6 +6,14 @@ defineProps({
     type: Object,
     required: true,
   },
+  pending: {
+    type: Boolean,
+    default: false,
+  },
+  locked: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 defineEmits(['update:modelValue', 'next'])
@@ -21,6 +29,7 @@ defineEmits(['update:modelValue', 'next'])
           class="rounded-lg border border-input bg-muted px-4 py-3 outline-none focus:ring-2 focus:ring-ring"
           maxlength="150"
           placeholder="재판 제목을 입력해주세요"
+          readonly
           @input="$emit('update:modelValue', { ...modelValue, title: $event.target.value })"
         />
       </label>
@@ -31,8 +40,9 @@ defineEmits(['update:modelValue', 'next'])
           <input
             :value="modelValue.aDisplayName"
             class="rounded-lg border border-input bg-muted px-4 py-3 outline-none focus:ring-2 focus:ring-ring"
-            maxlength="50"
-            placeholder="A측 이름"
+          maxlength="50"
+          placeholder="A측 이름"
+          :readonly="locked"
             @input="$emit('update:modelValue', { ...modelValue, aDisplayName: $event.target.value })"
           />
         </label>
@@ -41,8 +51,9 @@ defineEmits(['update:modelValue', 'next'])
           <input
             :value="modelValue.bDisplayName"
             class="rounded-lg border border-input bg-muted px-4 py-3 outline-none focus:ring-2 focus:ring-ring"
-            maxlength="50"
-            placeholder="B측 이름"
+          maxlength="50"
+          placeholder="B측 이름"
+          :readonly="locked"
             @input="$emit('update:modelValue', { ...modelValue, bDisplayName: $event.target.value })"
           />
         </label>
@@ -55,6 +66,7 @@ defineEmits(['update:modelValue', 'next'])
           class="min-h-32 resize-none rounded-lg border border-input bg-muted px-4 py-3 outline-none focus:ring-2 focus:ring-ring"
           maxlength="1000"
           placeholder="두 사람 사이에 있었던 갈등을 설명해주세요"
+          readonly
           @input="$emit('update:modelValue', { ...modelValue, summary: $event.target.value })"
         />
       </label>
@@ -82,10 +94,10 @@ defineEmits(['update:modelValue', 'next'])
 
     <button
       class="mt-8 w-full rounded-lg bg-[var(--ds-color-primary)] px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-      :disabled="!modelValue.title.trim() || !modelValue.aDisplayName.trim() || !modelValue.bDisplayName.trim() || !modelValue.summary.trim()"
+      :disabled="pending || !modelValue.title.trim() || !modelValue.aDisplayName.trim() || !modelValue.bDisplayName.trim() || !modelValue.summary.trim()"
       type="submit"
     >
-      다음: A측 진술 →
+      {{ pending ? '재판을 생성하는 중...' : '다음: A측 진술 →' }}
     </button>
   </form>
 </template>
