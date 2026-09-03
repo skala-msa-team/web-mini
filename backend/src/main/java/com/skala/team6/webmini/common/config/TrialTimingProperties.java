@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 public record TrialTimingProperties(
         @Min(1) long introductionSeconds,
         @Min(1) long argumentSeconds,
+        @Min(1) long debateSeconds,
         @Min(1) long votingSeconds
 ) {
 }

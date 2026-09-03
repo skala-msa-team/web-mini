@@ -5,6 +5,7 @@ public enum TrialStatus {
     INTRODUCTION,
     A_ARGUMENT,
     B_ARGUMENT,
+    DEBATE,
     VOTING,
     VERDICT,
     ENDED
