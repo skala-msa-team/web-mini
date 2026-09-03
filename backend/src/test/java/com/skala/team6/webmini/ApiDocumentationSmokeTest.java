@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.skala.team6.webmini.post.PostService;
 import com.skala.team6.webmini.database.repository.PostRepository;
 import com.skala.team6.webmini.database.repository.UserRepository;
+import com.skala.team6.webmini.trial.TrialCreationService;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,6 +28,8 @@ class ApiDocumentationSmokeTest {
     private UserRepository userRepository;
     @MockitoBean
     private PostRepository postRepository;
+    @MockitoBean
+    private TrialCreationService trialCreationService;
 
     @Autowired
     private MockMvc mockMvc;

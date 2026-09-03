@@ -76,6 +76,14 @@ public class TrialEntity {
         return status;
     }
 
+    public Visibility getVisibility() {
+        return visibility;
+    }
+
+    public PostEntity getPost() {
+        return post;
+    }
+
     public OffsetDateTime getPhaseStartedAt() {
         return phaseStartedAt;
     }

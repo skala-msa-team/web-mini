@@ -44,4 +44,23 @@ public class TrialPartyEntity {
 
     protected TrialPartyEntity() {
     }
+
+    public TrialPartyEntity(TrialEntity trial, TrialSide side, String displayName) {
+        this.trial = trial;
+        this.side = side;
+        this.displayName = displayName;
+        this.ready = false;
+    }
+
+    public TrialSide getSide() {
+        return side;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
 }
