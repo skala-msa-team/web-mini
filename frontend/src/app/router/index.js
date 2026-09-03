@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LiveTrialEntryPage from '@/pages/live-trial/LiveTrialEntryPage.vue'
-import TrialVotingPage from '@/pages/live-trial/TrialVotingPage.vue'
-import TrialResultPage from '@/pages/trial-result/TrialResultPage.vue'
 import CommunityPage from '@/pages/community/CommunityPage.vue'
 import PostCreatePage from '@/pages/community/PostCreatePage.vue'
+import LiveTrialEntryPage from '@/pages/live-trial/LiveTrialEntryPage.vue'
+import TrialVotingPage from '@/pages/live-trial/TrialVotingPage.vue'
+import TrialPreparationPage from '@/pages/trial-preparation/TrialPreparationPage.vue'
+import TrialResultPage from '@/pages/trial-result/TrialResultPage.vue'
 
 const DEFAULT_DEMO_TRIAL_ID = '1'
 
@@ -13,6 +14,7 @@ const router = createRouter({
     { path: '/', name: 'home', component: CommunityPage },
     { path: '/community', redirect: '/' },
     { path: '/community/posts/new', name: 'post-create', component: PostCreatePage },
+    { path: '/trials/new', name: 'trial-preparation', component: TrialPreparationPage },
 
     {
       path: '/live-trial',
