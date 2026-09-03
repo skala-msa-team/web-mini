@@ -15,6 +15,8 @@ import com.skala.team6.webmini.trial.GuideAnswerService;
 import com.skala.team6.webmini.trial.TrialArgumentService;
 import com.skala.team6.webmini.trial.TrialStartService;
 import com.skala.team6.webmini.trial.TrialStatementService;
+import com.skala.team6.webmini.trial.TrialChatQueryService;
+import com.skala.team6.webmini.trial.TrialChatService;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +47,10 @@ class ApiDocumentationSmokeTest {
     private TrialArgumentService trialArgumentService;
     @MockitoBean
     private TrialStartService trialStartService;
+    @MockitoBean
+    private TrialChatQueryService trialChatQueryService;
+    @MockitoBean
+    private TrialChatService trialChatService;
 
     @Autowired
     private MockMvc mockMvc;

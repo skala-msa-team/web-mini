@@ -2,6 +2,8 @@ package com.skala.team6.webmini.trial;
 
 import com.skala.team6.webmini.common.model.RelationshipType;
 import com.skala.team6.webmini.common.model.TrialStatus;
+import com.skala.team6.webmini.common.exception.ApiException;
+import com.skala.team6.webmini.common.exception.ErrorCode;
 import com.skala.team6.webmini.database.entity.PostEntity;
 import com.skala.team6.webmini.database.entity.TrialEntity;
 import com.skala.team6.webmini.database.entity.UserEntity;
@@ -27,6 +29,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -152,5 +155,82 @@ class TrialChatAcceptanceTest {
                 .andExpect(jsonPath("$.data.items[0].content").value("셋째 메시지"))
                 .andExpect(jsonPath("$.data.latestMessageSequence").value(3))
                 .andExpect(jsonPath("$.data.hasMore").value(false));
+    }
+
+    @Test
+    void rejectsInactiveTrialMissingTrialAndInvalidContent() {
+        trial.complete(OffsetDateTime.now());
+        trialRepository.saveAndFlush(trial);
+
+        assertApiError(
+                () -> trialChatService.send(
+                        trial.getId(), UUID.randomUUID().toString(), "종료 후 메시지"),
+                ErrorCode.CHAT_NOT_ALLOWED
+        );
+        assertApiError(
+                () -> trialChatService.send(
+                        Long.MAX_VALUE, UUID.randomUUID().toString(), "메시지"),
+                ErrorCode.TRIAL_NOT_FOUND
+        );
+        TrialEntity activeTrial = createActiveTrial("글자 수 재판");
+        assertApiError(
+                () -> trialChatService.send(
+                        activeTrial.getId(), UUID.randomUUID().toString(), " "),
+                ErrorCode.VALIDATION_ERROR
+        );
+        assertApiError(
+                () -> trialChatService.send(
+                        activeTrial.getId(), UUID.randomUUID().toString(), "x".repeat(501)),
+                ErrorCode.MESSAGE_TOO_LONG
+        );
+    }
+
+    @Test
+    void assignsIndependentSequencesPerTrial() {
+        String demoUserId = UUID.randomUUID().toString();
+        TrialChatMessagePayload first = trialChatService.send(
+                trial.getId(), demoUserId, "첫 재판 첫 메시지");
+        trialChatService.send(trial.getId(), demoUserId, "첫 재판 둘째 메시지");
+        TrialEntity otherTrial = createActiveTrial("다른 재판");
+        TrialChatMessagePayload otherFirst = trialChatService.send(
+                otherTrial.getId(), demoUserId, "다른 재판 첫 메시지");
+
+        assertThat(first.messageSequence()).isEqualTo(1);
+        assertThat(otherFirst.messageSequence()).isEqualTo(1);
+    }
+
+    @Test
+    void validatesHistoryCursorAndSize() throws Exception {
+        mockMvc.perform(get("/api/v1/trials/{trialId}/messages", trial.getId())
+                        .param("afterSequence", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mockMvc.perform(get("/api/v1/trials/{trialId}/messages", trial.getId())
+                        .param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mockMvc.perform(get("/api/v1/trials/{trialId}/messages", Long.MAX_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRIAL_NOT_FOUND"));
+    }
+
+    private TrialEntity createActiveTrial(String title) {
+        UserEntity creator = userRepository.save(
+                new UserEntity(UUID.randomUUID().toString(), "다른 작성자"));
+        PostEntity post = postRepository.save(new PostEntity(
+                creator, title, "내용", RelationshipType.COUPLE, true));
+        TrialEntity activeTrial = new TrialEntity(post, creator);
+        activeTrial.startPhase(
+                TrialStatus.INTRODUCTION,
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(5)
+        );
+        return trialRepository.save(activeTrial);
+    }
+
+    private void assertApiError(Runnable action, ErrorCode errorCode) {
+        assertThatThrownBy(action::run)
+                .isInstanceOfSatisfying(ApiException.class,
+                        exception -> assertThat(exception.getErrorCode()).isEqualTo(errorCode));
     }
 }

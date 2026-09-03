@@ -51,10 +51,7 @@ public class TrialChatService {
                 .orElseThrow(() -> new ApiException(ErrorCode.TRIAL_NOT_FOUND));
         validateChatAllowed(trial);
 
-        String content = rawContent.trim();
-        if (content.length() > MAX_CONTENT_LENGTH) {
-            throw new ApiException(ErrorCode.MESSAGE_TOO_LONG);
-        }
+        String content = validateContent(rawContent);
 
         UserEntity sender = demoUserPersistenceService.getOrCreate(demoUserId);
         long sequence = chatMessageRepository.findLatestSequenceByTrialId(trialId) + 1;
@@ -70,6 +67,17 @@ public class TrialChatService {
                 || !CHAT_ALLOWED_STATUSES.contains(trial.getStatus())) {
             throw new ApiException(ErrorCode.CHAT_NOT_ALLOWED);
         }
+    }
+
+    private String validateContent(String rawContent) {
+        if (rawContent == null || rawContent.isBlank()) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR);
+        }
+        String content = rawContent.trim();
+        if (content.length() > MAX_CONTENT_LENGTH) {
+            throw new ApiException(ErrorCode.MESSAGE_TOO_LONG);
+        }
+        return content;
     }
 
     private TrialChatMessagePayload toPayload(ChatMessageEntity message) {
