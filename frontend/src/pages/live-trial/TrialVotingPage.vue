@@ -2,9 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Eye } from '@lucide/vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import { CONNECTION_STATUS, VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
+import { VOTE_STATUS } from '@/constants/liveTrialUiStatus.js'
 import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
 import { useLiveTrialRealtime } from '@/composables/useLiveTrialRealtime.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
@@ -127,8 +125,6 @@ function selectChoice(choiceId) {
 
 <template>
   <div class="voting-page">
-    <AppHeader />
-
     <main class="voting-shell">
       <TrialConnectionStatus
         :connection="realtimeConnection"
@@ -179,7 +175,6 @@ function selectChoice(choiceId) {
       </div>
     </main>
 
-    <AppFooter />
   </div>
 </template>
 

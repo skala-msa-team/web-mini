@@ -2,8 +2,6 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Clock3, Eye, UsersRound } from '@lucide/vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
-import AppHeader from '@/components/layout/AppHeader.vue'
 import { CONNECTION_STATUS } from '@/constants/liveTrialUiStatus.js'
 import { TRIAL_STATUS_LABEL } from '@/constants/trialStatus.js'
 import { useLiveTrialMockState } from '@/composables/useLiveTrialMockState.js'
@@ -115,8 +113,6 @@ watch(
 
 <template>
   <div id="live-trial" class="live-trial-page">
-    <AppHeader />
-
     <main class="page-shell">
       <TrialConnectionStatus
         :connection="realtimeConnection"
@@ -181,7 +177,6 @@ watch(
       </div>
     </main>
 
-    <AppFooter />
   </div>
 </template>
 
