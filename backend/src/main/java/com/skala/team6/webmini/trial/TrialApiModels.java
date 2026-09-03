@@ -84,9 +84,14 @@ record StatementResponse(
 }
 
 record GuideQuestionsResponse(
+        List<GuideQuestionResponse> questions
+) {
+}
+
+record GuideQuestionResponse(
         Long questionId,
         int sequence,
-        List<String> questions
+        String question
 ) {
 }
 
