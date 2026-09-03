@@ -59,6 +59,15 @@ class PostCreationAcceptanceTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
+        mockMvc.perform(post("/api/v1/posts")
+                        .header("X-Demo-User-Id", UUID.randomUUID())
+                        .contentType("application/json")
+                        .content("""
+                                {"title":"게시글","content":"내용","relationshipType":"COUPLE"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
         createPost(UUID.randomUUID().toString(), "x".repeat(151))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
