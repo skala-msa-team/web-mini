@@ -62,7 +62,7 @@ const AGENT_DEBATE_TURNS = Object.freeze([
     argument: Object.freeze({
       speaker: "A측 AI 변호사",
       content:
-        "문제는 친구의 반복적인 유혹적 행동(여우짓)과 B의 그에 대한 방관입니다. 사전에 서로의 경계나 연락 기준을 합의했는지 여부가 중요합니다.",
+        "문제는 친구의 선 넘는 행동과 B측의 방관입니다. 사전에 경계와 연락 기준을 합의했는지가 중요합니다.",
     }),
     summary: Object.freeze({
       title: "쟁점 1 · 사전 합의",
@@ -79,7 +79,7 @@ const AGENT_DEBATE_TURNS = Object.freeze([
     argument: Object.freeze({
       speaker: "B측 AI 변호사",
       content:
-        "갑작스럽게 정해진 자리였고 그 자리의 발언을 모두가 가볍게 받아들였을 수 있습니다. B는 고의적인 은폐 의도가 없었으며 한 번의 실수를 지나치게 확대 해석하지 말아달라고 요청합니다.",
+        "자리는 갑자기 정해졌고, B측에게 은폐 의도는 없었습니다. 한 번의 실수로 단정해선 안 됩니다.",
     }),
     summary: Object.freeze({
       title: "쟁점 2 · 고의성",
@@ -96,7 +96,7 @@ const AGENT_DEBATE_TURNS = Object.freeze([
     argument: Object.freeze({
       speaker: "AI 판사",
       content:
-        "행동 이후 B측이 충분히 설명하고 사과했는지, A가 불편함을 표한 뒤 B가 이를 충분히 바로잡았는지 여부가 책임 판단의 중요한 요소입니다.",
+        "갈등 후 B측이 충분히 설명하고 사과했는지도 책임 판단의 중요한 기준입니다.",
     }),
     summary: Object.freeze({
       title: "쟁점 3 · 사후 대응",
@@ -113,7 +113,7 @@ const AGENT_DEBATE_TURNS = Object.freeze([
     argument: Object.freeze({
       speaker: "A측 AI 변호사",
       content:
-        "A측은 친구의 선 넘는 행동과 B측의 미온적 태도로 인해 불편함을 느꼈습니다. 비록 감정적 대응에 아쉬움이 있을 수 있지만, 최초의 원인은 경계 위반과 이를 방지하지 못한 B측의 태도입니다. 책임 인정과 명확한 경계 설정이 필요합니다.",
+        "최초 원인은 경계 위반과 B측의 미온적 대응입니다. 책임을 인정하고 명확한 기준을 세워야 합니다.",
     }),
     summary: Object.freeze({
       title: "A측 최종 요지",
@@ -130,7 +130,7 @@ const AGENT_DEBATE_TURNS = Object.freeze([
     argument: Object.freeze({
       speaker: "B측 AI 변호사",
       content:
-        "B측은 사전 공유를 놓친 점을 인정하지만, 친구의 발언이 농담에 가깝고 고의적 기만은 아니었다고 주장합니다. B는 사후 대화를 통해 관계를 회복하려는 의지가 있으며, 이를 고려한 균형 있는 판단을 요청합니다.",
+        "사전 공유를 놓친 점은 인정합니다. 다만 고의적 기만은 아니었고, 대화로 관계를 회복할 의지가 있습니다.",
     }),
     summary: Object.freeze({
       title: "최종 쟁점 정리",
@@ -147,7 +147,7 @@ const AGENT_DEBATE_TURNS = Object.freeze([
     argument: Object.freeze({
       speaker: "AI 판사",
       content:
-        "이번 재판에서는 사전 합의 위반 여부, 행동의 고의성, 사건 이후 양측의 소통 태도가 핵심 쟁점으로 확인되었습니다. 배심원은 세 쟁점을 종합해 판단해 주세요.",
+        "사전 합의, 고의성, 갈등 후 소통 태도를 종합해 판단해 주세요.",
     }),
     summary: Object.freeze({
       title: "배심원 최종 판단 기준",

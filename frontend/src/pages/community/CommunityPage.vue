@@ -1,11 +1,11 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
-import { Search } from "@lucide/vue";
-import Button from "@/components/ui/Button.vue";
+import { PenLine, Search } from "@lucide/vue";
 import Input from "@/components/ui/Input.vue";
 
 import { getTrials } from "@/apis/trialApi.js";
 import { TRIAL_STATUS_LABEL } from "@/consts/trialStatus.js";
+import { useLiveTrialPresenceList } from "@/composables/useLiveTrialPresenceList.js";
 import CommunityLayout from "@/components/community/CommunityLayout.vue";
 import EmptyPosts from "@/components/community/EmptyPosts.vue";
 import LiveTrialCard from "@/components/community/LiveTrialCard.vue";
@@ -34,7 +34,7 @@ function toDisplayTrial(trial) {
     id: trial.trialId,
     title: trial.title,
     statusLabel: TRIAL_STATUS_LABEL[trial.status] || "공개 재판 진행 중",
-    viewerCount: trial.viewerCount || trial.audienceCount || null,
+    viewerCount: trial.viewerCount ?? trial.audienceCount ?? 0,
   }
 }
 
@@ -77,6 +77,12 @@ async function loadLiveTrials() {
 }
 
 onMounted(loadLiveTrials);
+
+useLiveTrialPresenceList(liveTrials, ({ trialId, audienceCount }) => {
+  liveTrials.value = liveTrials.value.map((trial) =>
+    trial.id === trialId ? { ...trial, viewerCount: audienceCount } : trial,
+  );
+});
 
 const filteredPosts = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
@@ -128,7 +134,6 @@ function resetFilters() {
             class="h-9 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
           />
         </label>
-        <Button as="RouterLink" :to="{ name: 'post-create' }" class="sm:ml-auto">글쓰기</Button>
       </div>
 
       <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -180,7 +185,16 @@ function resetFilters() {
       </section>
 
       <section id="popular-posts">
-        <div class="flex items-center justify-between"><h2 class="text-xl font-bold tracking-tight">인기게시글</h2></div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 class="text-xl font-bold tracking-tight">인기게시글</h2>
+          <RouterLink
+            :to="{ name: 'post-create' }"
+            class="inline-flex w-fit items-center gap-2 rounded-lg border border-[var(--ds-color-primary-fixed-dim)] bg-[var(--ds-color-primary-fixed)] px-4 py-2 text-sm font-semibold text-[var(--ds-color-on-primary-fixed)] shadow-sm transition hover:border-primary/30 hover:bg-[var(--ds-color-secondary-fixed)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <PenLine :size="16" aria-hidden="true" />
+            고민 쓰기
+          </RouterLink>
+        </div>
         <div v-if="paginatedPosts.length" class="mt-4 grid gap-3">
           <PostCard v-for="post in paginatedPosts" :key="post.id" :post="post" />
         </div>

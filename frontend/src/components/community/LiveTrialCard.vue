@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue'
+import { UsersRound } from '@lucide/vue'
 import Badge from '@/components/ui/Badge.vue'
 import Button from '@/components/ui/Button.vue'
 
@@ -14,6 +16,11 @@ const props = defineProps({
 });
 
 const actionLabel = props.isMock ? '준비 중' : '참여하기'
+const hasViewerCount = computed(() => props.trial.viewerCount !== null && props.trial.viewerCount !== undefined)
+const formattedViewerCount = computed(() => {
+  const viewerCount = Number(String(props.trial.viewerCount).replace(/,/g, ''))
+  return Number.isFinite(viewerCount) ? viewerCount.toLocaleString('ko-KR') : props.trial.viewerCount
+})
 </script>
 
 <template>
@@ -24,7 +31,10 @@ const actionLabel = props.isMock ? '준비 중' : '참여하기'
     </div>
     <h3 class="mt-3 min-h-12 text-base font-bold leading-6">{{ trial.title }}</h3>
     <p class="mt-2 text-sm text-muted-foreground">{{ trial.statusLabel || '공개 재판 진행 중' }}</p>
-    <p v-if="trial.viewerCount" class="mt-2 text-xs text-muted-foreground">참여자 {{ trial.viewerCount }}명</p>
+    <p v-if="hasViewerCount" class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+      <UsersRound :size="14" aria-hidden="true" />
+      {{ formattedViewerCount }}명 참여 중
+    </p>
     <template v-if="isMock">
       <Button class="mt-5 w-full" disabled>
         {{ actionLabel }}

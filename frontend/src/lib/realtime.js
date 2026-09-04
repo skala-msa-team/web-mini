@@ -8,6 +8,7 @@ import { mergeMessages } from '@/utils/messageMerge.js'
 export const STOMP_DESTINATION = Object.freeze({
   endpoint: '/ws',
   trialEvents: (trialId) => `/topic/trials/${trialId}/events`,
+  trialPresence: (trialId) => `/topic/trials/${trialId}/presence`,
   trialChat: (trialId) => `/topic/trials/${trialId}/chat`,
   errors: '/user/queue/errors',
   sendChat: (trialId) => `/app/trials/${trialId}/chat`,

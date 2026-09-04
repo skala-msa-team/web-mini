@@ -25,6 +25,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Duration;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,6 +88,8 @@ class TrialProgressAcceptanceTest {
         assertThat(started.getPhaseStartedAt()).isNotNull();
         assertThat(started.getPhaseEndsAt()).isNotNull();
         assertThat(started.getScheduledEndAt()).isNotNull();
+        assertThat(Duration.between(started.getPhaseStartedAt(), started.getScheduledEndAt()))
+                .isEqualTo(Duration.ofSeconds(122));
         assertThat(trialEventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId()))
                 .extracting("sequenceNo", "eventType")
                 .containsExactly(

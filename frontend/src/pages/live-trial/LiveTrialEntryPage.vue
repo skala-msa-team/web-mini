@@ -43,16 +43,16 @@ const trialParticipants = computed(() =>
   }),
 );
 const audienceCount = computed(() => {
-  // prefer snapshot or detail values when available
   const snap = session.currentSnapshot.value;
   const detailValue = session.detail.value;
-  if (snap && typeof snap.audienceCount === "number") return snap.audienceCount;
+  if (snap && typeof snap.audienceCount === "number") {
+    return snap.audienceCount;
+  }
   if (detailValue && typeof detailValue.audienceCount === "number")
     return detailValue.audienceCount;
   if (detailValue && detailValue.viewerCount)
     return Number(String(detailValue.viewerCount).replace(/,/g, ""));
 
-  // fallback: count unique demo user keys from recovered messages
   try {
     const ids = new Set(
       session.messages.value
@@ -61,7 +61,7 @@ const audienceCount = computed(() => {
     );
     const count = ids.size;
     return count || liveTrialMock.audienceCount || 0;
-  } catch (e) {
+  } catch {
     return liveTrialMock.audienceCount || 0;
   }
 });

@@ -4,9 +4,9 @@ import { TRIAL_STATUS } from '@/consts/trialStatus.js'
 export const LIVE_TRIAL_TIMING = Object.freeze({
   INTRODUCTION_SECONDS: 7,
   ARGUMENT_SECONDS: 10,
-  AGENT_DEBATE_SECONDS: 138,
+  AGENT_DEBATE_SECONDS: 80,
   VOTING_SECONDS: 15,
-  TOTAL_SECONDS: 7 + 10 + 10 + 138 + 15,
+  TOTAL_SECONDS: 7 + 10 + 10 + 80 + 15,
 })
 
 export const LIVE_TRIAL_MOCK_SCENARIO = Object.freeze({

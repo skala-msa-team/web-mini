@@ -7,12 +7,9 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
-import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,7 +18,8 @@ public class TrialPresenceEventListener implements
         ApplicationListener<SessionSubscribeEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(TrialPresenceEventListener.class);
-    private static final Pattern TRIAL_TOPIC = Pattern.compile("/topic/trials/(\\d+)/events");
+    private static final Pattern TRIAL_EVENTS_TOPIC = Pattern.compile("/topic/trials/(\\d+)/events");
+    private static final Pattern TRIAL_PRESENCE_TOPIC = Pattern.compile("/topic/trials/(\\d+)/presence");
 
     private final TrialPresenceService presenceService;
 
@@ -36,11 +34,18 @@ public class TrialPresenceEventListener implements
         String sessionId = accessor.getSessionId();
         if (destination == null)
             return;
-        Matcher m = TRIAL_TOPIC.matcher(destination);
-        if (m.find()) {
-            Long trialId = Long.valueOf(m.group(1));
+        Matcher eventsTopicMatcher = TRIAL_EVENTS_TOPIC.matcher(destination);
+        if (eventsTopicMatcher.find()) {
+            Long trialId = Long.valueOf(eventsTopicMatcher.group(1));
             int count = presenceService.addSubscriber(trialId, sessionId);
             log.debug("Added subscriber {} to trial {} (count={})", sessionId, trialId, count);
+            return;
+        }
+
+        Matcher presenceTopicMatcher = TRIAL_PRESENCE_TOPIC.matcher(destination);
+        if (presenceTopicMatcher.find()) {
+            Long trialId = Long.valueOf(presenceTopicMatcher.group(1));
+            presenceService.broadcastCurrent(trialId);
         }
     }
 

@@ -3,6 +3,7 @@ package com.skala.team6.webmini.trial;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,12 +35,27 @@ public class TrialPresenceService {
         return count;
     }
 
+    public int getAudienceCount(Long trialId) {
+        var set = presence.get(trialId);
+        return set == null ? 0 : set.size();
+    }
+
+    public void broadcastCurrent(Long trialId) {
+        broadcastPresence(trialId, getAudienceCount(trialId));
+    }
+
     private void broadcast(Long trialId, int count) {
         var payload = Map.of("trialId", trialId, "audienceCount", count);
-        var event = Map.of(
-                "type", "PRESENCE_UPDATED",
-                "sequence", null,
-                "payload", payload);
+        var event = new HashMap<String, Object>();
+        event.put("type", "PRESENCE_UPDATED");
+        event.put("sequence", null);
+        event.put("payload", payload);
         messagingTemplate.convertAndSend(String.format("/topic/trials/%d/events", trialId), (Object) event);
+        broadcastPresence(trialId, count);
+    }
+
+    private void broadcastPresence(Long trialId, int count) {
+        var payload = Map.of("trialId", trialId, "audienceCount", count);
+        messagingTemplate.convertAndSend(String.format("/topic/trials/%d/presence", trialId), payload);
     }
 }
