@@ -64,7 +64,8 @@ public class TrialStartService {
                 "phaseEndsAt", phaseEndsAt.toString(),
                 "scheduledEndAt", scheduledEndAt.toString()));
         eventWriter.save(trial, "JUDGE_INTRODUCTION", TrialSpeaker.JUDGE,
-                "지금부터 재판을 시작합니다. " + trial.getPost().getTitle(), Map.of(
+                "지금부터 재판을 시작합니다. 사건의 주요 내용을 확인한 뒤 양측의 주장을 듣겠습니다. "
+                        + trial.getPost().getTitle(), Map.of(
                         "status", TrialStatus.INTRODUCTION.name(),
                         "phaseEndsAt", phaseEndsAt.toString()));
         return new StartedTrial(trial, 2);
