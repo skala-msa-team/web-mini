@@ -4,16 +4,17 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 
 ## Current state
 
-- A minimal Vue 3 and Vite JavaScript project with ESLint exists.
-- Vue Router, Axios, and STOMP Client are installed as dependencies only; their application configuration is not implemented.
+- A Vue 3 and Vite JavaScript project with the approved design-system foundation and Vue Router structure exists.
+- Shared live-trial STOMP connection, subscription, and recovery helpers are implemented under `src/lib/realtime.js`.
+- Axios is the approved REST client. Use the shared instance in `src/lib/http.js` and keep API request functions under `src/apis/`.
 - Do not choose or install state-management, test, or other optional libraries without an explicit decision or Issue.
 
 ## Change boundaries
 
 - Do not implement screens before the user flow and Google Stitch/Figma design are approved.
-- Do not define REST payloads or STOMP destinations before the shared interface is approved.
-- Treat every `VITE_` value as public because it is bundled into browser code; never put secrets or private API keys in it.
+- Do not define REST payloads or add STOMP destinations outside the approved shared interface.
 - Keep Backend files out of Frontend Tasks and PRs.
+- Create Frontend work branches from the latest `frontend` branch and open Frontend PRs back into `frontend`.
 
 ## Commands
 

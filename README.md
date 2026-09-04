@@ -1,83 +1,138 @@
-# AI-Ready Web Service Mini Project - 6조
+# 사랑과 전쟁터
 
-SKALA Full-Stack Engineering 과정의 AI-Ready 웹 서비스 설계 팀 프로젝트 저장소입니다.
+SKALA Full-Stack Engineering 과정의 6조 AI-Ready 웹 서비스 설계 프로젝트입니다.
 
-현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. 애플리케이션 Library는 의존성만 추가했으며 Database, Docker, Router/API/STOMP 설정 및 기능 코드는 아직 추가하지 않았습니다.
+연인 간 갈등 당사자가 각자의 입장을 정리하고, Mock AI 변호사와 Mock AI 판사의 의견 및 관전자 투표를 참고해 해결 방향을 탐색하는 서비스입니다. 실제 법률 판결이나 법률 상담을 제공하지 않습니다.
 
-## 프로젝트 자료
+현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. Frontend에는 확정된 디자인 시스템과 shadcn-vue 사용 기반이 설정되어 있으며, 화면과 개별 UI 컴포넌트는 담당 Issue에서 추가합니다. Database, Docker 및 기능 코드는 아직 추가하지 않았습니다.
 
-- [팀 Notion](https://confused-dietician-c17.notion.site/mini-Project-6-3cd7caa087bd808caf1bc28791f745e2?pvs=73)
-- [GitHub Repository](https://github.com/skala-msa-team/web-mini)
-- [GitHub Project 실행 순서 Board](https://github.com/orgs/skala-msa-team/projects/3/views/6)
-- [Google Stitch](https://stitch.withgoogle.com/projects/416001617538729018)
-- [Figma](https://www.figma.com/design/kcaV9To7uU5HQHXDcbssGL/Untitled?node-id=0-1&t=pc3itD8mLpulTZE0-1)
+## 범위와 구현 상태
 
-기획, Actor 중심 Use Case, 화면 흐름, 기술 결정, ERD, API 및 AI JSON 계약은 Notion에서 관리합니다. 담당자, Priority, Iteration과 상태는 GitHub Project에서 관리합니다.
+이 문서에서는 기능의 범위와 현재 구현 여부를 다음 상태로 구분합니다.
 
-## 현재 확정된 방향
+| 상태                  | 의미                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------- |
+| `현재 구현`           | 현재 Repository에 실행 가능한 코드나 설정이 존재함                                                |
+| `Demo 개발 대상`      | 이번 Local Live Demo에서 구현할 기능이며, 완료 여부는 아래 체크리스트와 GitHub Project에서 확인함 |
+| `Frontend만 개발`     | 화면과 로컬 Mock 데이터만 구현하며 Backend·Database에는 연결하지 않음                             |
+| `설계 완료·추후 개발` | 화면·ERD·API·권한 등 계약만 설계되었고 이번 Demo에서는 코드로 구현하지 않음                       |
 
-| 영역 | 방향 |
-| --- | --- |
-| Frontend | Vue 3, Vite, JavaScript, Vue Router, Axios, STOMP Client |
-| Backend | Java 21, Spring Boot, Gradle, Web, Validation, WebSocket |
-| Realtime | WebSocket, STOMP |
-| Database | PostgreSQL |
-| AI | Mock AI 우선, 추후 Amazon Bedrock 연동 |
-| Design | Google Stitch, Figma |
-| Lint | ESLint, Checkstyle |
+Notion에 기능이 작성되어 있거나 관련 Issue가 닫혀 있어도 실제 코드가 존재한다는 뜻은 아닙니다. GitHub Issue의 `Completed`와 `Not planned`도 구분하며, 실제 구현 완료 여부는 Repository 코드와 검증 결과를 기준으로 판단합니다.
 
-미정인 Library와 Version, API Path, STOMP Destination, Database Schema와 AI JSON은 담당 Issue에서 설계가 확정된 후 추가합니다.
+자료가 서로 다를 때는 제품 범위·정책·인터페이스는 Notion, 담당자·Priority·Iteration·작업 상태는 GitHub Project, 실제 구현 여부는 Repository 코드와 실행된 검증 결과를 각각 기준으로 판단합니다.
 
-## 저장소 구조
+### Demo 개발 대상
 
-```text
-.
-├── .github/              # Issue 및 PR Template
-├── .vscode/              # 팀 공통 VS Code 설정
-├── docs/                 # 확정 문서와 Notion 연결 Asset
-├── frontend/             # Vue, Vite, ESLint 기본 프로젝트
-│   ├── AGENTS.md
-│   ├── README.md
-│   └── eslint.config.js
-├── backend/              # Spring Boot, Checkstyle 기본 프로젝트
-│   ├── AGENTS.md
-│   ├── README.md
-│   └── config/checkstyle/
-├── .editorconfig
-├── .gitattributes
-├── .gitignore
-├── AGENTS.md             # 저장소 공통 작업 규칙
-└── README.md
-```
+이번 Local Live Demo는 공개 재판의 다음 핵심 흐름을 개발 대상으로 합니다.
 
-## 로컬 실행
+- 갈등 게시글과 공개 재판 생성
+- 한 화면 흐름에서 A측 작성 후 B측 작성
+- Mock AI 안내 질문, 답변, 사실관계 요약과 변론문 생성
+- Backend 시간 기준 재판 단계 전이와 STOMP Event 전달
+- 이전 채팅 조회, 원본 채팅 저장과 실시간 채팅
+- 관전자당 한 번의 승소 투표
+- 양측 변론을 사용한 Mock AI 판결 생성과 결과 저장
+- AI 판결과 대중 투표 결과의 분리 표시
 
-사전 준비: Node.js, npm, Java 21
+Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사용하고 공개 재판만 동작시킵니다.
 
-Frontend:
+### Frontend만 개발
 
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
+다음 일반 커뮤니티 기능은 Frontend 화면과 로컬 Mock 데이터로만 구현합니다. Backend API, Database 저장, 실제 인증과 권한 처리는 이번 Demo 범위가 아닙니다.
 
-Backend:
+- 홈·인기 게시글·Live 재판·커뮤니티 가이드라인 탭
+- 게시글 목록·상세·작성·수정·삭제 화면
+- 관계 유형·갈등 사유 필터와 페이지 선택
+- 댓글·답글·좋아요·신고 화면 및 로컬 상호작용
+
+### 설계 완료·추후 개발
+
+다음 기능은 전체 서비스 설계에는 포함되지만 이번 Demo에서는 구현하지 않습니다.
+
+## 로컬 실행 (권장)
+
+권장 실행 방식 — Docker Compose(통합 실행)
+
+사전 준비: Docker와 Docker Compose 설치
+
+루트 Compose로 Frontend(Nginx), Backend(Spring Boot), PostgreSQL을 한 번에 빌드·실행합니다. 이 방식은 팀 공유(같은 LAN) 시 가장 간단하고 안정적입니다.
 
 ```bash
-cd backend
-./gradlew bootRun
+docker compose up -d --build
+```
+
+접속: Frontend가 호스트의 `8081`로 매핑되어 있으므로 팀원들은 `http://<HOST_LAN_IP>:8081`로 접속하면 됩니다.
+
+간단 확인(호스트 LAN IP 확인, macOS 예시):
+
+```bash
+ipconfig getifaddr en0
+```
+
+주의사항:
+
+- 백엔드의 CORS 설정(`APP_CORS_ALLOWED_ORIGINS`)이 기본값으로 localhost만 허용되어 있을 수 있습니다. LAN에서 접속할 경우 필요한 origin(예: `http://<HOST_LAN_IP>:8081`)을 환경변수에 추가하세요.
+- 회사/학교 네트워크의 클라이언트 분리(guest isolation) 또는 방화벽 설정에 따라 같은 SSID에서도 접속이 차단될 수 있습니다.
+
+종료:
+
+```bash
+docker compose down
 ```
 
 현재 환경변수:
 
-| 영역 | 변수 | 예시 | 용도 |
-| --- | --- | --- | --- |
-| Frontend | `VITE_API_BASE_URL` | `http://localhost:8080` | Backend 기본 URL |
-| Backend | `SERVER_PORT` | `8080` | Spring Boot 실행 Port |
+| 영역     | 변수                                   | 예시                                          | 용도                                                    |
+| -------- | -------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| Frontend | `VITE_API_BASE_URL`                    | `/api/v1` 또는 `http://localhost:8080/api/v1` | Docker 통합 실행 또는 Backend 개별 실행용 REST Base URL |
+| Backend  | `SERVER_PORT`                          | `8080`                                        | Spring Boot 실행 Port                                   |
+| Backend  | `APP_CORS_ALLOWED_ORIGINS`             | `http://localhost:5173,http://localhost:8081` | REST API와 STOMP Endpoint 허용 Origin                   |
+| Backend  | `APP_DEMO_USER_HEADER_NAME`            | `X-Demo-User-Id`                              | Demo 사용자 식별 Header 이름                            |
+| Backend  | `APP_WEBSOCKET_ENDPOINT`               | `/ws`                                         | STOMP Handshake Endpoint                                |
+| Backend  | `APP_WEBSOCKET_HEARTBEAT`              | `10000,10000`                                 | STOMP Heartbeat 송수신 간격                             |
+| Backend  | `APP_WEBSOCKET_MESSAGE_SIZE_LIMIT`     | `65536`                                       | 수신 메시지 최대 크기                                   |
+| Backend  | `APP_WEBSOCKET_SEND_BUFFER_SIZE_LIMIT` | `131072`                                      | 송신 버퍼 최대 크기                                     |
+| Backend  | `APP_WEBSOCKET_SEND_TIME_LIMIT`        | `20000`                                       | 송신 시간 제한                                          |
+| Backend  | `APP_AI_PROVIDER`                      | `mock`                                        | 현재 AI Adapter 선택                                    |
+| Backend  | `APP_AI_PROMPT_VERSION`                | `judge-v1`                                    | AI 요청 Prompt Version                                  |
+| Backend  | `DB_NAME`                              | `webmini`                                     | Docker PostgreSQL Database 이름                         |
+| Backend  | `DB_PORT`                              | `5432`                                        | Docker PostgreSQL 호스트 Port                           |
+| Backend  | `DB_URL`                               | `jdbc:postgresql://localhost:5432/webmini`    | Backend Database JDBC URL                               |
+| Backend  | `DB_USERNAME`                          | `webmini`                                     | 로컬 개발 Database 사용자                               |
+| Backend  | `DB_PASSWORD`                          | `webmini`                                     | 로컬 개발 Database 비밀번호 예시                        |
 
 실제 비밀값은 `.env` 또는 로컬 실행 환경에만 저장합니다. 새로운 환경변수가 확정되면 영역별 `.env.example`에는 변수명과 비밀값이 아닌 예시만 추가합니다. Spring Boot는 `.env` 파일을 자동으로 읽지 않으므로 Backend 값은 실행 환경변수로 전달합니다.
+
+Backend에는 [backend/.env.example](backend/.env.example)에 실행 예시를 두었습니다. 이 파일은 참고용이며 자동 로드되지 않습니다. 아무 환경변수를 주지 않아도 기본값으로 실행되지만, 팀원별 또는 환경별 차이는 실행 환경변수로 override합니다.
+
+### Backend WebSocket/STOMP 기본값
+
+현재 Backend에는 Demo 재판 실시간 연결과 재판 진행을 위한 WebSocket/STOMP 구현이 포함되어 있습니다.
+
+- Handshake Endpoint: `/ws`
+- Application Prefix: `/app`
+- Broker Prefix: `/topic`
+- User Destination Prefix: `/user`
+- 개인 오류 Queue: `/user/queue/errors`
+- Demo 사용자 식별: `CONNECT` 프레임의 `X-Demo-User-Id`
+
+현재 구현은 Demo 사용자 식별, 기본 Broker 설정, 개인 오류 Queue, 채팅 `@MessageMapping`, 재판 상태 전이, 채팅·Event 저장, Commit 이후 Broadcast를 포함합니다.
+
+간단한 로컬 확인 예시:
+
+```bash
+cd backend
+export APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
+export APP_WEBSOCKET_ENDPOINT=/ws
+./gradlew bootRun
+```
+
+이후 STOMP Client에서 `/ws` 로 연결하고 다음 경로를 확인합니다.
+
+- `SEND /app/trials/{trialId}/chat`
+- `SUBSCRIBE /topic/trials/{trialId}/chat`
+- `SUBSCRIBE /topic/trials/{trialId}/events`
+- `SUBSCRIBE /user/queue/errors`
 
 기본 검증:
 
@@ -89,13 +144,16 @@ cd backend
 
 ## 협업 흐름
 
-1. 최신 `dev`에서 작업 Branch를 생성합니다.
+1. 최신 `dev`에서 영역 통합 Branch인 `frontend`와 `backend`를 분기하고 최신 상태를 유지합니다.
 2. Issue 하나에 Branch 하나와 PR 하나를 연결합니다.
 3. Frontend와 Backend 작업은 Task, Branch, Commit, PR을 분리합니다.
-4. 일반 작업 PR은 `dev`로 생성합니다.
-5. `dev` 대상 PR은 최소 1명의 승인을 받은 뒤 병합합니다.
-6. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
-7. `dev` 대상 PR은 Review와 검증 후 Squash and merge합니다.
+4. Frontend 작업 Branch는 최신 `frontend`에서, Backend 작업 Branch는 최신 `backend`에서 생성합니다.
+5. Frontend 작업 PR은 `frontend`로, Backend 작업 PR은 `backend`로 생성합니다.
+6. `frontend`와 `backend`에서 검증된 변경을 `dev`로 반영합니다.
+7. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
+8. Review와 검증 후 Squash and merge합니다.
+
+초기 Repository 부트스트랩 Issue는 위 협업 규칙 확정 전에 직접 반영되었습니다. 이후 기능 작업부터 Issue·Branch·PR 연결과 Review 규칙을 적용합니다.
 
 ## 협업 컨벤션
 
@@ -112,6 +170,8 @@ cd backend
 ### Branch
 
 - 형식: `type/작업영역-이슈번호-영어-작업명`
+- 기준 Branch:
+  Frontend 작업은 `frontend`, Backend 작업은 `backend`, Integration 작업은 `dev`에서 분기합니다.
 - Frontend: `feat/frontend-12-task-form`
 - Backend: `feat/backend-13-task-api`
 - 연동: `fix/integration-27-task-flow`
@@ -131,43 +191,46 @@ docs(docs): API 명세 갱신
 chore(common): 공통 개발환경 구성
 ```
 
-| type | 용도 |
-| --- | --- |
-| `feat` | 기능 추가 |
-| `fix` | 버그 수정 |
-| `refactor` | 기능 변경 없는 코드 개선 |
-| `docs` | 문서 작성 및 수정 |
-| `test` | 테스트 작성 및 수정 |
-| `style` | UI 스타일 또는 코드 Format |
-| `chore` | 설정과 개발환경 작업 |
+| type       | 용도                       |
+| ---------- | -------------------------- |
+| `feat`     | 기능 추가                  |
+| `fix`      | 버그 수정                  |
+| `refactor` | 기능 변경 없는 코드 개선   |
+| `docs`     | 문서 작성 및 수정          |
+| `test`     | 테스트 작성 및 수정        |
+| `style`    | UI 스타일 또는 코드 Format |
+| `chore`    | 설정과 개발환경 작업       |
 
 scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integration`, `common`을 사용합니다.
 
 ### Pull Request
 
-- 일반 작업은 작업 Branch에서 `dev`로 PR을 생성합니다.
-- `dev`는 작업 통합 Branch이며, GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
+- Frontend 작업은 작업 Branch에서 `frontend`로 PR을 생성합니다.
+- Backend 작업은 작업 Branch에서 `backend`로 PR을 생성합니다.
+- `frontend`와 `backend`는 영역 통합 Branch이며, 각 영역의 검증된 작업을 먼저 모읍니다.
+- `frontend`와 `backend`에서 검증된 변경만 `dev`로 반영합니다.
+- `dev`는 최종 통합 Branch이며, GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
 - `main`은 최종 완성본 Branch이며, GitHub의 필수 승인 규칙은 적용하지 않습니다.
 - 작업 Branch에서 `main`으로 직접 병합하지 않고 최종 완료 시점에 `dev`의 검증된 내용을 `main`에 반영합니다.
 - `Closes #이슈번호`를 작성합니다.
-- Frontend와 Backend PR을 각각 병합한 뒤 별도 Integration Task와 PR로 연동합니다.
+- Frontend와 Backend PR을 각각 영역 Branch에 병합한 뒤 별도 Integration Task와 PR로 `dev` 반영을 진행합니다.
 - Review와 필요한 검증을 통과한 뒤 Squash and merge합니다.
 
 ### 네이밍
 
-| 대상 | 규칙 | 예시 |
-| --- | --- | --- |
-| 디렉터리 | kebab-case | `task-result` |
-| Vue 컴포넌트 | PascalCase | `TaskResultCard.vue` |
-| JavaScript 함수·변수 | camelCase | `fetchTaskResult` |
-| Java Package | lowercase | `com.skala.team6.webmini` |
-| Java Class | PascalCase | `TaskService` |
-| Java 함수·변수 | camelCase | `createTask` |
-| 상수 | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT_MS` |
-| API Path | 소문자 kebab-case, 복수 명사 | `/api/task-results` |
-| JSON 필드 | camelCase | `createdAt` |
-| DB 테이블·컬럼 | snake_case | `task_results`, `created_at` |
-| 환경변수 | UPPER_SNAKE_CASE | `DB_PASSWORD` |
+| 대상                 | 규칙                         | 예시                         |
+| -------------------- | ---------------------------- | ---------------------------- |
+| 디렉터리             | kebab-case                   | `task-result`                |
+| Vue 컴포넌트         | PascalCase                   | `TaskResultCard.vue`         |
+| JavaScript 함수·변수 | camelCase                    | `fetchTaskResult`            |
+| Java Package         | lowercase                    | `com.skala.team6.webmini`    |
+| Java Class           | PascalCase                   | `TaskService`                |
+| Java 함수·변수       | camelCase                    | `createTask`                 |
+| 상수                 | UPPER_SNAKE_CASE             | `DEFAULT_TIMEOUT_MS`         |
+| API Path             | 소문자 kebab-case, 복수 명사 | `/api/task-results`          |
+| JSON 필드            | camelCase                    | `createdAt`                  |
+| DB 테이블·컬럼       | snake_case                   | `task_results`, `created_at` |
+| 환경변수             | UPPER_SNAKE_CASE             | `DB_PASSWORD`                |
 
 ### 코드 작성
 
@@ -197,8 +260,12 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - [x] Vue 3 + Vite 최소 Frontend 프로젝트 생성
 - [x] Java 21 + Spring Boot 최소 Backend 프로젝트 생성
 - [x] 확정된 Frontend·Backend 필수 Library 의존성 추가
+- [x] Justice & Empathy 디자인 토큰과 shadcn-vue 사용 기반 구성
 - [x] Frontend·Backend 환경변수 예시 작성
 - [x] ESLint·Checkstyle 설정
-- [ ] Database 연결
-- [ ] Docker 구성(선택)
+- [x] REST API·공통 응답·오류 계약 확정
+- [x] Demo ERD와 Database 제약조건 확정
+- [x] 재판 상태·STOMP Message 계약 확정
+- [x] Mock AI 입출력 JSON 계약 확정
+- [x] PostgreSQL Schema, Flyway와 로컬 Docker Compose 구성
 - [ ] API, WebSocket/STOMP, Mock AI와 기능 구현

@@ -1,0 +1,223 @@
+<script setup>
+import { computed, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { Bold, Image, Italic, Link, Scale } from "@lucide/vue";
+
+import { createPost } from "@/apis/postApi.js";
+import CommunityLayout from "@/components/community/CommunityLayout.vue";
+import Button from "@/components/ui/Button.vue";
+import Input from "@/components/ui/Input.vue";
+import Textarea from "@/components/ui/Textarea.vue";
+import { categoryTypes } from "@/mock/community/communityData.js";
+import { useCommunityStore } from "@/stores/communityStore.js";
+import { createUuid } from "@/utils/createUuid.js";
+
+const TRIAL_DRAFT_STORAGE_KEY = "love-war:trial-draft";
+const relationshipOptions = [
+  { label: "연인", value: "COUPLE" },
+  { label: "썸", value: "SOME" },
+  { label: "부부", value: "SPOUSE" },
+];
+const router = useRouter();
+const { addPost } = useCommunityStore();
+
+const category = ref("");
+const relationshipType = ref("");
+const title = ref("");
+const content = ref("");
+const requestTrial = ref(false);
+const submitPending = ref(false);
+const submitError = ref("");
+const canSubmit = computed(() =>
+  Boolean(
+    category.value &&
+    relationshipType.value &&
+    title.value.trim() &&
+    content.value.trim(),
+  ),
+);
+
+async function submitPost() {
+  if (!canSubmit.value || submitPending.value) return;
+
+  submitPending.value = true;
+  submitError.value = "";
+
+  try {
+    const createdPost = await createPost({
+      title: title.value.trim(),
+      content: content.value.trim(),
+      relationshipType: relationshipType.value,
+      trialRequested: requestTrial.value,
+    });
+
+    if (!requestTrial.value) {
+      const localPost = addPost({
+        id: `created-${createdPost.postId}-${createUuid()}`,
+        backendPostId: createdPost.postId,
+        category: category.value,
+        relationshipType: createdPost.relationshipType,
+        title: createdPost.title,
+        content: createdPost.content,
+      });
+      sessionStorage.removeItem(TRIAL_DRAFT_STORAGE_KEY);
+      await router.push({
+        name: "post-detail",
+        params: { postId: localPost.id },
+      });
+      return;
+    }
+
+    sessionStorage.setItem(
+      TRIAL_DRAFT_STORAGE_KEY,
+      JSON.stringify({
+        postId: createdPost.postId,
+        title: createdPost.title,
+        content: createdPost.content,
+        relationshipType: createdPost.relationshipType,
+        category: category.value,
+      }),
+    );
+
+    await router.push({
+      name: "trial-preparation",
+      query: { postId: createdPost.postId },
+    });
+  } catch (error) {
+    submitError.value =
+      error?.message ||
+      "게시글을 등록하지 못했습니다. 잠시 후 다시 시도해주세요.";
+  } finally {
+    submitPending.value = false;
+  }
+}
+
+// Prefill form for quick demo
+onMounted(() => {
+  // Demo defaults matching user's scenario
+  category.value = "이성친구";
+  relationshipType.value = "COUPLE";
+  title.value = "내 친구의 여우짓을 남자친구가 거절을 안해";
+  content.value = `며칠 전에 나, 남자친구, 내 친구랑 같이 술자리를 가졌었는데 친구가 한 번씩 "오빠가 아깝다~" 그러더라고 그러면서 자꾸 배배꼬기도 하고\n남자친구는 그 자리에서는 그냥 허허 웃기만 하더라고\n내 친구가 살짝 선 넘은 것 같아서 남자친구한테 뒷담화 하듯이 "쟤 자꾸 왜 저래" 라고 이야기했더니 "에이 그냥 한 소리지" 하면서 넘어가더라고\n내 남자친구가 확실하게 선을 못긋는 것 같아서 불편한데 이거 나만 이렇게 생각해?`;
+  requestTrial.value = true;
+});
+</script>
+
+<template>
+  <CommunityLayout>
+    <section
+      class="mx-auto max-w-3xl rounded-xl border border-border bg-card p-5 shadow-sm sm:p-8"
+    >
+      <h1 class="text-2xl font-bold tracking-tight">글쓰기</h1>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        <label class="grid gap-2 text-sm font-semibold">
+          <span>카테고리</span>
+          <select
+            class="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            v-model="category"
+          >
+            <option value="" disabled>카테고리를 선택하세요</option>
+            <option v-for="type in categoryTypes.slice(1)" :key="type">
+              {{ type }}
+            </option>
+          </select>
+        </label>
+        <label class="grid gap-2 text-sm font-semibold">
+          <span>관계 유형</span>
+          <select
+            class="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            v-model="relationshipType"
+          >
+            <option value="" disabled>관계 유형을 선택하세요</option>
+            <option
+              v-for="option in relationshipOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+      </div>
+      <Input
+        v-model="title"
+        class="mt-6 h-12 border-0 border-b border-border rounded-none px-0 text-lg shadow-none focus-visible:ring-0"
+        placeholder="제목을 입력하세요."
+      />
+      <div
+        class="mt-4 flex gap-1 rounded-lg border border-border bg-muted p-2"
+        aria-label="글 편집 도구"
+      >
+        <button
+          class="rounded-md p-2 transition hover:bg-card"
+          type="button"
+          aria-label="굵게"
+        >
+          <Bold :size="17" />
+        </button>
+        <button
+          class="rounded-md p-2 transition hover:bg-card"
+          type="button"
+          aria-label="기울임"
+        >
+          <Italic :size="17" />
+        </button>
+        <button
+          class="rounded-md p-2 transition hover:bg-card"
+          type="button"
+          aria-label="이미지"
+        >
+          <Image :size="17" />
+        </button>
+        <button
+          class="rounded-md p-2 transition hover:bg-card"
+          type="button"
+          aria-label="링크"
+        >
+          <Link :size="17" />
+        </button>
+      </div>
+      <Textarea
+        v-model="content"
+        class="mt-2 min-h-72 border-0 px-0 shadow-none focus-visible:ring-0"
+        placeholder="당신의 이야기를 자세히 적어주세요. 판결에 도움이 될 구체적인 상황일수록 좋습니다."
+      />
+      <label
+        class="mt-4 flex items-start gap-3 rounded-xl border border-border bg-muted p-4"
+      >
+        <Scale class="mt-0.5 text-primary" :size="25" />
+        <span class="grid gap-1 text-sm"
+          ><strong>재판 신청 (Request Trial)</strong
+          ><small class="leading-5 text-muted-foreground"
+            >게시글 등록과 동시에 AI 재판을 신청하시겠습니까? 신청 시 AI
+            변호사와 함께 재판을 준비하게 됩니다.</small
+          ></span
+        >
+        <input
+          class="ml-auto mt-1 size-4 accent-primary"
+          v-model="requestTrial"
+          type="checkbox"
+        />
+      </label>
+      <p v-if="submitError" class="mt-3 text-sm text-destructive" role="alert">
+        {{ submitError }}
+      </p>
+      <div
+        class="mt-6 flex items-center justify-end gap-4 border-t border-border pt-5"
+      >
+        <RouterLink
+          class="text-sm font-semibold text-muted-foreground hover:text-foreground"
+          to="/community"
+          >취소</RouterLink
+        >
+        <Button
+          type="button"
+          :disabled="!canSubmit || submitPending"
+          @click="submitPost"
+        >
+          {{ submitPending ? "등록 중..." : "등록하기" }}</Button
+        >
+      </div>
+    </section>
+  </CommunityLayout>
+</template>
