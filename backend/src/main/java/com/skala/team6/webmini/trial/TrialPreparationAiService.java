@@ -77,7 +77,7 @@ public class TrialPreparationAiService {
 
         List<AiGuideQuestionEntity> questions =
                 questionRepository.findByTrialPartyIdOrderBySequenceNoAsc(party.getId());
-        if (questions.isEmpty() || questions.stream().anyMatch(question -> !hasText(question.getAnswer()))) {
+        if (!questions.isEmpty() && questions.stream().anyMatch(question -> !hasText(question.getAnswer()))) {
             throw new ApiException(ErrorCode.GUIDE_ANSWERS_INCOMPLETE);
         }
 
