@@ -8,7 +8,7 @@ const props = defineProps({
   otherParty: { type: Object, default: null },
 })
 
-const emit = defineEmits(['update:party', 'back', 'prepare', 'generate-draft', 'confirm'])
+const emit = defineEmits(['update:party', 'back', 'prepare', 'confirm'])
 const chatInput = ref('')
 const chatLog = useTemplateRef('chatLog')
 const statementFields = [
@@ -23,24 +23,18 @@ const statementFields = [
 const userMessages = computed(() => props.party.messages.filter((message) => message.role === 'USER'))
 const statementMessages = computed(() => userMessages.value.slice(0, statementFields.length))
 const statementComplete = computed(() => statementMessages.value.length === statementFields.length)
-const guideComplete = computed(() =>
-  props.party.statementSaved &&
-  props.party.guideAnswers.length === props.party.guideQuestions.length,
-)
 const inputDisabled = computed(() =>
   props.party.pending ||
   props.party.draftGenerated ||
-  (!props.party.statementSaved && statementComplete.value) ||
-  (props.party.statementSaved && guideComplete.value),
+  statementComplete.value,
 )
 const actionDisabled = computed(() =>
   props.party.pending ||
   props.party.draftGenerated ||
-  (!props.party.statementSaved ? !statementComplete.value : !guideComplete.value),
+  !statementComplete.value,
 )
 const actionLabel = computed(() => {
   if (props.party.pending) return '처리 중...'
-  if (!props.party.statementSaved) return '진술 저장하고 추가 질문 받기'
   return props.party.draftGenerated ? '변론문 생성 완료' : '진술서 작성 완료'
 })
 
@@ -58,48 +52,31 @@ function sendMessage() {
   if (!content || inputDisabled.value) return
 
   const messages = [...props.party.messages, { id: crypto.randomUUID(), role: 'USER', content }]
-  let guideAnswers = props.party.guideAnswers
   let nextQuestion
 
-  if (props.party.statementSaved) {
-    const currentQuestion = props.party.guideQuestions[props.party.guideAnswers.length]
-    guideAnswers = [
-      ...props.party.guideAnswers,
-      { questionId: currentQuestion.questionId, answer: content },
-    ]
-    nextQuestion = props.party.guideQuestions[guideAnswers.length]?.question
-  } else {
-    const answeredCount = messages.filter((message) => message.role === 'USER').length
-    nextQuestion = statementFields[answeredCount]?.question
-  }
+  const answeredCount = messages.filter((message) => message.role === 'USER').length
+  nextQuestion = statementFields[answeredCount]?.question
 
   messages.push({
     id: crypto.randomUUID(),
     role: 'ASSISTANT',
     content:
       nextQuestion ??
-      (props.party.statementSaved
-        ? '추가 답변을 모두 확인했습니다. 아래 버튼을 누르면 변론문을 정리해드릴게요.'
-        : '기본 진술을 모두 확인했습니다. 아래 버튼을 눌러 추가 질문을 받아주세요.'),
+      '진술 내용을 모두 확인했습니다. 아래 버튼을 눌러 변론문 초안을 작성해드릴게요.',
   })
 
   chatInput.value = ''
-  updateParty({ messages, guideAnswers, draftGenerated: false })
+  updateParty({ messages, draftGenerated: false })
   scrollChatToBottom()
 }
 
 function advancePreparation() {
   if (actionDisabled.value) return
 
-  if (!props.party.statementSaved) {
-    const statement = Object.fromEntries(
-      statementFields.map((field, index) => [field.key, statementMessages.value[index].content]),
-    )
-    emit('prepare', statement)
-    return
-  }
-
-  emit('generate-draft', props.party.guideAnswers)
+  const statement = Object.fromEntries(
+    statementFields.map((field, index) => [field.key, statementMessages.value[index].content]),
+  )
+  emit('prepare', statement)
 }
 </script>
 

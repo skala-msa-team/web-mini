@@ -31,8 +31,15 @@ const trialParticipants = computed(() => liveTrialMock.participants.map((partici
   if (participant.position === 'right' && session.detail.value?.bParty) {
     return { ...participant, name: `${session.detail.value.bParty.displayName} AI 변호사` }
   }
-  return participant
+    return { ...participant, speakerKey: participant.position === 'left' ? 'A_LAWYER' : participant.position === 'right' ? 'B_LAWYER' : 'JUDGE' }
 }))
+const activeSpeaker = computed(() => {
+  if (session.status.value === TRIAL_STATUS.INTRODUCTION || session.status.value === TRIAL_STATUS.VERDICT) return 'JUDGE'
+  if (session.status.value === TRIAL_STATUS.A_ARGUMENT) return 'A_LAWYER'
+  if (session.status.value === TRIAL_STATUS.B_ARGUMENT) return 'B_LAWYER'
+  if (session.status.value === TRIAL_STATUS.DEBATE) return session.events.value.at(-1)?.speaker || ''
+  return ''
+})
 const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value))
 const waitingMessage = computed(() => getTrialWaitingMessage(session.status.value))
 const timelineEvents = computed(() => toTimelineEvents(session.events.value))
@@ -123,7 +130,7 @@ watch(
 
       <div class="trial-layout">
         <div class="trial-main-column">
-          <TrialStage :participants="trialParticipants" />
+          <TrialStage :participants="trialParticipants" :active-speaker="activeSpeaker" />
           <LawyerDebatePanel
             v-if="session.status.value === TRIAL_STATUS.DEBATE"
             :events="lawyerDebateEvents"

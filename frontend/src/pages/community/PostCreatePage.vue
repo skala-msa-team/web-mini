@@ -150,7 +150,7 @@ async function submitPost() {
           :disabled="!canSubmit || submitPending"
           @click="submitPost"
         >
-          >{{ submitPending ? "등록 중..." : "등록하기" }}</Button>
+          {{ submitPending ? "등록 중..." : "등록하기" }}</Button>
       </div>
     </section>
   </CommunityLayout>

@@ -8,9 +8,9 @@ export const liveTrialMock = Object.freeze({
   sessionTime: '총 재판 시간 3분',
   audienceCount: 1284,
   participants: [
-    { id: 'a-attorney', name: 'A측 AI 변호사', role: 'A측', position: 'left', tone: 'navy' },
-    { id: 'judge', name: 'AI 판사', role: '재판 진행', position: 'center', tone: 'judge' },
-    { id: 'b-attorney', name: 'B측 AI 변호사', role: 'B측', position: 'right', tone: 'blue' },
+    { id: 'a-attorney', name: 'A측 AI 변호사', role: 'A측', position: 'left', tone: 'navy', avatar: '🦊' },
+    { id: 'judge', name: 'AI 판사', role: '재판 진행', position: 'center', tone: 'judge', avatar: '🦉' },
+    { id: 'b-attorney', name: 'B측 AI 변호사', role: 'B측', position: 'right', tone: 'blue', avatar: '🐺' },
   ],
   messages: [
     { id: 1, avatar: '배', nickname: '배심원_882', message: '단둘이는 선 넘었지;;', tone: 'blue' },
