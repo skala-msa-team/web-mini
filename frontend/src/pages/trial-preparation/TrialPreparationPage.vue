@@ -449,7 +449,7 @@ async function startDemo() {
         새로운 재판 열기
       </h1>
 
-      <div class="mb-6 text-center">
+      <div v-if="currentStep === 1" class="mb-6 text-center">
         <button
           class="rounded-lg bg-primary px-5 py-2.5 font-semibold text-primary-foreground"
           :disabled="startPending"

@@ -30,7 +30,8 @@ record TrialListItem(
         String title,
         String aDisplayName,
         String bDisplayName,
-        Visibility visibility
+        Visibility visibility,
+        int audienceCount
 ) {
 }
 
@@ -146,6 +147,7 @@ record TrialSnapshotResponse(
         String scheduledEndAt,
         long latestEventSequence,
         long latestMessageSequence,
+        int audienceCount,
         boolean voteOpen,
         boolean ended
 ) {

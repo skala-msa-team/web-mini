@@ -49,6 +49,9 @@ export function normalizeTrialEvent(event = {}) {
 
 function eventKey(event) {
   if (event.sequence !== null) return `sequence:${event.sequence}`;
+  if (event.type === TRIAL_EVENT_TYPE.PRESENCE_UPDATED) {
+    return `presence:${event.trialId ?? event.payload?.trialId ?? "global"}`;
+  }
   if (event.eventId !== null) return `id:${event.eventId}`;
   return null;
 }
@@ -105,16 +108,24 @@ export function applyEventsToSnapshot(snapshot, events = []) {
 
   const snapshotSequence = Number(snapshot.latestEventSequence) || 0;
   return events
-    .filter((event) => (Number(event.sequence) || 0) > snapshotSequence)
+    .filter((event) => {
+      if (event.type === TRIAL_EVENT_TYPE.PRESENCE_UPDATED) return true;
+      return (Number(event.sequence) || 0) > snapshotSequence;
+    })
     .reduce((current, event) => {
-      // propagate audienceCount/viewerCount from presence events
       const audienceCountFromEvent =
         event.payload?.audienceCount ?? event.payload?.viewerCount ?? null;
       if (
         audienceCountFromEvent !== null &&
         audienceCountFromEvent !== undefined
       ) {
-        current = { ...current, audienceCount: audienceCountFromEvent };
+        const audienceCount = Number(audienceCountFromEvent);
+        current = {
+          ...current,
+          audienceCount: Number.isFinite(audienceCount)
+            ? audienceCount
+            : audienceCountFromEvent,
+        };
       }
       const votingOpened =
         event.type === TRIAL_EVENT_TYPE.VOTING_OPENED ||

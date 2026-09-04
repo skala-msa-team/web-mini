@@ -39,6 +39,7 @@ public class TrialController {
     private final TrialChatQueryService trialChatQueryService;
     private final TrialVoteService trialVoteService;
     private final TrialResultService trialResultService;
+    private final TrialPresenceService trialPresenceService;
 
     public TrialController(
             TrialQueryService trialQueryService,
@@ -49,7 +50,8 @@ public class TrialController {
             TrialStartService trialStartService,
             TrialChatQueryService trialChatQueryService,
             TrialVoteService trialVoteService,
-            TrialResultService trialResultService
+            TrialResultService trialResultService,
+            TrialPresenceService trialPresenceService
     ) {
         this.trialQueryService = trialQueryService;
         this.trialStatementService = trialStatementService;
@@ -60,6 +62,7 @@ public class TrialController {
         this.trialChatQueryService = trialChatQueryService;
         this.trialVoteService = trialVoteService;
         this.trialResultService = trialResultService;
+        this.trialPresenceService = trialPresenceService;
     }
 
     @Operation(summary = "재판 목록 조회")
@@ -78,7 +81,8 @@ public class TrialController {
                         entry.trial().getPost().getTitle(),
                         entry.aDisplayName(),
                         entry.bDisplayName(),
-                        entry.trial().getVisibility()
+                        entry.trial().getVisibility(),
+                        trialPresenceService.getAudienceCount(entry.trial().getId())
                 ))
                 .toList();
         TrialListResponse response = new TrialListResponse(
@@ -257,6 +261,7 @@ public class TrialController {
                 formatTime(trial.getScheduledEndAt()),
                 started.latestEventSequence(),
                 0,
+                trialPresenceService.getAudienceCount(trialId),
                 false,
                 false)));
     }
@@ -275,6 +280,7 @@ public class TrialController {
                 formatTime(trial.getScheduledEndAt()),
                 snapshot.latestEventSequence(),
                 snapshot.latestMessageSequence(),
+                trialPresenceService.getAudienceCount(trialId),
                 trial.getStatus() == TrialStatus.VOTING,
                 trial.getStatus() == TrialStatus.ENDED
         );
@@ -350,6 +356,7 @@ public class TrialController {
                 "2026-09-03T03:30:00Z",
                 12,
                 15,
+                3,
                 true,
                 false
         );
