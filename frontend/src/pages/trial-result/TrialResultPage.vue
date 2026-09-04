@@ -15,6 +15,7 @@ const resultPending = ref(true)
 const resultError = ref('')
 const caseTitle = computed(() => trialDetail.value?.title ?? '')
 const caseNumber = computed(() => `사건 #${route.params.trialId}`)
+const groundTitles = ['합의 기준', '갈등 확대 책임', '관계 회복 노력']
 const aiResult = computed(() => {
   const verdict = trialResult.value?.verdict
   if (!verdict) return null
@@ -25,7 +26,7 @@ const aiResult = computed(() => {
     sideB: verdict.bFaultRatio,
     judgment: verdict.summary,
     grounds: (verdict.grounds || []).map((description, index) => ({
-      title: `주요 근거 ${index + 1}`,
+      title: groundTitles[index] || `주요 근거 ${index + 1}`,
       side: '',
       description,
     })),

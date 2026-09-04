@@ -136,8 +136,14 @@ class MockAiControllerTest {
                 .andExpect(jsonPath("$.data.winnerSide").value("B"))
                 .andExpect(jsonPath("$.data.aFaultRatio").value(60))
                 .andExpect(jsonPath("$.data.bFaultRatio").value(40))
-                .andExpect(jsonPath("$.data.summary").isNotEmpty())
-                .andExpect(jsonPath("$.data.grounds").isArray())
+                .andExpect(jsonPath("$.data.summary").value(
+                        org.hamcrest.Matchers.startsWith("주문:")))
+                .andExpect(jsonPath("$.data.summary").value(
+                        org.hamcrest.Matchers.hasLength(org.hamcrest.Matchers.greaterThanOrEqualTo(60))))
+                .andExpect(jsonPath("$.data.grounds.length()").value(
+                        org.hamcrest.Matchers.greaterThanOrEqualTo(3)))
+                .andExpect(jsonPath("$.data.grounds[0]").value(
+                        org.hamcrest.Matchers.hasLength(org.hamcrest.Matchers.greaterThanOrEqualTo(30))))
                 .andExpect(jsonPath("$.data.recommendations.a").isNotEmpty())
                 .andExpect(jsonPath("$.data.recommendations.b").isNotEmpty())
                 .andExpect(jsonPath("$.data.schemaVersion").value("1.0"))

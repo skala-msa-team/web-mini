@@ -58,7 +58,8 @@ class MockAiClientTest {
                 "mock-argument-request", "lawyer-argument-v1");
         List<GuideAnswerItem> guideAnswers = List.of(
                 new GuideAnswerItem(1, "연락 기준이 있었나요?", "명확한 기준은 없었습니다."),
-                new GuideAnswerItem(2, "당시 의도는 무엇이었나요?", "대화를 이어가고 싶었습니다.")
+                new GuideAnswerItem(2, "당시 의도는 무엇이었나요?", "대화를 이어가고 싶었습니다."),
+                new GuideAnswerItem(3, "추가로 확인할 점이 있나요?", " ")
         );
         LawyerArgumentRequest sideARequest = new LawyerArgumentRequest(
                 10L, TrialSide.A, statement, guideAnswers);
@@ -78,6 +79,10 @@ class MockAiClientTest {
                 .contains("어제 저녁", "연락 문제", "답장이 늦었습니다", "반복해서 연락했습니다");
         assertThat(firstSideA.argumentText())
                 .contains("A측", "명확한 기준은 없었습니다", "대화를 이어가고 싶었습니다");
+        assertThat(firstSideA.argumentText())
+                .doesNotContain("안내 답변에 따르면")
+                .doesNotContain("  ")
+                .endsWith(".");
         assertThat(sideB.argumentText()).contains("B측");
         assertThat(sideB).isNotEqualTo(firstSideA);
     }
