@@ -23,6 +23,8 @@ const messageList = ref(null)
 const formattedAudienceCount = computed(() => props.audienceCount.toLocaleString('ko-KR'))
 const displayedHeaderLabel = computed(() => props.headerLabel || `${formattedAudienceCount.value}명`)
 const tonePalette = ['sky', 'violet', 'coral', 'mint', 'amber', 'lavender']
+const FOLLOW_LATEST_THRESHOLD = 48
+const shouldFollowLatest = ref(true)
 
 function stableToneSeed(value) {
   if (!value) return 0
@@ -50,6 +52,15 @@ watch(
   { deep: true },
 )
 
+function scrollToLatest(behavior = 'smooth') {
+  if (!messageList.value) return
+
+  messageList.value.scrollTo({
+    top: messageList.value.scrollHeight,
+    behavior,
+  })
+}
+
 watch(
   () => {
     const lastMessage = messages.value.at(-1)
@@ -57,10 +68,18 @@ watch(
   },
   async () => {
     await nextTick()
-    messageList.value?.lastElementChild?.scrollIntoView({ behavior: 'smooth' })
+    if (shouldFollowLatest.value) scrollToLatest()
   },
   { immediate: true },
 )
+
+function updateFollowLatest() {
+  if (!messageList.value) return
+
+  const remainingScroll =
+    messageList.value.scrollHeight - messageList.value.scrollTop - messageList.value.clientHeight
+  shouldFollowLatest.value = remainingScroll <= FOLLOW_LATEST_THRESHOLD
+}
 
 function messageKey(message) {
   return message.messageId ?? message.id ?? message.messageSequence
@@ -87,7 +106,7 @@ function isOwnMessage(message) {
   return Boolean(props.currentUserId) && message.sender?.demoUserId === props.currentUserId
 }
 
-async function submitMessage() {
+function submitMessage() {
   if (props.disabled || props.sending) return
 
   const message = draft.value.trim()
@@ -95,6 +114,7 @@ async function submitMessage() {
 
   const sent = props.onSend ? props.onSend(message) : true
   if (sent === false) return
+  shouldFollowLatest.value = true
   if (!props.onSend) {
     messages.value.push({
       id: Date.now(),
@@ -106,8 +126,6 @@ async function submitMessage() {
   }
   emit('send', message)
   draft.value = ''
-  await nextTick()
-  messageList.value?.lastElementChild?.scrollIntoView({ behavior: 'smooth' })
 }
 </script>
 
@@ -118,7 +136,14 @@ async function submitMessage() {
       <span><i aria-hidden="true"></i>{{ displayedHeaderLabel }}</span>
     </header>
 
-    <div ref="messageList" class="message-list" aria-live="polite" :aria-busy="loading">
+    <div
+      ref="messageList"
+      class="message-list"
+      aria-live="polite"
+      :aria-busy="loading"
+      tabindex="0"
+      @scroll.passive="updateFollowLatest"
+    >
       <p v-if="loading && !messages.length" class="chat-notice">이전 채팅을 불러오는 중입니다.</p>
       <p v-else-if="!messages.length" class="chat-notice">아직 등록된 채팅이 없습니다.</p>
       <article
@@ -214,6 +239,13 @@ header i {
   max-height: none;
   padding: 20px 16px;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+
+.message-list:focus-visible {
+  outline: 2px solid var(--ds-color-justice-blue);
+  outline-offset: -2px;
 }
 
 .chat-notice {
@@ -225,13 +257,17 @@ header i {
 
 .message-item {
   display: grid;
-  grid-template-columns: 30px 1fr;
+  grid-template-columns: 30px minmax(0, 1fr);
   gap: 9px;
   margin-bottom: 18px;
 }
 
 .message-item--own {
-  grid-template-columns: 1fr 30px;
+  grid-template-columns: minmax(0, 1fr) 30px;
+}
+
+.message-item > div:last-child {
+  min-width: 0;
 }
 
 .message-item--own .avatar {
@@ -338,6 +374,8 @@ header i {
   color: var(--ds-color-on-surface);
   font-size: 1rem;
   line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .chat-form {

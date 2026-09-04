@@ -138,17 +138,19 @@ watch(
 
         </div>
 
-        <TrialChatPanel
-          :messages="session.messages.value"
-          :current-user-id="session.demoUserId"
-          :audience-count="liveTrialMock.audienceCount"
-          :header-label="trialEnded ? '종료' : ''"
-          :disabled="interactionsDisabled"
-          :loading="session.chatRestoring.value"
-          :sending="session.chatSending.value"
-          :disabled-message="interactionDisabledMessage"
-          :on-send="session.sendChat"
-        />
+        <div class="trial-chat-column">
+          <TrialChatPanel
+            :messages="session.messages.value"
+            :current-user-id="session.demoUserId"
+            :audience-count="liveTrialMock.audienceCount"
+            :header-label="trialEnded ? '종료' : ''"
+            :disabled="interactionsDisabled"
+            :loading="session.chatRestoring.value"
+            :sending="session.chatSending.value"
+            :disabled-message="interactionDisabledMessage"
+            :on-send="session.sendChat"
+          />
+        </div>
       </div>
     </main>
 
@@ -289,7 +291,17 @@ h1 {
   border-bottom-right-radius: 0;
 }
 
-.trial-layout > :deep(.chat-panel) {
+.trial-chat-column {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.trial-chat-column > :deep(.chat-panel) {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  max-height: none;
   margin-left: -1px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -309,7 +321,11 @@ h1 {
     border-radius: var(--ds-radius-md);
   }
 
-  .trial-layout > :deep(.chat-panel) {
+  .trial-chat-column {
+    height: 30rem;
+  }
+
+  .trial-chat-column > :deep(.chat-panel) {
     margin-left: 0;
     border-radius: var(--ds-radius-md);
   }

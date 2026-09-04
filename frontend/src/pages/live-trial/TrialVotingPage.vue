@@ -151,17 +151,19 @@ async function submitVote() {
           />
         </div>
 
-        <TrialChatPanel
-          :messages="session.messages.value"
-          :current-user-id="session.demoUserId"
-          :audience-count="finalVoteMock.viewerCount"
-          :header-label="trialEnded ? '종료' : '실시간'"
-          :disabled="interactionsDisabled"
-          :loading="session.chatRestoring.value"
-          :sending="session.chatSending.value"
-          :disabled-message="interactionDisabledMessage"
-          :on-send="session.sendChat"
-        />
+        <div class="trial-chat-column">
+          <TrialChatPanel
+            :messages="session.messages.value"
+            :current-user-id="session.demoUserId"
+            :audience-count="finalVoteMock.viewerCount"
+            :header-label="trialEnded ? '종료' : '실시간'"
+            :disabled="interactionsDisabled"
+            :loading="session.chatRestoring.value"
+            :sending="session.chatSending.value"
+            :disabled-message="interactionDisabledMessage"
+            :on-send="session.sendChat"
+          />
+        </div>
       </div>
     </main>
 
@@ -299,8 +301,17 @@ async function submitVote() {
   font-size: 0.95rem;
 }
 
-.voting-layout > :deep(.chat-panel) {
-  min-height: 100%;
+.trial-chat-column {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.trial-chat-column > :deep(.chat-panel) {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  max-height: none;
 }
 
 @media (max-width: 960px) {
@@ -308,8 +319,8 @@ async function submitVote() {
     grid-template-columns: 1fr;
   }
 
-  .voting-layout > :deep(.chat-panel) {
-    min-height: 430px;
+  .trial-chat-column {
+    height: 30rem;
   }
 }
 

@@ -96,6 +96,18 @@ defineProps({
   object-fit: cover;
 }
 
+.portrait-left .portrait-image {
+  object-position: left center;
+}
+
+.portrait-center .portrait-image {
+  object-position: center;
+}
+
+.portrait-right .portrait-image {
+  object-position: right center;
+}
+
 .portrait-left {
   background: linear-gradient(145deg, #fff1cc, #f6c86d);
 }
