@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { Bot, CheckCircle2, FileText, Send, Sparkles, UserRound } from '@lucide/vue'
+import { createUuid } from '@/utils/createUuid.js'
 
 const props = defineProps({
   side: { type: String, required: true, validator: (value) => ['A', 'B'].includes(value) },
@@ -51,14 +52,14 @@ function sendMessage() {
   const content = chatInput.value.trim()
   if (!content || inputDisabled.value) return
 
-  const messages = [...props.party.messages, { id: crypto.randomUUID(), role: 'USER', content }]
+  const messages = [...props.party.messages, { id: createUuid(), role: 'USER', content }]
   let nextQuestion
 
   const answeredCount = messages.filter((message) => message.role === 'USER').length
   nextQuestion = statementFields[answeredCount]?.question
 
   messages.push({
-    id: crypto.randomUUID(),
+    id: createUuid(),
     role: 'ASSISTANT',
     content:
       nextQuestion ??

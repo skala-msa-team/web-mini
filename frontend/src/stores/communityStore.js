@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { communityPosts } from '@/mock/community/communityData.js'
+import { createUuid } from '@/utils/createUuid.js'
 
 const relationshipLabels = Object.freeze({
   COUPLE: '연인',
@@ -83,7 +84,7 @@ function addComment(postId, content, parentId = null) {
   if (!post) return
 
   const comment = {
-    id: crypto.randomUUID(),
+    id: createUuid(),
     author: '나',
     content,
     createdAt: '방금 전',

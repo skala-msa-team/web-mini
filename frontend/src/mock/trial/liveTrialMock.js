@@ -15,8 +15,8 @@ export const liveTrialMock = Object.freeze({
       position: 'left',
       tone: 'navy',
       speakerKey: 'A_LAWYER',
-      avatar: '🦊',
-      avatarUrl: '/images/animal-fox-profile.svg',
+      avatar: 'A',
+      avatarUrl: '/images/trial-portraits-pixel.png',
     },
     {
       id: 'judge',
@@ -25,8 +25,8 @@ export const liveTrialMock = Object.freeze({
       position: 'center',
       tone: 'judge',
       speakerKey: 'JUDGE',
-      avatar: '🦉',
-      avatarUrl: '/images/animal-owl-profile.svg',
+      avatar: 'AI',
+      avatarUrl: '/images/trial-portraits-pixel.png',
     },
     {
       id: 'b-attorney',
@@ -35,8 +35,8 @@ export const liveTrialMock = Object.freeze({
       position: 'right',
       tone: 'blue',
       speakerKey: 'B_LAWYER',
-      avatar: '🐺',
-      avatarUrl: '/images/animal-wolf-profile.svg',
+      avatar: 'B',
+      avatarUrl: '/images/trial-portraits-pixel.png',
     },
   ],
   messages: [

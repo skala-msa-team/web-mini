@@ -10,6 +10,7 @@ import Input from "@/components/ui/Input.vue";
 import Textarea from "@/components/ui/Textarea.vue";
 import { categoryTypes } from "@/mock/community/communityData.js";
 import { useCommunityStore } from "@/stores/communityStore.js";
+import { createUuid } from "@/utils/createUuid.js";
 
 const TRIAL_DRAFT_STORAGE_KEY = "love-war:trial-draft";
 const relationshipOptions = [
@@ -52,7 +53,7 @@ async function submitPost() {
 
     if (!requestTrial.value) {
       const localPost = addPost({
-        id: `created-${createdPost.postId}-${crypto.randomUUID()}`,
+        id: `created-${createdPost.postId}-${createUuid()}`,
         backendPostId: createdPost.postId,
         category: category.value,
         relationshipType: createdPost.relationshipType,

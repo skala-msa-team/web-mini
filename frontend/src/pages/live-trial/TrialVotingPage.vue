@@ -151,17 +151,19 @@ async function submitVote() {
           />
         </div>
 
-        <TrialChatPanel
-          :messages="session.messages.value"
-          :current-user-id="session.demoUserId"
-          :audience-count="finalVoteMock.viewerCount"
-          :header-label="trialEnded ? '종료' : '실시간'"
-          :disabled="interactionsDisabled"
-          :loading="session.chatRestoring.value"
-          :sending="session.chatSending.value"
-          :disabled-message="interactionDisabledMessage"
-          :on-send="session.sendChat"
-        />
+        <div class="trial-chat-column">
+          <TrialChatPanel
+            :messages="session.messages.value"
+            :current-user-id="session.demoUserId"
+            :audience-count="finalVoteMock.viewerCount"
+            :header-label="trialEnded ? '종료' : '실시간'"
+            :disabled="interactionsDisabled"
+            :loading="session.chatRestoring.value"
+            :sending="session.chatSending.value"
+            :disabled-message="interactionDisabledMessage"
+            :on-send="session.sendChat"
+          />
+        </div>
       </div>
     </main>
 
@@ -170,21 +172,18 @@ async function submitVote() {
 
 <style scoped>
 .voting-page {
-  min-height: 100vh;
-  height: 100vh;
-  overflow: hidden;
+  min-height: calc(100dvh - 72px);
   background: var(--ds-color-page-background);
 }
 
 .voting-shell {
   width: min(calc(100% - 32px), var(--ds-container-max));
-  min-height: 100%;
+  min-height: calc(100dvh - 72px);
   margin: 0 auto;
   padding: 24px 0 34px;
   display: grid;
   grid-template-rows: auto auto auto 1fr;
   gap: 14px;
-  overflow: hidden;
 }
 
 .voting-layout {
@@ -302,8 +301,17 @@ async function submitVote() {
   font-size: 0.95rem;
 }
 
-.voting-layout > :deep(.chat-panel) {
-  min-height: 100%;
+.trial-chat-column {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.trial-chat-column > :deep(.chat-panel) {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  max-height: none;
 }
 
 @media (max-width: 960px) {
@@ -311,8 +319,8 @@ async function submitVote() {
     grid-template-columns: 1fr;
   }
 
-  .voting-layout > :deep(.chat-panel) {
-    min-height: 430px;
+  .trial-chat-column {
+    height: 30rem;
   }
 }
 
