@@ -23,13 +23,56 @@ src/
 
 ## 실행과 검증
 
-개별 개발:
+### Frontend·Backend 로컬 실행
+
+Frontend 환경 파일을 준비합니다. 실제 `.env`는 Git에서 제외되므로 팀원별 주소를 안전하게 설정할 수 있습니다.
 
 ```bash
+cp .env.example .env
 npm install
 npm run dev
+```
+
+기본 설정에서는 Vite가 `0.0.0.0:5173`으로 열리고 `/api`, `/ws` 요청을 로컬 Backend `localhost:8080`으로 전달합니다. `5173`이 이미 사용 중이면 다른 Port로 자동 변경하지 않고 실행을 중단하므로, 중복 실행을 먼저 종료합니다.
+
+PostgreSQL만 Docker로 실행하고 Backend는 로컬에서 실행하려면 프로젝트 루트와 Backend에서 각각 다음 명령을 사용합니다.
+
+```bash
+# 프로젝트 루트
+docker compose up -d postgres
+
+# backend 디렉터리
+cp .env.example .env
+set -a
+source .env
+set +a
+./gradlew bootRun
+```
+
+Frontend 검증:
+
+```bash
 npm run lint
 npm run build
+```
+
+### 같은 네트워크에서 공유
+
+1. 호스트 PC에서 위 방식으로 PostgreSQL, Backend, Frontend를 실행합니다.
+2. `npm run dev` 출력의 `Network` 주소(예: `http://192.168.0.15:5173`)를 팀원에게 공유합니다.
+3. 호스트 PC의 `backend/.env`에서 `APP_CORS_ALLOWED_ORIGINS`에 해당 Network 주소를 추가한 후 Backend를 다시 실행합니다.
+
+```dotenv
+APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.0.15:5173
+```
+
+Frontend `.env`의 `VITE_API_BASE_URL`은 `/api/v1`로 유지합니다. 팀원 브라우저가 `localhost:8080`을 직접 호출하지 않고, 공유받은 Vite 서버가 REST와 WebSocket 요청을 Backend로 프록시합니다.
+
+Backend가 다른 장비나 Port에서 실행되는 경우에만 Frontend `.env`의 프록시 대상을 변경합니다.
+
+```dotenv
+BACKEND_HTTP_ORIGIN=http://192.168.0.20:8080
+BACKEND_WS_ORIGIN=ws://192.168.0.20:8080
 ```
 
 전체 서비스는 프로젝트 루트에서 실행합니다.
@@ -105,14 +148,16 @@ import Button from "@/components/ui/Button.vue"
 
 ## API 통신 규약
 
-Backend를 별도로 실행하는 로컬 개발에서는 `.env.example`을 복사해 `VITE_API_BASE_URL`을 설정합니다. Demo REST Base URL에는 `/api/v1`을 포함합니다. 루트 Docker Compose로 실행할 때는 기본값 `/api/v1`을 사용하므로 별도 `.env`가 필요하지 않습니다.
+Backend를 별도로 실행하는 로컬 개발에서는 `.env.example`을 복사합니다. Demo REST Base URL에는 `/api/v1`을 포함합니다. 루트 Docker Compose로 실행할 때는 기본값 `/api/v1`을 사용하므로 별도 `.env`가 필요하지 않습니다.
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 ```dotenv
-VITE_API_BASE_URL=http://localhost:8080/api/v1
+VITE_API_BASE_URL=/api/v1
+BACKEND_HTTP_ORIGIN=http://localhost:8080
+BACKEND_WS_ORIGIN=ws://localhost:8080
 ```
 
 공통 규약:
