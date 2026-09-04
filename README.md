@@ -10,12 +10,12 @@ SKALA Full-Stack Engineering 과정의 6조 AI-Ready 웹 서비스 설계 프로
 
 이 문서에서는 기능의 범위와 현재 구현 여부를 다음 상태로 구분합니다.
 
-| 상태 | 의미 |
-| --- | --- |
-| `현재 구현` | 현재 Repository에 실행 가능한 코드나 설정이 존재함 |
-| `Demo 개발 대상` | 이번 Local Live Demo에서 구현할 기능이며, 완료 여부는 아래 체크리스트와 GitHub Project에서 확인함 |
-| `Frontend만 개발` | 화면과 로컬 Mock 데이터만 구현하며 Backend·Database에는 연결하지 않음 |
-| `설계 완료·추후 개발` | 화면·ERD·API·권한 등 계약만 설계되었고 이번 Demo에서는 코드로 구현하지 않음 |
+| 상태                  | 의미                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------- |
+| `현재 구현`           | 현재 Repository에 실행 가능한 코드나 설정이 존재함                                                |
+| `Demo 개발 대상`      | 이번 Local Live Demo에서 구현할 기능이며, 완료 여부는 아래 체크리스트와 GitHub Project에서 확인함 |
+| `Frontend만 개발`     | 화면과 로컬 Mock 데이터만 구현하며 Backend·Database에는 연결하지 않음                             |
+| `설계 완료·추후 개발` | 화면·ERD·API·권한 등 계약만 설계되었고 이번 Demo에서는 코드로 구현하지 않음                       |
 
 Notion에 기능이 작성되어 있거나 관련 Issue가 닫혀 있어도 실제 코드가 존재한다는 뜻은 아닙니다. GitHub Issue의 `Completed`와 `Not planned`도 구분하며, 실제 구현 완료 여부는 Repository 코드와 검증 결과를 기준으로 판단합니다.
 
@@ -49,115 +49,30 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 
 다음 기능은 전체 서비스 설계에는 포함되지만 이번 Demo에서는 구현하지 않습니다.
 
-| 순서 | 기능 | 이번 Demo 처리 |
-| --- | --- | --- |
-| Future 1 | 회원가입·로그인·로그아웃·회원탈퇴, JWT 인증, 마이페이지 | Demo 사용자 식별값으로 대체 |
-| Future 2 | 재판 중 AI 추가 질문과 지정 당사자 답변 | 상태·화면·API·STOMP·AI 계약만 설계 |
-| Future 3 | 재판 등록 당사자의 강제 종료 | 종료 Event·권한·삭제 정책만 설계 |
-| Future 4 | 비공개 재판 | 선택 UI를 제공하되 추후 개발로 안내 |
-| Future 5 | 서로 다른 A측·B측 사용자의 독립 Form 참여 | Demo에서는 한 사용자가 A측 후 B측을 순차 작성 |
+## 로컬 실행 (권장)
 
-추가로 일반 커뮤니티 Backend와 Database 처리, 게시글·댓글·답글·좋아요·신고 권한, 실제 Amazon Bedrock 연동도 설계 또는 확장 지점만 유지하고 이번 Demo에서는 구현하지 않습니다.
+권장 실행 방식 — Docker Compose(통합 실행)
 
-## 프로젝트 자료
+사전 준비: Docker와 Docker Compose 설치
 
-- [팀 Notion](https://confused-dietician-c17.notion.site/mini-Project-6-3cd7caa087bd808caf1bc28791f745e2?pvs=73)
-- [GitHub Repository](https://github.com/skala-msa-team/web-mini)
-- [GitHub Project](https://github.com/orgs/skala-msa-team/projects/3/views/1)
-- [Google Stitch](https://stitch.withgoogle.com/projects/416001617538729018)
-- [Figma](https://www.figma.com/design/kcaV9To7uU5HQHXDcbssGL/Untitled?node-id=0-1&t=pc3itD8mLpulTZE0-1)
-
-기획, Actor 중심 Use Case, 화면 흐름, 기술 결정, ERD, API 및 AI JSON 계약은 Notion에서 관리합니다. 담당자, Priority, Iteration과 상태는 GitHub Project에서 관리합니다.
-
-### 확정 설계 문서
-
-- [사용자 흐름](https://confused-dietician-c17.notion.site/3cf7caa087bd8148b2d1f56e4245e0e3?pvs=25)
-- [기능 명세서](https://confused-dietician-c17.notion.site/3cf7caa087bd8061a61dfae752a62ddc?pvs=25)
-- [Demo ERD](https://confused-dietician-c17.notion.site/Demo-ERD-3d07caa087bd81918fb3d21eef3f9066?pvs=25)
-- [Demo API 명세서](https://confused-dietician-c17.notion.site/Demo-API-3d07caa087bd8171aaa1fa90ba18db5f?pvs=25)
-- [시스템 아키텍처](https://confused-dietician-c17.notion.site/8e27caa087bd83fba11a811959a760af?pvs=25)
-- [실시간 AI 재판 구현 방식](https://confused-dietician-c17.notion.site/p/3d07caa087bd8001a677ff2486dd8c6c?pvs=25)
-
-## 현재 확정된 방향
-
-| 영역 | 방향 |
-| --- | --- |
-| Frontend | Vue 3, Vite, JavaScript, Tailwind CSS 4, shadcn-vue, Vue Router, STOMP Client; HTTP Client 미정 |
-| Backend | Java 21, Spring Boot, Gradle, Web, Validation, WebSocket |
-| Realtime | WebSocket, STOMP |
-| Database | PostgreSQL 17, Flyway, Spring Data JPA |
-| AI | Mock AI 우선, 추후 Amazon Bedrock 연동 |
-| Design | Justice & Empathy 디자인 시스템, Google Stitch, Figma |
-| Lint | ESLint, Checkstyle |
-
-REST API, STOMP Destination, Database Schema, Demo 사용자 식별 방식과 AI 입출력 JSON 계약은 위 Notion 문서에서 확정되었습니다. 상태 관리·HTTP Client 등 확정되지 않은 Library는 도입하지 않습니다.
-
-## 핵심 아키텍처 원칙
-
-- Frontend는 Backend의 REST API와 WebSocket·STOMP만 사용하며 AI Provider와 Database를 직접 호출하지 않습니다.
-- Backend가 재판 상태와 단계 시간을 관리하고 Frontend는 `phaseEndsAt`을 기준으로 남은 시간을 표시합니다.
-- 재판 Event와 채팅은 Database Transaction Commit 이후 STOMP로 전송합니다.
-- 최초 입장과 재연결 시 Topic을 먼저 구독한 뒤 Snapshot과 Sequence 이후 이력을 조회해 누락과 중복을 방지합니다.
-- `AiClient` 계약을 유지한 채 Demo의 Mock AI를 향후 Amazon Bedrock Adapter로 교체합니다.
-- 관전자 채팅과 투표는 AI 판결 입력에 포함하지 않고 결과 화면에서도 AI 판결과 대중 투표를 분리합니다.
-
-Demo 재판 상태는 다음 순서를 사용합니다.
-
-```text
-PREPARING → INTRODUCTION → A_ARGUMENT → B_ARGUMENT → VOTING → VERDICT → ENDED
-```
-
-## 저장소 구조
-
-```text
-.
-├── frontend/
-│   ├── .env.example    # Frontend 환경변수 예시
-│   ├── AGENTS.md       # Frontend 작업 규칙
-│   ├── components.json # shadcn-vue CLI 설정
-│   ├── src/app/        # App 진입점과 Router
-│   ├── src/assets/     # 디자인 토큰과 공통 Style
-│   ├── src/components/ # shadcn 기본 UI와 도메인 조합 UI
-│   ├── src/apis/       # API별 순수 요청 함수
-│   ├── src/lib/        # Axios/HTTP/STOMP 등 외부 의존 로직
-│   ├── src/utils/      # 공용 순수 함수
-│   ├── src/consts/     # 도메인 상수와 매직넘버
-│   ├── src/mock/       # 도메인별 Demo 목 데이터
-│   ├── src/stores/     # 화면 상태
-│   ├── src/pages/      # 라우트 화면
-│   └── ...             # Vue 3 + Vite 프로젝트
-├── backend/
-│   ├── .env.example    # Backend 환경변수 예시
-│   ├── AGENTS.md       # Backend 작업 규칙
-│   ├── Dockerfile      # Spring Boot 이미지 빌드
-│   ├── compose.yaml    # PostgreSQL 단독 실행용
-│   └── ...             # Spring Boot 최소 프로젝트
-├── compose.yaml       # PostgreSQL·Backend·Frontend 통합 실행
-├── docs/
-│   ├── AGENTS.md       # 설계 문서 작업 규칙
-│   ├── README.md       # docs 책임과 자산 안내
-│   └── assets/         # Notion에서 사용하는 정적 자산
-├── .github/            # Issue 및 PR 템플릿
-├── .vscode/            # 팀 공통 VS Code 설정
-└── AGENTS.md           # 저장소 공통 작업 규칙
-```
-
-## 로컬 실행
-
-사전 준비:
-
-- Node.js `^20.19.0 || ^22.13.0 || >=24`
-- npm
-- Java 21
-- Docker와 Docker Compose
-
-전체 서비스 Docker 실행:
+루트 Compose로 Frontend(Nginx), Backend(Spring Boot), PostgreSQL을 한 번에 빌드·실행합니다. 이 방식은 팀 공유(같은 LAN) 시 가장 간단하고 안정적입니다.
 
 ```bash
 docker compose up -d --build
 ```
 
-실행 후 Frontend는 `http://localhost:8081`에서 접속합니다. 루트 Compose는 PostgreSQL, Spring Boot Backend, Nginx로 제공되는 Frontend를 함께 실행하며 `/api`와 `/ws`를 Backend로 프록시합니다.
+접속: Frontend가 호스트의 `8081`로 매핑되어 있으므로 팀원들은 `http://<HOST_LAN_IP>:8081`로 접속하면 됩니다.
+
+간단 확인(호스트 LAN IP 확인, macOS 예시):
+
+```bash
+ipconfig getifaddr en0
+```
+
+주의사항:
+
+- 백엔드의 CORS 설정(`APP_CORS_ALLOWED_ORIGINS`)이 기본값으로 localhost만 허용되어 있을 수 있습니다. LAN에서 접속할 경우 필요한 origin(예: `http://<HOST_LAN_IP>:8081`)을 환경변수에 추가하세요.
+- 회사/학교 네트워크의 클라이언트 분리(guest isolation) 또는 방화벽 설정에 따라 같은 SSID에서도 접속이 차단될 수 있습니다.
 
 종료:
 
@@ -165,67 +80,26 @@ docker compose up -d --build
 docker compose down
 ```
 
-Frontend 개별 개발 실행:
-
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-디자인 토큰과 shadcn-vue 컴포넌트 추가 방법은 [`frontend/README.md`](frontend/README.md)의 `디자인 시스템과 shadcn-vue` 항목을 따릅니다. shadcn-vue 초기화는 완료되어 있으므로 `init`을 다시 실행하지 않습니다.
-
-Backend와 PostgreSQL 개별 개발 실행:
-
-```bash
-cd backend
-cp .env.example .env
-docker compose up -d
-set -a
-source .env
-set +a
-./gradlew bootRun
-```
-
-루트 `compose.yaml`은 세 서비스를 함께 실행하고, `backend/compose.yaml`은 PostgreSQL만 실행합니다. 최초 실행 시 Flyway가 확정 Demo Schema를 자동으로 적용하고, PostgreSQL 데이터는 Compose Volume에 유지됩니다.
-
-PostgreSQL 상태와 종료 방법:
-
-```bash
-docker compose ps
-docker compose down
-```
-
-`docker compose down`은 Volume을 보존합니다. Database를 완전히 초기화할 때만 `docker compose down -v`를 사용하며, 이 명령은 로컬 PostgreSQL 데이터를 삭제합니다.
-
-개별 개발에서 호스트의 5432 Port를 다른 PostgreSQL이 사용 중이면 `.env`에서 `DB_PORT`와 `DB_URL`을 같은 Port로 변경합니다. 루트 Compose를 사용할 때는 Compose가 Backend 컨테이너에 주입하는 `DB_URL`을 호스트 주소로 바꾸지 않습니다.
-
-```dotenv
-DB_PORT=5433
-DB_URL=jdbc:postgresql://localhost:5433/webmini
-```
-
 현재 환경변수:
 
-| 영역 | 변수 | 예시 | 용도 |
-| --- | --- | --- | --- |
-| Frontend | `VITE_API_BASE_URL` | `/api/v1` 또는 `http://localhost:8080/api/v1` | Docker 통합 실행 또는 Backend 개별 실행용 REST Base URL |
-| Backend | `SERVER_PORT` | `8080` | Spring Boot 실행 Port |
-| Backend | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:8081` | REST API와 STOMP Endpoint 허용 Origin |
-| Backend | `APP_DEMO_USER_HEADER_NAME` | `X-Demo-User-Id` | Demo 사용자 식별 Header 이름 |
-| Backend | `APP_WEBSOCKET_ENDPOINT` | `/ws` | STOMP Handshake Endpoint |
-| Backend | `APP_WEBSOCKET_HEARTBEAT` | `10000,10000` | STOMP Heartbeat 송수신 간격 |
-| Backend | `APP_WEBSOCKET_MESSAGE_SIZE_LIMIT` | `65536` | 수신 메시지 최대 크기 |
-| Backend | `APP_WEBSOCKET_SEND_BUFFER_SIZE_LIMIT` | `131072` | 송신 버퍼 최대 크기 |
-| Backend | `APP_WEBSOCKET_SEND_TIME_LIMIT` | `20000` | 송신 시간 제한 |
-| Backend | `APP_AI_PROVIDER` | `mock` | 현재 AI Adapter 선택 |
-| Backend | `APP_AI_PROMPT_VERSION` | `judge-v1` | AI 요청 Prompt Version |
-| Backend | `DB_NAME` | `webmini` | Docker PostgreSQL Database 이름 |
-| Backend | `DB_PORT` | `5432` | Docker PostgreSQL 호스트 Port |
-| Backend | `DB_URL` | `jdbc:postgresql://localhost:5432/webmini` | Backend Database JDBC URL |
-| Backend | `DB_USERNAME` | `webmini` | 로컬 개발 Database 사용자 |
-| Backend | `DB_PASSWORD` | `webmini` | 로컬 개발 Database 비밀번호 예시 |
+| 영역     | 변수                                   | 예시                                          | 용도                                                    |
+| -------- | -------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| Frontend | `VITE_API_BASE_URL`                    | `/api/v1` 또는 `http://localhost:8080/api/v1` | Docker 통합 실행 또는 Backend 개별 실행용 REST Base URL |
+| Backend  | `SERVER_PORT`                          | `8080`                                        | Spring Boot 실행 Port                                   |
+| Backend  | `APP_CORS_ALLOWED_ORIGINS`             | `http://localhost:5173,http://localhost:8081` | REST API와 STOMP Endpoint 허용 Origin                   |
+| Backend  | `APP_DEMO_USER_HEADER_NAME`            | `X-Demo-User-Id`                              | Demo 사용자 식별 Header 이름                            |
+| Backend  | `APP_WEBSOCKET_ENDPOINT`               | `/ws`                                         | STOMP Handshake Endpoint                                |
+| Backend  | `APP_WEBSOCKET_HEARTBEAT`              | `10000,10000`                                 | STOMP Heartbeat 송수신 간격                             |
+| Backend  | `APP_WEBSOCKET_MESSAGE_SIZE_LIMIT`     | `65536`                                       | 수신 메시지 최대 크기                                   |
+| Backend  | `APP_WEBSOCKET_SEND_BUFFER_SIZE_LIMIT` | `131072`                                      | 송신 버퍼 최대 크기                                     |
+| Backend  | `APP_WEBSOCKET_SEND_TIME_LIMIT`        | `20000`                                       | 송신 시간 제한                                          |
+| Backend  | `APP_AI_PROVIDER`                      | `mock`                                        | 현재 AI Adapter 선택                                    |
+| Backend  | `APP_AI_PROMPT_VERSION`                | `judge-v1`                                    | AI 요청 Prompt Version                                  |
+| Backend  | `DB_NAME`                              | `webmini`                                     | Docker PostgreSQL Database 이름                         |
+| Backend  | `DB_PORT`                              | `5432`                                        | Docker PostgreSQL 호스트 Port                           |
+| Backend  | `DB_URL`                               | `jdbc:postgresql://localhost:5432/webmini`    | Backend Database JDBC URL                               |
+| Backend  | `DB_USERNAME`                          | `webmini`                                     | 로컬 개발 Database 사용자                               |
+| Backend  | `DB_PASSWORD`                          | `webmini`                                     | 로컬 개발 Database 비밀번호 예시                        |
 
 실제 비밀값은 `.env` 또는 로컬 실행 환경에만 저장합니다. 새로운 환경변수가 확정되면 영역별 `.env.example`에는 변수명과 비밀값이 아닌 예시만 추가합니다. Spring Boot는 `.env` 파일을 자동으로 읽지 않으므로 Backend 값은 실행 환경변수로 전달합니다.
 
@@ -317,15 +191,15 @@ docs(docs): API 명세 갱신
 chore(common): 공통 개발환경 구성
 ```
 
-| type | 용도 |
-| --- | --- |
-| `feat` | 기능 추가 |
-| `fix` | 버그 수정 |
-| `refactor` | 기능 변경 없는 코드 개선 |
-| `docs` | 문서 작성 및 수정 |
-| `test` | 테스트 작성 및 수정 |
-| `style` | UI 스타일 또는 코드 Format |
-| `chore` | 설정과 개발환경 작업 |
+| type       | 용도                       |
+| ---------- | -------------------------- |
+| `feat`     | 기능 추가                  |
+| `fix`      | 버그 수정                  |
+| `refactor` | 기능 변경 없는 코드 개선   |
+| `docs`     | 문서 작성 및 수정          |
+| `test`     | 테스트 작성 및 수정        |
+| `style`    | UI 스타일 또는 코드 Format |
+| `chore`    | 설정과 개발환경 작업       |
 
 scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integration`, `common`을 사용합니다.
 
@@ -344,19 +218,19 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 
 ### 네이밍
 
-| 대상 | 규칙 | 예시 |
-| --- | --- | --- |
-| 디렉터리 | kebab-case | `task-result` |
-| Vue 컴포넌트 | PascalCase | `TaskResultCard.vue` |
-| JavaScript 함수·변수 | camelCase | `fetchTaskResult` |
-| Java Package | lowercase | `com.skala.team6.webmini` |
-| Java Class | PascalCase | `TaskService` |
-| Java 함수·변수 | camelCase | `createTask` |
-| 상수 | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT_MS` |
-| API Path | 소문자 kebab-case, 복수 명사 | `/api/task-results` |
-| JSON 필드 | camelCase | `createdAt` |
-| DB 테이블·컬럼 | snake_case | `task_results`, `created_at` |
-| 환경변수 | UPPER_SNAKE_CASE | `DB_PASSWORD` |
+| 대상                 | 규칙                         | 예시                         |
+| -------------------- | ---------------------------- | ---------------------------- |
+| 디렉터리             | kebab-case                   | `task-result`                |
+| Vue 컴포넌트         | PascalCase                   | `TaskResultCard.vue`         |
+| JavaScript 함수·변수 | camelCase                    | `fetchTaskResult`            |
+| Java Package         | lowercase                    | `com.skala.team6.webmini`    |
+| Java Class           | PascalCase                   | `TaskService`                |
+| Java 함수·변수       | camelCase                    | `createTask`                 |
+| 상수                 | UPPER_SNAKE_CASE             | `DEFAULT_TIMEOUT_MS`         |
+| API Path             | 소문자 kebab-case, 복수 명사 | `/api/task-results`          |
+| JSON 필드            | camelCase                    | `createdAt`                  |
+| DB 테이블·컬럼       | snake_case                   | `task_results`, `created_at` |
+| 환경변수             | UPPER_SNAKE_CASE             | `DB_PASSWORD`                |
 
 ### 코드 작성
 
