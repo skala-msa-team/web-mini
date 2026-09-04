@@ -1,11 +1,12 @@
 <script setup>
-import { Scale } from '@lucide/vue'
+import { MessageCircle, Scale } from '@lucide/vue'
 
 defineProps({
   participants: {
     type: Array,
     required: true,
   },
+  activeSpeaker: { type: String, default: '' },
 })
 </script>
 
@@ -15,14 +16,29 @@ defineProps({
       v-for="participant in participants"
       :key="participant.id"
       class="participant"
-      :class="[`participant-${participant.position}`, `tone-${participant.tone}`]"
+    :class="[
+        `participant-${participant.position}`,
+        `tone-${participant.tone}`,
+        { 'participant--speaking': activeSpeaker === participant.speakerKey },
+      ]"
     >
+      <div v-if="activeSpeaker === participant.speakerKey" class="speaking-bubble" role="status">
+        <MessageCircle :size="15" /> 발언 중
+      </div>
       <div
         class="portrait"
         :class="`portrait-${participant.position}`"
         role="img"
         :aria-label="participant.name"
-      ></div>
+      >
+        <img
+          v-if="participant.avatarUrl"
+          class="portrait-image"
+          :src="participant.avatarUrl"
+          :alt="`${participant.name} 프로필`"
+        />
+        <span v-else>{{ participant.avatar }}</span>
+      </div>
       <div class="participant-label">
         <Scale v-if="participant.position === 'center'" :size="16" />
         <span>{{ participant.name }}</span>
@@ -66,24 +82,57 @@ defineProps({
   border: 4px solid white;
   border-radius: 50%;
   background-color: #cbdcf3;
-  background-image: url('/images/trial-portraits.png');
-  background-repeat: no-repeat;
-  background-size: 300% auto;
+  display: grid;
+  place-items: center;
+  font-size: 4.2rem;
+  line-height: 1;
   box-shadow: 0 12px 30px rgb(26 54 93 / 18%);
 }
 
+.portrait-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .portrait-left {
-  background-position: left center;
+  background: linear-gradient(145deg, #fff1cc, #f6c86d);
 }
 
 .portrait-center {
   width: 174px;
   border-color: var(--ds-color-primary);
-  background-position: center;
+  background: linear-gradient(145deg, #e7edff, #aebce8);
 }
 
 .portrait-right {
-  background-position: right center;
+  background: linear-gradient(145deg, #e2eaff, #9cb5ee);
+}
+
+.speaking-bubble {
+  position: absolute;
+  top: -8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--ds-color-primary);
+  color: white;
+  box-shadow: 0 8px 18px rgb(26 54 93 / 20%);
+  font-size: 0.9rem;
+  font-weight: 800;
+  animation: speaking-pulse 1.4s ease-in-out infinite;
+}
+
+.participant {
+  position: relative;
+}
+
+@keyframes speaking-pulse {
+  50% { transform: translateY(-3px); }
 }
 
 .participant-label {

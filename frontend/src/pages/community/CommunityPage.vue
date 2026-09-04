@@ -14,6 +14,7 @@ import { useCommunityStore } from "@/stores/communityStore.js";
 import {
   categoryTypes,
   relationshipTypes,
+  liveTrials as mockLiveTrials,
 } from "@/mock/community/communityData.js";
 import { COMMUNITY_LIVE_TRIAL_PAGE_SIZE, COMMUNITY_POST_PAGE_SIZE } from "@/consts/api.js";
 
@@ -26,20 +27,50 @@ const { state } = useCommunityStore();
 const liveTrials = ref([]);
 const liveTrialsLoading = ref(true);
 const liveTrialsError = ref("");
+const isMockLiveTrials = ref(false);
+
+function toDisplayTrial(trial) {
+  return {
+    id: trial.trialId,
+    title: trial.title,
+    statusLabel: TRIAL_STATUS_LABEL[trial.status] || "공개 재판 진행 중",
+    viewerCount: trial.viewerCount || trial.audienceCount || null,
+  }
+}
+
+function setMockLiveTrials(reason = "") {
+  liveTrials.value = mockLiveTrials.map((trial) => ({
+    id: trial.id,
+    title: trial.title,
+    statusLabel: "데모 라이브 재판",
+    isMock: true,
+    viewerCount: trial.viewerCount,
+  }));
+  isMockLiveTrials.value = true;
+  if (reason) liveTrialsError.value = reason
+}
 
 async function loadLiveTrials() {
   liveTrialsLoading.value = true;
   liveTrialsError.value = "";
+  isMockLiveTrials.value = false;
 
   try {
     const response = await getTrials({ page: 0, size: COMMUNITY_LIVE_TRIAL_PAGE_SIZE });
-    liveTrials.value = (response.items || []).map((trial) => ({
-      id: trial.trialId,
-      title: trial.title,
-      statusLabel: TRIAL_STATUS_LABEL[trial.status] || "공개 재판 진행 중",
-    }));
+    const realTrials = response.items || [];
+
+    if (realTrials.length) {
+      liveTrials.value = realTrials.map((trial) => ({
+        ...toDisplayTrial(trial),
+        isMock: false,
+      }));
+      liveTrialsError.value = "";
+      return;
+    }
+
+    setMockLiveTrials("현재 진행 중인 라이브 재판이 없어 데모 목록을 표시합니다.");
   } catch (error) {
-    liveTrialsError.value = error.message || "Live 재판 목록을 불러오지 못했습니다.";
+    setMockLiveTrials(error.message || "라이브 재판 목록을 불러오지 못해 데모 목록을 표시합니다.");
   } finally {
     liveTrialsLoading.value = false;
   }
@@ -130,7 +161,10 @@ function resetFilters() {
         </div>
         <div class="mt-4 grid gap-3 md:grid-cols-3">
           <p v-if="liveTrialsLoading" class="col-span-full rounded-xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">Live 재판을 불러오는 중입니다.</p>
-          <p v-else-if="liveTrialsError" class="col-span-full rounded-xl border border-red-200 bg-red-50 px-5 py-8 text-center text-sm text-red-700" role="alert">
+          <p v-else-if="liveTrialsError && !isMockLiveTrials" class="col-span-full rounded-xl border border-red-200 bg-red-50 px-5 py-8 text-center text-sm text-red-700" role="alert">
+            {{ liveTrialsError }}
+          </p>
+          <p v-else-if="liveTrialsError && isMockLiveTrials" class="col-span-full rounded-xl border border-border bg-card px-5 py-4 text-center text-xs text-muted-foreground">
             {{ liveTrialsError }}
           </p>
           <template v-else-if="liveTrials.length">
@@ -138,6 +172,7 @@ function resetFilters() {
               v-for="trial in liveTrials"
               :key="trial.id"
               :trial="trial"
+              :is-mock="trial.isMock"
             />
           </template>
           <p v-else class="col-span-full rounded-xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">현재 진행 중인 공개 재판이 없습니다.</p>

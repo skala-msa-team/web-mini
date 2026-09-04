@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.security.Principal;
 import java.util.Map;
-import java.util.UUID;
 
 @Component
 public class DemoUserChannelInterceptor implements ChannelInterceptor {
@@ -41,7 +40,7 @@ public class DemoUserChannelInterceptor implements ChannelInterceptor {
         }
 
         if (StompCommand.CONNECT.equals(command)) {
-            String demoUserId = requireValidDemoUserId(accessor.getFirstNativeHeader(demoUserProperties.headerName()));
+            String demoUserId = resolveDemoUserId(accessor);
             demoUserRegistry.getOrCreate(demoUserId);
             accessor.setUser(new DemoUserPrincipal(demoUserId));
             sessionAttributes(accessor).put(DEMO_USER_SESSION_KEY, demoUserId);
@@ -60,18 +59,26 @@ public class DemoUserChannelInterceptor implements ChannelInterceptor {
         return MessageBuilder.createMessage(message.getPayload(), accessor.getMessageHeaders());
     }
 
-    private String requireValidDemoUserId(String demoUserId) {
-        if (demoUserId == null || demoUserId.isBlank()) {
+    private String resolveDemoUserId(StompHeaderAccessor accessor) {
+        String demoUserId = accessor.getFirstNativeHeader(demoUserProperties.headerName());
+        if (isValidUuid(demoUserId)) {
+            return demoUserId;
+        }
+
+        String sessionId = accessor.getSessionId();
+        if (sessionId == null || sessionId.isBlank()) {
             throw new ApiException(ErrorCode.DEMO_USER_REQUIRED);
         }
 
-        try {
-            UUID.fromString(demoUserId);
-        } catch (IllegalArgumentException exception) {
-            throw new ApiException(ErrorCode.DEMO_USER_REQUIRED);
+        return "ws-" + sessionId;
+    }
+
+    private boolean isValidUuid(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
         }
 
-        return demoUserId;
+        return value.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}");
     }
 
     private Map<String, Object> sessionAttributes(StompHeaderAccessor accessor) {

@@ -5,9 +5,7 @@ import { createTrial } from '@/apis/postApi.js'
 import {
   confirmArgument,
   createArgumentDraft,
-  createGuideQuestions,
   getTrial,
-  saveGuideAnswers,
   saveStatement,
   startTrial as startTrialRequest,
   updateArgumentDraft,
@@ -177,57 +175,17 @@ async function prepareParty(statement) {
 
   try {
     await saveStatement(trialId.value, side, statement)
-    const response = await createGuideQuestions(trialId.value, side)
-    const guideQuestions = response?.questions ?? []
+    const draft = await createArgumentDraft(trialId.value, side)
 
     Object.assign(party, {
       statementSaved: true,
-      guideQuestions,
-      guideAnswers: [],
-      messages: [
-        ...party.messages,
-        {
-          id: `${side}-guide-${guideQuestions[0]?.questionId ?? 'complete'}`,
-          role: 'ASSISTANT',
-          content: guideQuestions[0]?.question ?? '추가 질문 없이 변론문을 생성할 수 있습니다.',
-        },
-      ],
-    })
-  } catch (error) {
-    party.error = error?.message || '진술을 저장하지 못했습니다.'
-  } finally {
-    party.pending = false
-  }
-}
-
-async function generatePartyDraft(guideAnswers) {
-  if (!trialId.value) return
-
-  const side = currentSide.value
-  const party = parties[side]
-  party.pending = true
-  party.error = ''
-
-  try {
-    if (guideAnswers.length) {
-      const savedAnswers = await saveGuideAnswers(trialId.value, side, {
-        answers: guideAnswers,
-      })
-
-      if (!savedAnswers.allAnswered) {
-        throw new Error('모든 AI 안내 질문에 답변한 뒤 변론문을 생성해주세요.')
-      }
-    }
-
-    const draft = await createArgumentDraft(trialId.value, side)
-    Object.assign(party, {
       draftGenerated: true,
       caseOverview: draft.factSummary,
-      keyPoints: guideAnswers.map((answer) => answer.answer),
+      keyPoints: Object.values(statement),
       argumentText: draft.argumentText,
     })
   } catch (error) {
-    party.error = error?.message || '변론문 초안을 생성하지 못했습니다.'
+    party.error = error?.message || '진술을 저장하지 못했습니다.'
   } finally {
     party.pending = false
   }
@@ -332,7 +290,6 @@ async function startTrial() {
           @update:party="updateParty"
           @back="goToStep(currentStep - 1)"
           @prepare="prepareParty"
-          @generate-draft="generatePartyDraft"
           @confirm="confirmParty"
         />
 
