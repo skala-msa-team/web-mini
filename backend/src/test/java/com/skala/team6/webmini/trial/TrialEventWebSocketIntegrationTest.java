@@ -135,18 +135,21 @@ class TrialEventWebSocketIntegrationTest {
             phaseService.advanceIfExpired(trial.getId(), current.getPhaseEndsAt());
         }
 
-        List<TrialEventMessage> receivedFirst = receiveEvents(firstEvents, 14);
-        List<TrialEventMessage> receivedSecond = receiveEvents(secondEvents, 14);
+        List<TrialEventMessage> receivedFirst = receiveEvents(firstEvents, 20);
+        List<TrialEventMessage> receivedSecond = receiveEvents(secondEvents, 20);
         receivedFirst.sort((left, right) -> Long.compare(left.sequence(), right.sequence()));
         receivedSecond.sort((left, right) -> Long.compare(left.sequence(), right.sequence()));
         assertThat(receivedSecond).isEqualTo(receivedFirst);
         assertThat(receivedFirst).extracting(TrialEventMessage::sequence)
-                .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L);
+                .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L,
+                        11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 20L);
         assertThat(receivedFirst).extracting(TrialEventMessage::type).containsExactly(
-                "TRIAL_STARTED", "JUDGE_INTRODUCTION", "A_ARGUMENT", "B_ARGUMENT",
-                "DEBATE_STARTED", "A_DEBATE", "B_DEBATE", "A_DEBATE", "B_DEBATE",
-                "A_DEBATE", "B_DEBATE", "VOTING_STARTED", "VERDICT_ANNOUNCED", "TRIAL_ENDED");
-        assertThat(eventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId())).hasSize(14);
+                "TRIAL_STARTED", "JUDGE_INTRODUCTION", "JUDGE_PHASE_NOTICE", "A_ARGUMENT",
+                "JUDGE_PHASE_NOTICE", "B_ARGUMENT", "JUDGE_PHASE_NOTICE", "DEBATE_STARTED",
+                "A_DEBATE", "B_DEBATE", "A_DEBATE", "B_DEBATE", "A_DEBATE", "B_DEBATE",
+                "JUDGE_PHASE_NOTICE", "VOTING_STARTED", "JUDGE_PHASE_NOTICE", "VERDICT_ANNOUNCED",
+                "JUDGE_PHASE_NOTICE", "TRIAL_ENDED");
+        assertThat(eventRepository.findByTrialIdOrderBySequenceNoAsc(trial.getId())).hasSize(20);
     }
 
     private void readyParty(TrialSide side, String argument) {

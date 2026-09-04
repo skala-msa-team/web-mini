@@ -15,6 +15,7 @@ function parsePayload(payload) {
 function inferSpeaker(type) {
   switch (type) {
     case TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION:
+    case TRIAL_EVENT_TYPE.JUDGE_PHASE_NOTICE:
     case TRIAL_EVENT_TYPE.VERDICT_ANNOUNCED:
     case TRIAL_EVENT_TYPE.VERDICT_PUBLISHED:
       return "JUDGE";
@@ -172,6 +173,7 @@ export function normalizeSpeakerKey(rawSpeaker = '') {
 
 const EVENT_LABEL = Object.freeze({
   [TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION]: "사건 소개",
+  [TRIAL_EVENT_TYPE.JUDGE_PHASE_NOTICE]: "진행 안내",
   [TRIAL_EVENT_TYPE.A_ARGUMENT]: "A측 발언",
   [TRIAL_EVENT_TYPE.B_ARGUMENT]: "B측 발언",
   [TRIAL_EVENT_TYPE.A_DEBATE]: "A측 반론",
@@ -196,6 +198,7 @@ export function toLawyerDebateEvents(events = []) {
 
 const TRIAL_CONVERSATION_EVENT_TYPES = new Set([
   TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION,
+  TRIAL_EVENT_TYPE.JUDGE_PHASE_NOTICE,
   TRIAL_EVENT_TYPE.A_ARGUMENT,
   TRIAL_EVENT_TYPE.B_ARGUMENT,
   TRIAL_EVENT_TYPE.A_DEBATE,

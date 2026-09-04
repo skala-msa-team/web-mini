@@ -121,18 +121,24 @@ class TrialProgressAcceptanceTest {
                 .containsExactly(
                         org.assertj.core.groups.Tuple.tuple(1L, "TRIAL_STARTED"),
                         org.assertj.core.groups.Tuple.tuple(2L, "JUDGE_INTRODUCTION"),
-                        org.assertj.core.groups.Tuple.tuple(3L, "A_ARGUMENT"),
-                        org.assertj.core.groups.Tuple.tuple(4L, "B_ARGUMENT"),
-                        org.assertj.core.groups.Tuple.tuple(5L, "DEBATE_STARTED"),
-                        org.assertj.core.groups.Tuple.tuple(6L, "A_DEBATE"),
-                        org.assertj.core.groups.Tuple.tuple(7L, "B_DEBATE"),
-                        org.assertj.core.groups.Tuple.tuple(8L, "A_DEBATE"),
-                        org.assertj.core.groups.Tuple.tuple(9L, "B_DEBATE"),
-                        org.assertj.core.groups.Tuple.tuple(10L, "A_DEBATE"),
-                        org.assertj.core.groups.Tuple.tuple(11L, "B_DEBATE"),
-                        org.assertj.core.groups.Tuple.tuple(12L, "VOTING_STARTED"),
-                        org.assertj.core.groups.Tuple.tuple(13L, "VERDICT_ANNOUNCED"),
-                        org.assertj.core.groups.Tuple.tuple(14L, "TRIAL_ENDED"));
+                        org.assertj.core.groups.Tuple.tuple(3L, "JUDGE_PHASE_NOTICE"),
+                        org.assertj.core.groups.Tuple.tuple(4L, "A_ARGUMENT"),
+                        org.assertj.core.groups.Tuple.tuple(5L, "JUDGE_PHASE_NOTICE"),
+                        org.assertj.core.groups.Tuple.tuple(6L, "B_ARGUMENT"),
+                        org.assertj.core.groups.Tuple.tuple(7L, "JUDGE_PHASE_NOTICE"),
+                        org.assertj.core.groups.Tuple.tuple(8L, "DEBATE_STARTED"),
+                        org.assertj.core.groups.Tuple.tuple(9L, "A_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(10L, "B_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(11L, "A_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(12L, "B_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(13L, "A_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(14L, "B_DEBATE"),
+                        org.assertj.core.groups.Tuple.tuple(15L, "JUDGE_PHASE_NOTICE"),
+                        org.assertj.core.groups.Tuple.tuple(16L, "VOTING_STARTED"),
+                        org.assertj.core.groups.Tuple.tuple(17L, "JUDGE_PHASE_NOTICE"),
+                        org.assertj.core.groups.Tuple.tuple(18L, "VERDICT_ANNOUNCED"),
+                        org.assertj.core.groups.Tuple.tuple(19L, "JUDGE_PHASE_NOTICE"),
+                        org.assertj.core.groups.Tuple.tuple(20L, "TRIAL_ENDED"));
         assertThat(events).filteredOn(event -> event.getEventType().endsWith("_DEBATE"))
                 .allSatisfy(event -> assertThat(event.getContent()).isNotBlank());
     }
