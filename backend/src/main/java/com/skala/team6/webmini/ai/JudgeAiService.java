@@ -53,10 +53,10 @@ public class JudgeAiService {
                 && response.aFaultRatio() >= 0 && response.aFaultRatio() <= 100
                 && response.bFaultRatio() >= 0 && response.bFaultRatio() <= 100
                 && response.aFaultRatio() + response.bFaultRatio() == 100
-                && hasText(response.summary())
+                && hasEnoughText(response.summary(), 30)
                 && response.grounds() != null
-                && !response.grounds().isEmpty()
-                && response.grounds().stream().allMatch(this::hasText)
+                && response.grounds().size() >= 3
+                && response.grounds().stream().allMatch(ground -> hasEnoughText(ground, 20))
                 && response.recommendations() != null
                 && hasText(response.recommendations().a())
                 && hasText(response.recommendations().b())
@@ -65,6 +65,10 @@ public class JudgeAiService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private boolean hasEnoughText(String value, int minimumLength) {
+        return hasText(value) && value.trim().length() >= minimumLength;
     }
 
     public record Verdict(TrialSide winnerSide, int aFaultRatio, int bFaultRatio,

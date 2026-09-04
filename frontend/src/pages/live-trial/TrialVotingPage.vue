@@ -37,6 +37,27 @@ const selectedChoice = ref(null)
 const votePending = ref(false)
 const voteError = ref('')
 const duplicateVote = ref(false)
+const votePresentation = computed(() => {
+  const detail = session.detail.value
+  const aDisplayName = detail?.aParty?.displayName || '박건우'
+  const bDisplayName = detail?.bParty?.displayName || '김지민'
+
+  return {
+    ...finalVoteMock,
+    title: detail?.title || finalVoteMock.title,
+    subtitle: `A측: ${aDisplayName} vs B측: ${bDisplayName}`,
+    choices: [
+      {
+        ...finalVoteMock.choices[0],
+        description: `${aDisplayName}의 주장이 옳다`,
+      },
+      {
+        ...finalVoteMock.choices[1],
+        description: `${bDisplayName}의 주장이 옳다`,
+      },
+    ],
+  }
+})
 const voteStatus = computed(() =>
   submittedVote.value
     ? VOTE_STATUS.SUBMITTED
@@ -134,13 +155,13 @@ async function submitVote() {
             </div>
             <div class="stream-caption">
               <span>FINAL VOTE · 사랑과 전쟁터</span>
-              <h1 id="stream-title">사건 #{{ finalVoteMock.caseNumber }}: {{ finalVoteMock.title }}</h1>
-              <p>{{ finalVoteMock.subtitle }}</p>
+              <h1 id="stream-title">사건 #{{ votePresentation.caseNumber }}: {{ votePresentation.title }}</h1>
+              <p>{{ votePresentation.subtitle }}</p>
             </div>
           </section>
 
           <FinalVerdictVote
-            :choices="finalVoteMock.choices"
+            :choices="votePresentation.choices"
             :remaining-time="formattedRemainingTime"
             :selected-choice="selectedChoice"
             :status="voteStatus"

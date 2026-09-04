@@ -54,9 +54,14 @@ public class MockAiClient implements AiClient {
         StatementPayload statement = request.statement();
         String answers = request.guideAnswers().stream()
                 .map(GuideAnswerItem::answer)
+                .filter(answer -> answer != null && !answer.isBlank())
+                .map(String::trim)
                 .collect(Collectors.joining(" "));
+        String basis = answers.isBlank()
+                ? "양측 진술에서 확인된 사실관계입니다."
+                : ensureSentence(answers);
         return new LawyerArgumentResponse(
-                "%s에 %s 상대측은 %s, %s은 %s 이후 %s"
+                "%s에 %s 상대측의 행동은 '%s'였습니다. 이에 대해 %s은 '%s'라고 설명했고, 사건 이후에는 '%s'라는 상황이 이어졌습니다."
                         .formatted(
                                 statement.incidentTime(),
                                 statement.situation(),
@@ -65,8 +70,8 @@ public class MockAiClient implements AiClient {
                                 statement.ownAction(),
                                 statement.afterConversation()
                         ),
-                "%s은 '%s'라는 해결을 요청합니다. 안내 답변에 따르면 %s"
-                        .formatted(sideLabel, statement.desiredResolution(), answers),
+                "%s은 '%s'라는 해결을 요청합니다. 핵심 근거는 %s"
+                        .formatted(sideLabel, statement.desiredResolution(), basis),
                 "1.0"
         );
     }
@@ -80,11 +85,15 @@ public class MockAiClient implements AiClient {
                 TrialSide.B,
                 60,
                 40,
-                "판결 요지",
-                List.of("연락 기준에 대한 사전 합의가 없었습니다."),
+                "주문: B측의 손을 들어주되, 양측 모두 관계 회복을 위한 소통 기준을 다시 합의할 것을 권고합니다. A측의 불안과 서운함은 인정되지만, 명확한 약속 없이 상대의 즉시 응답 의무를 단정하기는 어렵습니다.",
+                List.of(
+                        "첫째, 양측 사이에 연락 빈도와 답장 가능 시간에 대한 명시적인 합의가 없었으므로 B측의 모든 지연 답장을 곧바로 책임 있는 회피로 보기는 어렵습니다.",
+                        "둘째, A측은 서운함을 느낄 만한 사정이 있었으나 반복적인 확인과 감정적 표현으로 갈등을 확대시킨 일부 책임이 인정됩니다.",
+                        "셋째, B측 역시 답장이 어려운 상황을 사전에 설명하거나 이후 대화를 회복하려는 노력이 부족했으므로 관계 신뢰를 흔든 책임이 일부 있습니다."
+                ),
                 new RecommendationPair(
-                        "불안할 때 반복 연락 전 의사를 확인합니다.",
-                        "답장이 어려운 시간을 미리 공유합니다."
+                        "불안할 때 반복 연락하기보다 원하는 연락 기준과 기다릴 수 있는 시간을 먼저 구체적으로 말합니다.",
+                        "답장이 어려운 시간대와 이후 다시 연락할 시점을 미리 공유해 상대가 방치됐다고 느끼지 않게 합니다."
                 ),
                 "1.0",
                 request.promptVersion().isBlank()
@@ -95,5 +104,13 @@ public class MockAiClient implements AiClient {
 
     private String sideLabel(TrialSide side) {
         return side.name() + "측";
+    }
+
+    private String ensureSentence(String value) {
+        String trimmed = value.trim();
+        if (trimmed.endsWith(".") || trimmed.endsWith("!") || trimmed.endsWith("?")) {
+            return trimmed;
+        }
+        return trimmed + ".";
     }
 }
