@@ -23,12 +23,14 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-webmini}
       DB_USERNAME: ${DB_USERNAME:-webmini}
       DB_PASSWORD: ${DB_PASSWORD:-webmini}
-      APP_CORS_ALLOWED_ORIGINS: http://localhost:8081,http://127.0.0.1:8081
+      # Allow all origins for local LAN demo so team members can access via host LAN IP.
+      # For production or stricter local policies, restrict this value appropriately.
+      APP_CORS_ALLOWED_ORIGINS: "*"
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
 
   frontend:
     build:
