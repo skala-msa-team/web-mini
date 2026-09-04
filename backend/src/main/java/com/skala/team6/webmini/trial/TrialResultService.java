@@ -21,9 +21,9 @@ public class TrialResultService {
     private final ObjectMapper objectMapper;
 
     public TrialResultService(TrialRepository trialRepository,
-                              VerdictRepository verdictRepository,
-                              VoteRepository voteRepository,
-                              ObjectMapper objectMapper) {
+            VerdictRepository verdictRepository,
+            VoteRepository voteRepository,
+            ObjectMapper objectMapper) {
         this.trialRepository = trialRepository;
         this.verdictRepository = verdictRepository;
         this.voteRepository = voteRepository;
@@ -34,7 +34,7 @@ public class TrialResultService {
     public TrialResultResponse getResult(Long trialId) {
         var trial = trialRepository.findById(trialId)
                 .orElseThrow(() -> new ApiException(ErrorCode.TRIAL_NOT_FOUND));
-        if (trial.getStatus() != TrialStatus.ENDED) {
+        if (trial.getStatus() != TrialStatus.ENDED && trial.getStatus() != TrialStatus.VERDICT) {
             throw new ApiException(ErrorCode.RESULT_NOT_FOUND);
         }
         var verdict = verdictRepository.findByTrialId(trialId)

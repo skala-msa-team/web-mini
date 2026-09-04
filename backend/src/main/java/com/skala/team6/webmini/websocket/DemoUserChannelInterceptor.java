@@ -25,8 +25,7 @@ public class DemoUserChannelInterceptor implements ChannelInterceptor {
 
     public DemoUserChannelInterceptor(
             DemoUserProperties demoUserProperties,
-            DemoUserRegistry demoUserRegistry
-    ) {
+            DemoUserRegistry demoUserRegistry) {
         this.demoUserProperties = demoUserProperties;
         this.demoUserRegistry = demoUserRegistry;
     }
@@ -78,7 +77,8 @@ public class DemoUserChannelInterceptor implements ChannelInterceptor {
             return false;
         }
 
-        return value.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}");
+        return value
+                .matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}");
     }
 
     private Map<String, Object> sessionAttributes(StompHeaderAccessor accessor) {
