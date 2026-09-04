@@ -194,6 +194,37 @@ export function toLawyerDebateEvents(events = []) {
     }));
 }
 
+const TRIAL_CONVERSATION_EVENT_TYPES = new Set([
+  TRIAL_EVENT_TYPE.JUDGE_INTRODUCTION,
+  TRIAL_EVENT_TYPE.A_ARGUMENT,
+  TRIAL_EVENT_TYPE.B_ARGUMENT,
+  TRIAL_EVENT_TYPE.A_DEBATE,
+  TRIAL_EVENT_TYPE.B_DEBATE,
+]);
+
+export function toTrialConversationEvents(events = []) {
+  return events
+    .filter((event) => TRIAL_CONVERSATION_EVENT_TYPES.has(event.type))
+    .map((event) => {
+      const speakerKey = normalizeSpeakerKey(event.speaker || inferSpeaker(event.type));
+      const side = speakerKey === 'A_LAWYER'
+        ? 'A'
+        : speakerKey === 'B_LAWYER'
+          ? 'B'
+          : 'JUDGE';
+
+      return {
+        id: event.eventId ?? event.sequence,
+        sequence: event.sequence,
+        side,
+        speaker: SPEAKER_LABEL[speakerKey] || event.speaker || 'AI 재판',
+        label: EVENT_LABEL[event.type] || event.type,
+        content: event.content || '발언 내용을 불러오는 중입니다.',
+        occurredAt: event.occurredAt,
+      };
+    });
+}
+
 export function toTimelineEvents(events = []) {
   return events
     .filter((event) => SPEECH_EVENT_TYPES.has(event.type))

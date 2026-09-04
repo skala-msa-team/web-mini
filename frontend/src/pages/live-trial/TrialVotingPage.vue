@@ -170,21 +170,18 @@ async function submitVote() {
 
 <style scoped>
 .voting-page {
-  min-height: 100vh;
-  height: 100vh;
-  overflow: hidden;
+  min-height: calc(100dvh - 72px);
   background: var(--ds-color-page-background);
 }
 
 .voting-shell {
   width: min(calc(100% - 32px), var(--ds-container-max));
-  min-height: 100%;
+  min-height: calc(100dvh - 72px);
   margin: 0 auto;
   padding: 24px 0 34px;
   display: grid;
   grid-template-rows: auto auto auto 1fr;
   gap: 14px;
-  overflow: hidden;
 }
 
 .voting-layout {

@@ -7,19 +7,14 @@ import { TRIAL_STATUS } from '@/consts/trialStatus.js'
 import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
 import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
 import TrialChatPanel from '@/components/chat/TrialChatPanel.vue'
-import ArgumentTimeline from '@/components/trial/ArgumentTimeline.vue'
 import LawyerDebatePanel from '@/components/trial/LawyerDebatePanel.vue'
 import TrialConnectionStatus from '@/components/trial/TrialConnectionStatus.vue'
 import TrialStage from '@/components/trial/TrialStage.vue'
 import { liveTrialMock } from '@/mock/trial/liveTrialMock.js'
-import {
-  getTrialPhaseLabel,
-  getTrialWaitingMessage,
-} from '@/mock/trial/liveTrialPresentation.js'
+import { getTrialPhaseLabel } from '@/mock/trial/liveTrialPresentation.js'
 import {
   normalizeSpeakerKey,
-  toLawyerDebateEvents,
-  toTimelineEvents,
+  toTrialConversationEvents,
 } from '@/utils/trialEvent.js'
 
 const route = useRoute()
@@ -48,9 +43,7 @@ const activeSpeaker = computed(() => {
   return ''
 })
 const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value))
-const waitingMessage = computed(() => getTrialWaitingMessage(session.status.value))
-const timelineEvents = computed(() => toTimelineEvents(session.events.value))
-const lawyerDebateEvents = computed(() => toLawyerDebateEvents(session.events.value))
+const trialConversationEvents = computed(() => toTrialConversationEvents(session.events.value))
 const phaseEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt)
 const { formattedRemainingTime } = useTrialCountdown(phaseEndsAt)
 const trialEnded = computed(
@@ -139,15 +132,8 @@ watch(
         <div class="trial-main-column">
           <TrialStage :participants="trialParticipants" :active-speaker="activeSpeaker" />
           <LawyerDebatePanel
-            v-if="session.status.value === TRIAL_STATUS.DEBATE"
-            :events="lawyerDebateEvents"
+            :events="trialConversationEvents"
             :remaining-time="formattedRemainingTime"
-          />
-          <ArgumentTimeline
-            v-else
-            :phase="phaseLabel"
-            :events="timelineEvents"
-            :waiting-message="waitingMessage"
           />
 
         </div>
@@ -171,21 +157,18 @@ watch(
 
 <style scoped>
 .live-trial-page {
-  min-height: 100vh;
-  height: 100vh;
-  overflow: hidden;
+  min-height: calc(100dvh - 72px);
   background: var(--ds-color-page-background);
 }
 
 .page-shell {
   width: min(calc(100% - 32px), var(--ds-container-max));
-  min-height: 100%;
+  min-height: calc(100dvh - 72px);
   margin: 0 auto;
   padding: 18px 0 20px;
   display: grid;
   grid-template-rows: auto auto 1fr;
   gap: 14px;
-  overflow: hidden;
 }
 
 .trial-summary {
