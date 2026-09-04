@@ -171,14 +171,20 @@ async function submitVote() {
 <style scoped>
 .voting-page {
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--ds-color-page-background);
 }
 
 .voting-shell {
   width: min(calc(100% - 32px), var(--ds-container-max));
-  min-height: calc(100vh - 148px);
+  min-height: 100%;
   margin: 0 auto;
   padding: 24px 0 34px;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 14px;
+  overflow: hidden;
 }
 
 .voting-layout {
@@ -186,6 +192,11 @@ async function submitVote() {
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
   align-items: stretch;
   gap: 20px;
+  min-height: 0;
+}
+
+.voting-main {
+  min-height: 0;
 }
 
 .vote-request-error {

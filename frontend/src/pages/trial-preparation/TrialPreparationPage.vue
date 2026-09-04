@@ -2,7 +2,14 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createTrial } from '@/apis/postApi.js'
-import { confirmArgument, createArgumentDraft, getTrial, saveGuideAnswers, saveStatement, startTrial as startTrialRequest, updateArgumentDraft } from '@/apis/trialApi.js'
+import {
+  confirmArgument,
+  createArgumentDraft,
+  getTrial,
+  saveStatement,
+  startTrial as startTrialRequest,
+  updateArgumentDraft,
+} from '@/apis/trialApi.js'
 import PartyStatementStep from '@/components/trial/PartyStatementStep.vue'
 import TrialBasicInformation from '@/components/trial/TrialBasicInformation.vue'
 import TrialFinalConfirmation from '@/components/trial/TrialFinalConfirmation.vue'
@@ -172,56 +179,13 @@ async function prepareParty(statement) {
 
     Object.assign(party, {
       statementSaved: true,
-      guideQuestions: [],
-      guideAnswers: [],
       draftGenerated: true,
       caseOverview: draft.factSummary,
-      keyPoints: [],
+      keyPoints: Object.values(statement),
       argumentText: draft.argumentText,
-      messages: [
-        ...party.messages,
-        {
-          id: `${side}-draft-generated`,
-          role: 'ASSISTANT',
-          content: '기본 진술을 바탕으로 변론문 초안을 생성했습니다.',
-        },
-      ],
     })
   } catch (error) {
     party.error = error?.message || '진술을 저장하지 못했습니다.'
-  } finally {
-    party.pending = false
-  }
-}
-
-async function generatePartyDraft(guideAnswers) {
-  if (!trialId.value) return
-
-  const side = currentSide.value
-  const party = parties[side]
-  party.pending = true
-  party.error = ''
-
-  try {
-    if (guideAnswers.length) {
-      const savedAnswers = await saveGuideAnswers(trialId.value, side, {
-        answers: guideAnswers,
-      })
-
-      if (!savedAnswers.allAnswered) {
-        throw new Error('모든 AI 안내 질문에 답변한 뒤 변론문을 생성해주세요.')
-      }
-    }
-
-    const draft = await createArgumentDraft(trialId.value, side)
-    Object.assign(party, {
-      draftGenerated: true,
-      caseOverview: draft.factSummary,
-      keyPoints: guideAnswers.map((answer) => answer.answer),
-      argumentText: draft.argumentText,
-    })
-  } catch (error) {
-    party.error = error?.message || '변론문 초안을 생성하지 못했습니다.'
   } finally {
     party.pending = false
   }
@@ -326,7 +290,6 @@ async function startTrial() {
           @update:party="updateParty"
           @back="goToStep(currentStep - 1)"
           @prepare="prepareParty"
-          @generate-draft="generatePartyDraft"
           @confirm="confirmParty"
         />
 
