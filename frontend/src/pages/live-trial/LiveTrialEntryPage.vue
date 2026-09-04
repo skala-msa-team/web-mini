@@ -16,7 +16,11 @@ import {
   getTrialPhaseLabel,
   getTrialWaitingMessage,
 } from '@/mock/trial/liveTrialPresentation.js'
-import { toLawyerDebateEvents, toTimelineEvents } from '@/utils/trialEvent.js'
+import {
+  normalizeSpeakerKey,
+  toLawyerDebateEvents,
+  toTimelineEvents,
+} from '@/utils/trialEvent.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,13 +35,16 @@ const trialParticipants = computed(() => liveTrialMock.participants.map((partici
   if (participant.position === 'right' && session.detail.value?.bParty) {
     return { ...participant, name: `${session.detail.value.bParty.displayName} AI 변호사` }
   }
-    return { ...participant, speakerKey: participant.position === 'left' ? 'A_LAWYER' : participant.position === 'right' ? 'B_LAWYER' : 'JUDGE' }
+    return participant
 }))
 const activeSpeaker = computed(() => {
   if (session.status.value === TRIAL_STATUS.INTRODUCTION || session.status.value === TRIAL_STATUS.VERDICT) return 'JUDGE'
   if (session.status.value === TRIAL_STATUS.A_ARGUMENT) return 'A_LAWYER'
   if (session.status.value === TRIAL_STATUS.B_ARGUMENT) return 'B_LAWYER'
-  if (session.status.value === TRIAL_STATUS.DEBATE) return session.events.value.at(-1)?.speaker || ''
+  if (session.status.value === TRIAL_STATUS.DEBATE) {
+    const lastSpeaker = normalizeSpeakerKey(session.events.value.at(-1)?.speaker)
+    return lastSpeaker
+  }
   return ''
 })
 const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value))
@@ -165,13 +172,20 @@ watch(
 <style scoped>
 .live-trial-page {
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--ds-color-page-background);
 }
 
 .page-shell {
   width: min(calc(100% - 32px), var(--ds-container-max));
+  min-height: 100%;
   margin: 0 auto;
   padding: 18px 0 20px;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 14px;
+  overflow: hidden;
 }
 
 .trial-summary {
@@ -276,10 +290,10 @@ h1 {
 }
 
 .trial-layout {
-  margin-top: 14px;
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
   align-items: stretch;
+  min-height: 0;
 }
 
 .trial-main-column {

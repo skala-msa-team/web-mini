@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, Check, Share2 } from '@lucide/vue'
 import { getResults, getTrial } from '@/apis/trialApi.js'
+import { TRIAL_STATUS } from '@/consts/trialStatus.js'
 import FaultRatioCard from '@/components/verdict/FaultRatioCard.vue'
 import JudgmentGrounds from '@/components/verdict/JudgmentGrounds.vue'
 import VerdictComparison from '@/components/verdict/VerdictComparison.vue'
@@ -49,6 +50,47 @@ const juryResult = computed(() => {
       ? null
       : publicVote.aVotes > publicVote.bVotes ? 'A' : 'B',
   }
+})
+
+const dataConsistencyChecks = computed(() => {
+  if (!trialDetail.value) return []
+
+  const trialIdFromRoute = Number(route.params.trialId)
+  const checks = []
+  const detailTrialId = Number(trialDetail.value.trialId)
+  const resultTrialId = Number(trialResult.value?.trialId)
+  const detailIdValid = !Number.isNaN(detailTrialId)
+  const resultIdValid = !Number.isNaN(resultTrialId)
+
+  checks.push({
+    label: '라우트 경로의 사건 ID와 재판 상세 ID 일치',
+    state: Number.isNaN(detailTrialId) ? 'warn' : detailTrialId === trialIdFromRoute ? 'pass' : 'fail',
+    message: Number.isNaN(detailTrialId) ? '재판 상세 ID 정보가 비어있습니다.' : `재판 ID: ${detailTrialId}`,
+  })
+
+  checks.push({
+    label: '재판 상세 ID와 판결 결과 ID 일치',
+    state: !trialResult.value
+      ? 'warn'
+      : (detailIdValid && resultIdValid && detailTrialId === resultTrialId)
+      ? 'pass'
+      : resultIdValid
+        ? 'fail'
+        : 'warn',
+    message: !resultIdValid
+      ? '결과 데이터에 trialId가 없습니다.'
+      : `결과의 trialId: ${resultTrialId}`,
+  })
+
+  checks.push({
+    label: '재판 상태가 최종 판결/종료 상태',
+    state: [TRIAL_STATUS.VERDICT, TRIAL_STATUS.ENDED].includes(trialDetail.value.status)
+      ? 'pass'
+      : 'warn',
+    message: `현재 재판 상태: ${trialDetail.value.status || '알 수 없음'}`,
+  })
+
+  return checks
 })
 
 onMounted(async () => {
@@ -102,6 +144,16 @@ async function shareResult() {
       <p v-else-if="!aiResult" class="result-status" role="status">표시할 판결 결과가 없습니다.</p>
 
       <template v-else>
+        <section class="result-integrity" aria-label="재판 데이터 정합성 체크">
+          <h2>재판 데이터 정합성</h2>
+          <ul>
+            <li v-for="check in dataConsistencyChecks" :key="check.label" class="result-integrity-row" :class="`result-integrity-row--${check.state}`">
+              <span>{{ check.label }}</span>
+              <p>{{ check.message }}</p>
+            </li>
+          </ul>
+        </section>
+
         <div class="judgment-grid">
           <FaultRatioCard :ratio="aiResult" />
           <JudgmentGrounds :grounds="aiResult.grounds" :judgment="aiResult.judgment" />
@@ -242,6 +294,56 @@ async function shareResult() {
   border: 1px solid var(--ds-color-error);
   background: var(--ds-color-error-container);
   color: var(--ds-color-on-error-container);
+}
+
+.result-integrity {
+  margin-top: 28px;
+  padding: 18px;
+  border: 1px solid var(--ds-color-outline-variant);
+  border-radius: var(--ds-radius-md);
+  background: #f6f9fe;
+}
+
+.result-integrity h2 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.result-integrity-row {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: var(--ds-radius-sm);
+  background: white;
+}
+
+.result-integrity-row span {
+  width: 60%;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ds-color-on-surface-variant);
+}
+
+.result-integrity-row p {
+  margin: 0;
+  width: 40%;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.result-integrity-row--pass {
+  border-left: 4px solid #2d9f65;
+}
+
+.result-integrity-row--warn {
+  border-left: 4px solid #b58b2d;
+}
+
+.result-integrity-row--fail {
+  border-left: 4px solid var(--ds-color-error);
 }
 
 .share-button,

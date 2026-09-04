@@ -22,6 +22,25 @@ const draft = ref('')
 const messageList = ref(null)
 const formattedAudienceCount = computed(() => props.audienceCount.toLocaleString('ko-KR'))
 const displayedHeaderLabel = computed(() => props.headerLabel || `${formattedAudienceCount.value}명`)
+const tonePalette = ['sky', 'violet', 'coral', 'mint', 'amber', 'lavender']
+
+function stableToneSeed(value) {
+  if (!value) return 0
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return Math.abs(hash) % tonePalette.length
+}
+
+function visibleNickname(message) {
+  const nickname = message.sender?.nickname || message.nickname
+  if (nickname && nickname !== 'Demo 사용자') return nickname
+  const demoUserId = message.sender?.demoUserId
+  if (!demoUserId) return '관전자'
+  return `관전자-${demoUserId.slice(-4).toUpperCase()}`
+}
 
 watch(
   () => props.messages,
@@ -48,7 +67,7 @@ function messageKey(message) {
 }
 
 function messageNickname(message) {
-  return message.sender?.nickname || message.nickname || '관전자'
+  return visibleNickname(message)
 }
 
 function messageAvatar(message) {
@@ -60,7 +79,8 @@ function messageContent(message) {
 }
 
 function messageTone(message) {
-  return message.tone || 'sky'
+  if (message.tone) return message.tone
+  return tonePalette[stableToneSeed(message.sender?.demoUserId || message.nickname || '')]
 }
 
 function isOwnMessage(message) {
@@ -115,7 +135,7 @@ async function submitMessage() {
             <b>{{ messageNickname(message) }}</b>
             <span v-if="message.badge" class="message-badge">{{ message.badge }}</span>
           </small>
-          <p>{{ messageContent(message) }}</p>
+          <p class="message-content" :class="{ 'message-content--own': isOwnMessage(message) }">{{ messageContent(message) }}</p>
         </div>
       </article>
     </div>
@@ -143,7 +163,8 @@ async function submitMessage() {
 
 <style scoped>
 .chat-panel {
-  min-height: 100%;
+  min-height: 0;
+  height: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;
   border: 1px solid var(--ds-color-outline-variant);
@@ -189,8 +210,8 @@ header i {
 }
 
 .message-list {
-  min-height: 450px;
-  max-height: 750px;
+  min-height: 0;
+  max-height: none;
   padding: 20px 16px;
   overflow-y: auto;
 }
@@ -230,6 +251,13 @@ header i {
   border-radius: 10px 0 10px 10px;
   background: var(--ds-color-justice-blue);
   color: white;
+}
+
+.message-content--own {
+  border-radius: 10px 0 10px 10px;
+  background: #0f4c8a;
+  color: white;
+  box-shadow: 0 10px 24px rgb(15 65 125 / 24%);
   text-align: left;
 }
 
@@ -259,6 +287,21 @@ header i {
   color: #3a638c;
 }
 
+.avatar.tone-mint {
+  background: #d8f1ee;
+  color: #1f7460;
+}
+
+.avatar.tone-amber {
+  background: #ffe8c7;
+  color: #8a5525;
+}
+
+.avatar.tone-lavender {
+  background: #ede8ff;
+  color: #5a4aa8;
+}
+
 .avatar.tone-navy {
   background: var(--ds-color-primary);
   color: white;
@@ -269,6 +312,10 @@ header i {
   margin: 0 0 4px;
   color: #8c95a2;
   font-size: 0.82rem;
+}
+
+.message-item--own small {
+  text-align: right;
 }
 
 .message-item small b {

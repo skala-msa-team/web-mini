@@ -16,7 +16,7 @@ defineProps({
       v-for="participant in participants"
       :key="participant.id"
       class="participant"
-      :class="[
+    :class="[
         `participant-${participant.position}`,
         `tone-${participant.tone}`,
         { 'participant--speaking': activeSpeaker === participant.speakerKey },
@@ -30,7 +30,15 @@ defineProps({
         :class="`portrait-${participant.position}`"
         role="img"
         :aria-label="participant.name"
-      >{{ participant.avatar }}</div>
+      >
+        <img
+          v-if="participant.avatarUrl"
+          class="portrait-image"
+          :src="participant.avatarUrl"
+          :alt="`${participant.name} 프로필`"
+        />
+        <span v-else>{{ participant.avatar }}</span>
+      </div>
       <div class="participant-label">
         <Scale v-if="participant.position === 'center'" :size="16" />
         <span>{{ participant.name }}</span>
@@ -79,6 +87,13 @@ defineProps({
   font-size: 4.2rem;
   line-height: 1;
   box-shadow: 0 12px 30px rgb(26 54 93 / 18%);
+}
+
+.portrait-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .portrait-left {

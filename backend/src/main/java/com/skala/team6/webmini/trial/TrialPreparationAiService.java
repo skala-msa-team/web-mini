@@ -77,21 +77,20 @@ public class TrialPreparationAiService {
 
         List<AiGuideQuestionEntity> questions =
                 questionRepository.findByTrialPartyIdOrderBySequenceNoAsc(party.getId());
-        if (questions.isEmpty() || questions.stream().anyMatch(question -> !hasText(question.getAnswer()))) {
-            throw new ApiException(ErrorCode.GUIDE_ANSWERS_INCOMPLETE);
-        }
+        List<LawyerAiService.GuideAnswer> guideAnswers = questions.stream()
+                .filter(question -> hasText(question.getAnswer()))
+                .map(question -> new LawyerAiService.GuideAnswer(
+                        question.getSequenceNo(),
+                        question.getQuestion(),
+                        question.getAnswer()
+                ))
+                .toList();
 
         LawyerAiService.ArgumentDraft draft = lawyerAiService.createArgumentDraft(
                 trialId,
                 side,
                 toStatement(statement),
-                questions.stream()
-                        .map(question -> new LawyerAiService.GuideAnswer(
-                                question.getSequenceNo(),
-                                question.getQuestion(),
-                                question.getAnswer()
-                        ))
-                        .toList()
+                guideAnswers
         );
         statement.updateArgumentDraft(draft.factSummary(), draft.argumentText());
         return trialStatementRepository.save(statement);

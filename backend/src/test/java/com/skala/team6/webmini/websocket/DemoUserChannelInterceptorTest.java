@@ -1,7 +1,6 @@
 package com.skala.team6.webmini.websocket;
 
 import com.skala.team6.webmini.common.config.DemoUserProperties;
-import com.skala.team6.webmini.common.exception.ApiException;
 import com.skala.team6.webmini.demo.DemoUserRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
@@ -15,7 +14,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DemoUserChannelInterceptorTest {
 
@@ -45,14 +43,40 @@ class DemoUserChannelInterceptorTest {
     }
 
     @Test
-    void rejectsConnectWhenDemoUserHeaderMissing() {
+    void resolvesDemoUserIdFromSessionIdWhenHeaderMissing() {
         StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.CONNECT);
         accessor.setLeaveMutable(true);
         accessor.setSessionAttributes(new HashMap<>());
+        accessor.setSessionId("session-abc");
 
         Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
-        assertThrows(ApiException.class, () -> interceptor.preSend(message, null));
+        Message<?> intercepted = interceptor.preSend(message, null);
+        StompHeaderAccessor interceptedAccessor = MessageHeaderAccessor.getAccessor(intercepted, StompHeaderAccessor.class);
+
+        assertNotNull(interceptedAccessor.getUser());
+        assertEquals("ws-session-abc", interceptedAccessor.getUser().getName());
+        assertEquals(
+                "ws-session-abc",
+                interceptedAccessor.getSessionAttributes().get(DemoUserChannelInterceptor.DEMO_USER_SESSION_KEY)
+        );
+    }
+
+    @Test
+    void bindsPrincipalOnConnectWithInvalidDemoUserIdHeader() {
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.CONNECT);
+        accessor.setLeaveMutable(true);
+        accessor.setNativeHeader("X-Demo-User-Id", "invalid-uuid");
+        accessor.setSessionAttributes(new HashMap<>());
+        accessor.setSessionId("session-invalid");
+
+        Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+
+        Message<?> intercepted = interceptor.preSend(message, null);
+        StompHeaderAccessor interceptedAccessor = MessageHeaderAccessor.getAccessor(intercepted, StompHeaderAccessor.class);
+
+        assertNotNull(interceptedAccessor.getUser());
+        assertEquals("ws-session-invalid", interceptedAccessor.getUser().getName());
     }
 
     @Test
