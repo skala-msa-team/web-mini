@@ -1,89 +1,142 @@
 <script setup>
-import { computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Clock3, Eye, UsersRound } from '@lucide/vue'
-import { CONNECTION_STATUS } from '@/consts/liveTrialUiStatus.js'
-import { TRIAL_STATUS } from '@/consts/trialStatus.js'
-import { useLiveTrialSession } from '@/composables/useLiveTrialSession.js'
-import { useTrialCountdown } from '@/composables/useTrialCountdown.js'
-import TrialChatPanel from '@/components/chat/TrialChatPanel.vue'
-import LawyerDebatePanel from '@/components/trial/LawyerDebatePanel.vue'
-import TrialConnectionStatus from '@/components/trial/TrialConnectionStatus.vue'
-import TrialStage from '@/components/trial/TrialStage.vue'
-import { liveTrialMock } from '@/mock/trial/liveTrialMock.js'
-import { getTrialPhaseLabel } from '@/mock/trial/liveTrialPresentation.js'
+import { computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { Clock3, Eye, UsersRound } from "@lucide/vue";
+import { CONNECTION_STATUS } from "@/consts/liveTrialUiStatus.js";
+import { TRIAL_STATUS } from "@/consts/trialStatus.js";
+import { useLiveTrialSession } from "@/composables/useLiveTrialSession.js";
+import { useTrialCountdown } from "@/composables/useTrialCountdown.js";
+import TrialChatPanel from "@/components/chat/TrialChatPanel.vue";
+import LawyerDebatePanel from "@/components/trial/LawyerDebatePanel.vue";
+import TrialConnectionStatus from "@/components/trial/TrialConnectionStatus.vue";
+import TrialStage from "@/components/trial/TrialStage.vue";
+import { liveTrialMock } from "@/mock/trial/liveTrialMock.js";
+import { getTrialPhaseLabel } from "@/mock/trial/liveTrialPresentation.js";
 import {
   normalizeSpeakerKey,
   toTrialConversationEvents,
-} from '@/utils/trialEvent.js'
+} from "@/utils/trialEvent.js";
 
-const route = useRoute()
-const router = useRouter()
-const trialId = computed(() => route.params.trialId)
-const session = useLiveTrialSession(trialId)
+const route = useRoute();
+const router = useRouter();
+const trialId = computed(() => route.params.trialId);
+const session = useLiveTrialSession(trialId);
 
-const trialTitle = computed(() => session.detail.value?.title ?? '재판 정보를 불러오는 중입니다')
-const trialParticipants = computed(() => liveTrialMock.participants.map((participant) => {
-  if (participant.position === 'left' && session.detail.value?.aParty) {
-    return { ...participant, name: `${session.detail.value.aParty.displayName} AI 변호사` }
+const trialTitle = computed(
+  () => session.detail.value?.title ?? "재판 정보를 불러오는 중입니다",
+);
+const trialParticipants = computed(() =>
+  liveTrialMock.participants.map((participant) => {
+    if (participant.position === "left" && session.detail.value?.aParty) {
+      return {
+        ...participant,
+        name: `${session.detail.value.aParty.displayName} AI 변호사`,
+      };
+    }
+    if (participant.position === "right" && session.detail.value?.bParty) {
+      return {
+        ...participant,
+        name: `${session.detail.value.bParty.displayName} AI 변호사`,
+      };
+    }
+    return participant;
+  }),
+);
+const audienceCount = computed(() => {
+  // prefer snapshot or detail values when available
+  const snap = session.currentSnapshot.value;
+  const detailValue = session.detail.value;
+  if (snap && typeof snap.audienceCount === "number") return snap.audienceCount;
+  if (detailValue && typeof detailValue.audienceCount === "number")
+    return detailValue.audienceCount;
+  if (detailValue && detailValue.viewerCount)
+    return Number(String(detailValue.viewerCount).replace(/,/g, ""));
+
+  // fallback: count unique demo user keys from recovered messages
+  try {
+    const ids = new Set(
+      session.messages.value
+        .map((m) => m?.sender?.demoUserId || m?.sender?.demoKey)
+        .filter(Boolean),
+    );
+    const count = ids.size;
+    return count || liveTrialMock.audienceCount || 0;
+  } catch (e) {
+    return liveTrialMock.audienceCount || 0;
   }
-  if (participant.position === 'right' && session.detail.value?.bParty) {
-    return { ...participant, name: `${session.detail.value.bParty.displayName} AI 변호사` }
-  }
-    return participant
-}))
+});
 const activeSpeaker = computed(() => {
-  if (session.status.value === TRIAL_STATUS.INTRODUCTION || session.status.value === TRIAL_STATUS.VERDICT) return 'JUDGE'
-  if (session.status.value === TRIAL_STATUS.A_ARGUMENT) return 'A_LAWYER'
-  if (session.status.value === TRIAL_STATUS.B_ARGUMENT) return 'B_LAWYER'
+  if (
+    session.status.value === TRIAL_STATUS.INTRODUCTION ||
+    session.status.value === TRIAL_STATUS.VERDICT
+  )
+    return "JUDGE";
+  if (session.status.value === TRIAL_STATUS.A_ARGUMENT) return "A_LAWYER";
+  if (session.status.value === TRIAL_STATUS.B_ARGUMENT) return "B_LAWYER";
   if (session.status.value === TRIAL_STATUS.DEBATE) {
-    const lastSpeaker = normalizeSpeakerKey(session.events.value.at(-1)?.speaker)
-    return lastSpeaker
+    const lastSpeaker = normalizeSpeakerKey(
+      session.events.value.at(-1)?.speaker,
+    );
+    return lastSpeaker;
   }
-  return ''
-})
-const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value))
-const trialConversationEvents = computed(() => toTrialConversationEvents(session.events.value))
-const phaseEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt)
-const { formattedRemainingTime } = useTrialCountdown(phaseEndsAt)
+  return "";
+});
+const phaseLabel = computed(() => getTrialPhaseLabel(session.status.value));
+const trialConversationEvents = computed(() =>
+  toTrialConversationEvents(session.events.value),
+);
+const phaseEndsAt = computed(() => session.currentSnapshot.value?.phaseEndsAt);
+const { formattedRemainingTime } = useTrialCountdown(phaseEndsAt);
 const trialEnded = computed(
-  () => session.status.value === TRIAL_STATUS.ENDED || session.currentSnapshot.value?.ended,
-)
-const chatAllowed = computed(() => [
-  TRIAL_STATUS.INTRODUCTION,
-  TRIAL_STATUS.A_ARGUMENT,
-  TRIAL_STATUS.B_ARGUMENT,
-  TRIAL_STATUS.DEBATE,
-  TRIAL_STATUS.VOTING,
-  TRIAL_STATUS.VERDICT,
-].includes(session.status.value))
+  () =>
+    session.status.value === TRIAL_STATUS.ENDED ||
+    session.currentSnapshot.value?.ended,
+);
+const chatAllowed = computed(() =>
+  [
+    TRIAL_STATUS.INTRODUCTION,
+    TRIAL_STATUS.A_ARGUMENT,
+    TRIAL_STATUS.B_ARGUMENT,
+    TRIAL_STATUS.DEBATE,
+    TRIAL_STATUS.VOTING,
+    TRIAL_STATUS.VERDICT,
+  ].includes(session.status.value),
+);
 const interactionsDisabled = computed(
-  () => session.connection.value.status !== CONNECTION_STATUS.CONNECTED || !chatAllowed.value,
-)
+  () =>
+    session.connection.value.status !== CONNECTION_STATUS.CONNECTED ||
+    !chatAllowed.value,
+);
 const interactionDisabledMessage = computed(() => {
-  if (trialEnded.value) return '재판이 종료되었습니다.'
+  if (trialEnded.value) return "재판이 종료되었습니다.";
   if (session.connection.value.status !== CONNECTION_STATUS.CONNECTED) {
-    return '재판 연결을 복구한 뒤 다시 시도해 주세요.'
+    return "재판 연결을 복구한 뒤 다시 시도해 주세요.";
   }
-  return '현재 단계에서는 채팅을 사용할 수 없습니다.'
-})
+  return "현재 단계에서는 채팅을 사용할 수 없습니다.";
+});
 
 watch(
   [() => session.status.value, () => session.restoring.value],
   ([status, restoring]) => {
-    if (restoring) return
+    if (restoring) return;
 
     if (status === TRIAL_STATUS.ENDED) {
-      router.replace({ name: 'trial-result', params: { trialId: route.params.trialId } })
-      return
+      router.replace({
+        name: "trial-result",
+        params: { trialId: route.params.trialId },
+      });
+      return;
     }
 
     if (status === TRIAL_STATUS.VOTING) {
-      router.replace({ name: 'trial-voting', params: { trialId: route.params.trialId } })
+      router.replace({
+        name: "trial-voting",
+        params: { trialId: route.params.trialId },
+      });
     }
   },
   { immediate: true },
-)
+);
 </script>
 
 <template>
@@ -96,16 +149,21 @@ watch(
       />
 
       <p v-if="session.chatError.value" class="realtime-error" role="alert">
-        {{ session.chatError.value?.message || '실시간 요청을 처리하지 못했습니다.' }}
+        {{
+          session.chatError.value?.message ||
+          "실시간 요청을 처리하지 못했습니다."
+        }}
       </p>
 
       <section class="trial-summary" aria-labelledby="trial-title">
         <div class="summary-copy">
           <div class="summary-badges">
             <span class="live-badge" :class="{ ended: trialEnded }">
-              <i aria-hidden="true"></i>{{ trialEnded ? '종료' : '실시간' }}
+              <i aria-hidden="true"></i>{{ trialEnded ? "종료" : "실시간" }}
             </span>
-            <span class="view-badge"><Eye :size="14" />{{ liveTrialMock.viewCount }}</span>
+            <span class="view-badge"
+              ><Eye :size="14" />{{ liveTrialMock.viewCount }}</span
+            >
           </div>
           <h1 id="trial-title">“{{ trialTitle }}”</h1>
         </div>
@@ -122,7 +180,7 @@ watch(
             <UsersRound :size="21" />
             <span>
               <small>참여 배심원</small>
-              <strong>{{ liveTrialMock.audienceCount.toLocaleString('ko-KR') }}명</strong>
+              <strong>{{ audienceCount.toLocaleString("ko-KR") }}명</strong>
             </span>
           </div>
         </div>
@@ -130,19 +188,21 @@ watch(
 
       <div class="trial-layout">
         <div class="trial-main-column">
-          <TrialStage :participants="trialParticipants" :active-speaker="activeSpeaker" />
+          <TrialStage
+            :participants="trialParticipants"
+            :active-speaker="activeSpeaker"
+          />
           <LawyerDebatePanel
             :events="trialConversationEvents"
             :remaining-time="formattedRemainingTime"
           />
-
         </div>
 
         <div class="trial-chat-column">
           <TrialChatPanel
             :messages="session.messages.value"
             :current-user-id="session.demoUserId"
-            :audience-count="liveTrialMock.audienceCount"
+            :audience-count="audienceCount"
             :header-label="trialEnded ? '종료' : ''"
             :disabled="interactionsDisabled"
             :loading="session.chatRestoring.value"
@@ -153,7 +213,6 @@ watch(
         </div>
       </div>
     </main>
-
   </div>
 </template>
 

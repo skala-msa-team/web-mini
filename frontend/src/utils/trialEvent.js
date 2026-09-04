@@ -107,6 +107,15 @@ export function applyEventsToSnapshot(snapshot, events = []) {
   return events
     .filter((event) => (Number(event.sequence) || 0) > snapshotSequence)
     .reduce((current, event) => {
+      // propagate audienceCount/viewerCount from presence events
+      const audienceCountFromEvent =
+        event.payload?.audienceCount ?? event.payload?.viewerCount ?? null;
+      if (
+        audienceCountFromEvent !== null &&
+        audienceCountFromEvent !== undefined
+      ) {
+        current = { ...current, audienceCount: audienceCountFromEvent };
+      }
       const votingOpened =
         event.type === TRIAL_EVENT_TYPE.VOTING_OPENED ||
         event.type === TRIAL_EVENT_TYPE.VOTING_STARTED;
@@ -145,28 +154,28 @@ const SPEAKER_LABEL = Object.freeze({
 });
 
 const SPEAKER_KEY_BY_PREFIX = Object.freeze({
-  JUDGE: 'JUDGE',
-  A_LAWYER: 'A_LAWYER',
-  B_LAWYER: 'B_LAWYER',
-  SYSTEM: 'SYSTEM',
-  A: 'A_LAWYER',
-  B: 'B_LAWYER',
-  J: 'JUDGE',
+  JUDGE: "JUDGE",
+  A_LAWYER: "A_LAWYER",
+  B_LAWYER: "B_LAWYER",
+  SYSTEM: "SYSTEM",
+  A: "A_LAWYER",
+  B: "B_LAWYER",
+  J: "JUDGE",
 });
 
-export function normalizeSpeakerKey(rawSpeaker = '') {
-  if (!rawSpeaker) return '';
+export function normalizeSpeakerKey(rawSpeaker = "") {
+  if (!rawSpeaker) return "";
 
   const token = String(rawSpeaker).trim().toUpperCase();
-  if (!token) return '';
+  if (!token) return "";
   if (Object.prototype.hasOwnProperty.call(SPEAKER_KEY_BY_PREFIX, token)) {
     return SPEAKER_KEY_BY_PREFIX[token];
   }
 
-  if (token.includes('A_')) return 'A_LAWYER';
-  if (token.includes('B_')) return 'B_LAWYER';
-  if (token.includes('JUDGE')) return 'JUDGE';
-  if (token === 'SYSTEM') return 'SYSTEM';
+  if (token.includes("A_")) return "A_LAWYER";
+  if (token.includes("B_")) return "B_LAWYER";
+  if (token.includes("JUDGE")) return "JUDGE";
+  if (token === "SYSTEM") return "SYSTEM";
 
   return token;
 }
@@ -186,12 +195,19 @@ const SPEECH_EVENT_TYPES = new Set(Object.keys(EVENT_LABEL));
 
 export function toLawyerDebateEvents(events = []) {
   return events
-    .filter((event) => [TRIAL_EVENT_TYPE.A_DEBATE, TRIAL_EVENT_TYPE.B_DEBATE].includes(event.type))
+    .filter((event) =>
+      [TRIAL_EVENT_TYPE.A_DEBATE, TRIAL_EVENT_TYPE.B_DEBATE].includes(
+        event.type,
+      ),
+    )
     .map((event) => ({
       id: event.eventId ?? event.sequence,
-      side: event.type === TRIAL_EVENT_TYPE.A_DEBATE ? 'A' : 'B',
-      speaker: SPEAKER_LABEL[normalizeSpeakerKey(event.speaker)] || event.speaker || 'AI 변호사',
-      content: event.content || '변론 내용을 불러오는 중입니다.',
+      side: event.type === TRIAL_EVENT_TYPE.A_DEBATE ? "A" : "B",
+      speaker:
+        SPEAKER_LABEL[normalizeSpeakerKey(event.speaker)] ||
+        event.speaker ||
+        "AI 변호사",
+      content: event.content || "변론 내용을 불러오는 중입니다.",
       occurredAt: event.occurredAt,
     }));
 }
@@ -209,20 +225,23 @@ export function toTrialConversationEvents(events = []) {
   return events
     .filter((event) => TRIAL_CONVERSATION_EVENT_TYPES.has(event.type))
     .map((event) => {
-      const speakerKey = normalizeSpeakerKey(event.speaker || inferSpeaker(event.type));
-      const side = speakerKey === 'A_LAWYER'
-        ? 'A'
-        : speakerKey === 'B_LAWYER'
-          ? 'B'
-          : 'JUDGE';
+      const speakerKey = normalizeSpeakerKey(
+        event.speaker || inferSpeaker(event.type),
+      );
+      const side =
+        speakerKey === "A_LAWYER"
+          ? "A"
+          : speakerKey === "B_LAWYER"
+            ? "B"
+            : "JUDGE";
 
       return {
         id: event.eventId ?? event.sequence,
         sequence: event.sequence,
         side,
-        speaker: SPEAKER_LABEL[speakerKey] || event.speaker || 'AI 재판',
+        speaker: SPEAKER_LABEL[speakerKey] || event.speaker || "AI 재판",
         label: EVENT_LABEL[event.type] || event.type,
-        content: event.content || '발언 내용을 불러오는 중입니다.',
+        content: event.content || "발언 내용을 불러오는 중입니다.",
         occurredAt: event.occurredAt,
       };
     });
@@ -234,7 +253,10 @@ export function toTimelineEvents(events = []) {
     .map((event) => ({
       id: event.eventId ?? event.sequence,
       sequence: event.sequence,
-      speaker: SPEAKER_LABEL[normalizeSpeakerKey(event.speaker)] || event.speaker || "AI 재판",
+      speaker:
+        SPEAKER_LABEL[normalizeSpeakerKey(event.speaker)] ||
+        event.speaker ||
+        "AI 재판",
       label: EVENT_LABEL[event.type] || event.type,
       content:
         event.content ||

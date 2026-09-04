@@ -1,5 +1,5 @@
 <script setup>
-import { Globe2, Info, LockKeyhole } from '@lucide/vue'
+import { Globe2, Info, LockKeyhole } from "@lucide/vue";
 
 defineProps({
   modelValue: {
@@ -14,13 +14,16 @@ defineProps({
     type: Boolean,
     default: false,
   },
-})
+});
 
-defineEmits(['update:modelValue', 'next'])
+defineEmits(["update:modelValue", "next"]);
 </script>
 
 <template>
-  <form class="rounded-xl border border-border bg-card p-5 shadow-interactive sm:p-7" @submit.prevent="$emit('next')">
+  <form
+    class="rounded-xl border border-border bg-card p-5 shadow-interactive sm:p-7"
+    @submit.prevent="$emit('next')"
+  >
     <div class="grid gap-5">
       <label class="grid gap-2 text-sm font-medium">
         재판 제목
@@ -30,7 +33,12 @@ defineEmits(['update:modelValue', 'next'])
           maxlength="150"
           placeholder="재판 제목을 입력해주세요"
           readonly
-          @input="$emit('update:modelValue', { ...modelValue, title: $event.target.value })"
+          @input="
+            $emit('update:modelValue', {
+              ...modelValue,
+              title: $event.target.value,
+            })
+          "
         />
       </label>
 
@@ -40,10 +48,15 @@ defineEmits(['update:modelValue', 'next'])
           <input
             :value="modelValue.aDisplayName"
             class="rounded-lg border border-input bg-muted px-4 py-3 outline-none focus:ring-2 focus:ring-ring"
-          maxlength="50"
-          placeholder="A측 이름"
-          :readonly="locked"
-            @input="$emit('update:modelValue', { ...modelValue, aDisplayName: $event.target.value })"
+            maxlength="50"
+            placeholder="A측 이름"
+            :readonly="locked"
+            @input="
+              $emit('update:modelValue', {
+                ...modelValue,
+                aDisplayName: $event.target.value,
+              })
+            "
           />
         </label>
         <label class="grid gap-2 text-sm font-medium">
@@ -51,10 +64,15 @@ defineEmits(['update:modelValue', 'next'])
           <input
             :value="modelValue.bDisplayName"
             class="rounded-lg border border-input bg-muted px-4 py-3 outline-none focus:ring-2 focus:ring-ring"
-          maxlength="50"
-          placeholder="B측 이름"
-          :readonly="locked"
-            @input="$emit('update:modelValue', { ...modelValue, bDisplayName: $event.target.value })"
+            maxlength="50"
+            placeholder="B측 이름"
+            :readonly="locked"
+            @input="
+              $emit('update:modelValue', {
+                ...modelValue,
+                bDisplayName: $event.target.value,
+              })
+            "
           />
         </label>
       </div>
@@ -67,26 +85,44 @@ defineEmits(['update:modelValue', 'next'])
           maxlength="1000"
           placeholder="두 사람 사이에 있었던 갈등을 설명해주세요"
           readonly
-          @input="$emit('update:modelValue', { ...modelValue, summary: $event.target.value })"
+          @input="
+            $emit('update:modelValue', {
+              ...modelValue,
+              summary: $event.target.value,
+            })
+          "
         />
       </label>
 
       <fieldset class="grid gap-2">
         <legend class="mb-2 text-sm font-medium">공개 여부</legend>
         <div class="grid gap-3 sm:grid-cols-2">
-          <label class="flex cursor-pointer items-center gap-3 rounded-lg border-2 border-primary bg-primary/5 p-4 text-primary">
+          <label
+            class="flex cursor-pointer items-center gap-3 rounded-lg border-2 border-primary bg-primary/5 p-4 text-primary"
+          >
             <input class="sr-only" type="radio" checked />
             <Globe2 class="size-5" />
-            <span><strong class="block">공개 재판</strong><small>누구나 관전할 수 있어요.</small></span>
+            <span
+              ><strong class="block">공개 재판</strong
+              ><small>누구나 관전할 수 있어요.</small></span
+            >
           </label>
-          <div class="flex items-center gap-3 rounded-lg border border-border bg-muted p-4 text-muted-foreground" aria-disabled="true">
+          <div
+            class="flex items-center gap-3 rounded-lg border border-border bg-muted p-4 text-muted-foreground"
+            aria-disabled="true"
+          >
             <LockKeyhole class="size-5" />
-            <span><strong class="block">비공개 재판</strong><small>추후 지원 예정입니다.</small></span>
+            <span
+              ><strong class="block">비공개 재판</strong
+              ><small>추후 지원 예정입니다.</small></span
+            >
           </div>
         </div>
       </fieldset>
 
-      <div class="flex gap-3 rounded-lg bg-[var(--ds-color-primary-fixed)] p-4 text-sm text-[var(--ds-color-on-primary-fixed-variant)]">
+      <div
+        class="flex gap-3 rounded-lg bg-[var(--ds-color-primary-fixed)] p-4 text-sm text-[var(--ds-color-on-primary-fixed-variant)]"
+      >
         <Info class="mt-0.5 size-5 shrink-0 text-primary" />
         양측의 진술 확인이 끝나면 공개 Live 재판이 즉시 시작됩니다.
       </div>
@@ -94,10 +130,16 @@ defineEmits(['update:modelValue', 'next'])
 
     <button
       class="mt-8 w-full rounded-lg bg-[var(--ds-color-primary)] px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-      :disabled="pending || !modelValue.title.trim() || !modelValue.aDisplayName.trim() || !modelValue.bDisplayName.trim() || !modelValue.summary.trim()"
+      :disabled="
+        pending ||
+        !modelValue.title.trim() ||
+        !modelValue.aDisplayName.trim() ||
+        !modelValue.bDisplayName.trim() ||
+        !modelValue.summary.trim()
+      "
       type="submit"
     >
-      {{ pending ? '재판을 생성하는 중...' : '다음: A측 진술 →' }}
+      {{ pending ? "재판을 생성하는 중..." : "다음: A측 진술 →" }}
     </button>
   </form>
 </template>
