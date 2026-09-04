@@ -125,7 +125,7 @@ async function submitVote() {
       <div class="voting-layout">
         <div class="voting-main">
           <section class="courtroom-stream" aria-labelledby="stream-title">
-            <img src="/images/final-vote-courtroom.png" alt="최종 투표를 진행 중인 AI 재판장" />
+            <img src="/images/final-vote-courtroom-pixel.png" alt="최종 투표를 진행 중인 AI 재판장" />
             <div class="live-indicator" :class="{ ended: trialEnded }">
               <i aria-hidden="true"></i>
               <span>{{ trialEnded ? 'ENDED' : 'LIVE' }}</span>
