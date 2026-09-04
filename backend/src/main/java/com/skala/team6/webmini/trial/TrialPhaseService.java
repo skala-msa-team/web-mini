@@ -98,6 +98,11 @@ public class TrialPhaseService {
         TrialStatus status = side == TrialSide.A ? TrialStatus.A_ARGUMENT : TrialStatus.B_ARGUMENT;
         OffsetDateTime endsAt = now.plusSeconds(timings.argumentSeconds());
         trial.startPhase(status, now, endsAt);
+        announcePhase(trial,
+                side == TrialSide.A
+                        ? "이제 A측의 주장을 듣겠습니다. A측 AI 변호사는 핵심 입장을 말씀해 주세요."
+                        : "A측의 주장을 확인했습니다. 이제 B측의 주장을 듣겠습니다.",
+                status, endsAt);
         TrialPartyEntity party = partyRepository.findByTrialIdAndSide(trial.getId(), side).orElseThrow();
         TrialStatementEntity statement = statementRepository.findByTrialPartyId(party.getId()).orElseThrow();
         TrialSpeaker speaker = side == TrialSide.A ? TrialSpeaker.A_LAWYER : TrialSpeaker.B_LAWYER;
@@ -108,6 +113,9 @@ public class TrialPhaseService {
     private void openVoting(TrialEntity trial, OffsetDateTime now) {
         OffsetDateTime endsAt = now.plusSeconds(timings.votingSeconds());
         trial.startPhase(TrialStatus.VOTING, now, endsAt);
+        announcePhase(trial,
+                "양측의 상호 변론이 마무리되었습니다. 지금부터 최종 판결 투표를 시작하겠습니다.",
+                TrialStatus.VOTING, endsAt);
         eventWriter.save(trial, "VOTING_STARTED", TrialSpeaker.SYSTEM, null, Map.of(
                 "status", TrialStatus.VOTING.name(), "voteStartedAt", now.toString(),
                 "voteEndsAt", endsAt.toString(), "allowedSides", new String[]{"A", "B"}));
@@ -116,6 +124,9 @@ public class TrialPhaseService {
     private void openDebate(TrialEntity trial, OffsetDateTime now) {
         OffsetDateTime endsAt = now.plusSeconds(timings.debateSeconds());
         trial.startPhase(TrialStatus.DEBATE, now, endsAt);
+        announcePhase(trial,
+                "양측의 주장을 모두 확인했습니다. 지금부터 상호 변론을 진행하겠습니다.",
+                TrialStatus.DEBATE, endsAt);
         eventWriter.save(trial, "DEBATE_STARTED", TrialSpeaker.SYSTEM, null, Map.of(
                 "status", TrialStatus.DEBATE.name(),
                 "phaseEndsAt", endsAt.toString(),
@@ -170,6 +181,9 @@ public class TrialPhaseService {
                 result.summary(), objectMapper.writeValueAsString(result.grounds()),
                 result.aRecommendation(), result.bRecommendation(), result.promptVersion()));
         trial.startPhase(TrialStatus.VERDICT, now, now);
+        announcePhase(trial,
+                "최종 판결 투표가 종료되었습니다. 지금부터 AI 판사의 최종 판결을 발표하겠습니다.",
+                TrialStatus.VERDICT, now);
         eventWriter.save(trial, "VERDICT_ANNOUNCED", TrialSpeaker.JUDGE, result.summary(), Map.of(
                 "status", TrialStatus.VERDICT.name(), "verdictId", verdict.getId(),
                 "winnerSide", result.winnerSide().name(), "aFaultRatio", result.aFaultRatio(),
@@ -178,11 +192,20 @@ public class TrialPhaseService {
 
     private void endTrial(TrialEntity trial, OffsetDateTime now) {
         trial.complete(now);
+        announcePhase(trial,
+                "이상으로 재판을 종료하겠습니다. 참여해 주신 배심원 여러분께 감사드립니다.",
+                TrialStatus.ENDED, now);
         eventWriter.save(trial, "TRIAL_ENDED", TrialSpeaker.SYSTEM, null, Map.of(
                 "status", TrialStatus.ENDED.name(), "endedAt", now.toString(),
                 "resultPath", "/api/v1/trials/" + trial.getId() + "/results"));
     }
 
     private record DebateTurn(TrialSpeaker speaker, String content) {
+    }
+
+    private void announcePhase(TrialEntity trial, String content, TrialStatus status, OffsetDateTime endsAt) {
+        eventWriter.save(trial, "JUDGE_PHASE_NOTICE", TrialSpeaker.JUDGE, content, Map.of(
+                "status", status.name(),
+                "phaseEndsAt", endsAt.toString()));
     }
 }
