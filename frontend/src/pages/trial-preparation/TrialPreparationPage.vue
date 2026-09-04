@@ -2,16 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createTrial } from '@/apis/postApi.js'
-import {
-  confirmArgument,
-  createArgumentDraft,
-  createGuideQuestions,
-  getTrial,
-  saveGuideAnswers,
-  saveStatement,
-  startTrial as startTrialRequest,
-  updateArgumentDraft,
-} from '@/apis/trialApi.js'
+import { confirmArgument, createArgumentDraft, getTrial, saveGuideAnswers, saveStatement, startTrial as startTrialRequest, updateArgumentDraft } from '@/apis/trialApi.js'
 import PartyStatementStep from '@/components/trial/PartyStatementStep.vue'
 import TrialBasicInformation from '@/components/trial/TrialBasicInformation.vue'
 import TrialFinalConfirmation from '@/components/trial/TrialFinalConfirmation.vue'
@@ -177,19 +168,22 @@ async function prepareParty(statement) {
 
   try {
     await saveStatement(trialId.value, side, statement)
-    const response = await createGuideQuestions(trialId.value, side)
-    const guideQuestions = response?.questions ?? []
+    const draft = await createArgumentDraft(trialId.value, side)
 
     Object.assign(party, {
       statementSaved: true,
-      guideQuestions,
+      guideQuestions: [],
       guideAnswers: [],
+      draftGenerated: true,
+      caseOverview: draft.factSummary,
+      keyPoints: [],
+      argumentText: draft.argumentText,
       messages: [
         ...party.messages,
         {
-          id: `${side}-guide-${guideQuestions[0]?.questionId ?? 'complete'}`,
+          id: `${side}-draft-generated`,
           role: 'ASSISTANT',
-          content: guideQuestions[0]?.question ?? '추가 질문 없이 변론문을 생성할 수 있습니다.',
+          content: '기본 진술을 바탕으로 변론문 초안을 생성했습니다.',
         },
       ],
     })
