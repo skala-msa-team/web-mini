@@ -45,6 +45,21 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 - 관계 유형·갈등 사유 필터와 페이지 선택
 - 댓글·답글·좋아요·신고 화면 및 로컬 상호작용
 
+## 기술 스택
+
+| 영역 | 기술 |
+| --- | --- |
+| Design | Google Stitch, Figma, Justice & Empathy Design System |
+| Frontend | Vue 3, Vite, JavaScript, Vue Router, Tailwind CSS 4, shadcn-vue, lucide-vue |
+| Frontend API | Axios, REST API Client, STOMP Client |
+| Backend | Java 21, Spring Boot 4, Gradle, Spring Web, Bean Validation |
+| Backend Realtime | Spring WebSocket/STOMP, Topic Broker, User Queue |
+| Database | PostgreSQL 17, Spring Data JPA, Flyway |
+| AI | Mock AI Client, Mock AI Lawyer, Mock AI Judge |
+| API Docs | springdoc-openapi, Swagger UI |
+| Infra | Docker Compose, Nginx Reverse Proxy |
+| Collaboration | Notion, GitHub Project, GitHub Issues, Pull Requests |
+
 ## 디렉토리 구조
 
 빌드 산출물인 `frontend/dist/`, `backend/build/`, `backend/.gradle/`, 의존성 디렉토리인 `node_modules/`는 구조 설명에서 제외합니다.
