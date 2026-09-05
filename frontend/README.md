@@ -7,8 +7,8 @@ Vue 3와 Vite 기반 Frontend 프로젝트입니다. Tailwind CSS 4와 shadcn-vu
 ```text
 src/
 ├── app/              # App.vue, main.js, router
-├── assets/           # styles/fonts·tokens·global.css
-├── components/       # ui(shadcn), common, 도메인별 컴포넌트
+├── assets/           # Tailwind CSS 진입점, 디자인 토큰, 폰트, 전역 스타일
+├── components/       # Tailwind CSS + shadcn-vue UI Primitive, 공통·도메인 컴포넌트
 ├── pages/            # Router에 연결되는 화면
 ├── apis/             # API별 순수 요청 함수
 ├── lib/              # Axios·HTTP·STOMP 등 외부 의존 로직
@@ -19,11 +19,27 @@ src/
 └── composables/      # 여러 기능이 공유하는 상태 로직
 ```
 
-`components/ui`에는 shadcn-vue 스타일의 재사용 기본 UI를 두고, 도메인 조합 UI는 `components/{domain}`에 둡니다. `pages`는 화면 조합과 라우팅에 집중합니다. REST 요청은 `apis`의 개별 함수가 `lib/http.js`를 통해 호출합니다. STOMP 연결·구독·복구는 `lib/realtime.js`에서 관리합니다.
+`assets/styles`는 Tailwind CSS 진입점, Justice & Empathy 디자인 토큰, 폰트와 전역 스타일을 담당합니다. `components/ui`에는 Tailwind CSS와 shadcn-vue 구조를 사용하는 재사용 기본 UI를 두고, 도메인 조합 UI는 `components/{domain}`에 둡니다. `pages`는 화면 조합과 라우팅에 집중합니다. REST 요청은 `apis`의 개별 함수가 `lib/http.js`를 통해 호출합니다. STOMP 연결·구독·복구는 `lib/realtime.js`에서 관리합니다.
 
 ## 실행과 검증
 
-### Frontend·Backend 로컬 실행
+### 전체 서비스 실행
+
+일반 실행과 데모용 실행은 프로젝트 루트의 Docker Compose를 사용합니다.
+
+```bash
+docker compose up -d --build
+```
+
+일반 접속 주소는 `http://localhost:8081`입니다. 데모에서는 같은 네트워크의 기기에서 `http://<HOST_LAN_IP>:8081`로 접속합니다. Frontend Container의 Nginx가 `/api`와 `/ws` 요청을 Backend Container로 프록시합니다.
+
+종료:
+
+```bash
+docker compose down
+```
+
+### Frontend 개발 실행
 
 Frontend 환경 파일을 준비합니다. 실제 `.env`는 Git에서 제외되므로 팀원별 주소를 안전하게 설정할 수 있습니다.
 
@@ -76,15 +92,6 @@ Backend가 다른 장비나 Port에서 실행되는 경우에만 Frontend `.env`
 BACKEND_HTTP_ORIGIN=http://192.168.0.20:8080
 BACKEND_WS_ORIGIN=ws://192.168.0.20:8080
 ```
-
-전체 서비스는 프로젝트 루트에서 실행합니다.
-
-```bash
-cd ..
-docker compose up -d --build
-```
-
-실행 주소는 `http://localhost:8081`이며, 종료는 `docker compose down`입니다.
 
 ## 디자인 시스템과 shadcn-vue
 

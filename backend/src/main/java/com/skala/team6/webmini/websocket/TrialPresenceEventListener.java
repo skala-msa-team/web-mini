@@ -32,8 +32,9 @@ public class TrialPresenceEventListener implements
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String destination = accessor.getDestination();
         String sessionId = accessor.getSessionId();
-        if (destination == null)
+        if (destination == null) {
             return;
+        }
         Matcher eventsTopicMatcher = TRIAL_EVENTS_TOPIC.matcher(destination);
         if (eventsTopicMatcher.find()) {
             Long trialId = Long.valueOf(eventsTopicMatcher.group(1));
