@@ -11,7 +11,7 @@ These instructions apply to `backend/` in addition to the repository-level `AGEN
 
 ## Change boundaries
 
-- Do not create build files, dependencies, containers, Entities, or migrations before their Task and design decision exist.
+- Do not add dependencies, containers, Entities, or migrations before their Task and design decision exist.
 - Do not define REST paths, status codes, WebSocket endpoints, STOMP destinations, or message payloads before interface review.
 - Do not implement Mock AI or provider adapters before Prompt and JSON Schema approval.
 - Keep Frontend files out of Backend Tasks and PRs.

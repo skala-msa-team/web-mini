@@ -9,6 +9,7 @@ node_modules/
 dist/
 dist-ssr/
 coverage/
+.eslintcache
 *.tsbuildinfo
 *.local
 
@@ -16,15 +17,24 @@ coverage/
 .gradle/
 build/
 out/
+backend/bin/
 *.class
 
 # IDE and OS
 .idea/
 *.iml
+*.code-workspace
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
 .DS_Store
 Thumbs.db
 *.swp
 
 # Logs and local data
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 logs/

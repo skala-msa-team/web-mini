@@ -24,6 +24,25 @@ src/
 
 Controller는 요청·응답 변환을 담당하고, Service는 비즈니스 규칙을 담당합니다. Entity와 Repository는 `database/`에 모아 관리하며, API 응답으로 Entity를 직접 반환하지 않습니다.
 
+## Backend 컨벤션
+
+| 대상 | 규칙 | 예시 |
+| --- | --- | --- |
+| Java Package | lowercase | `com.skala.team6.webmini.trial` |
+| Java Class | PascalCase | `TrialService` |
+| Java 함수·변수 | camelCase | `createTrial` |
+| Java 상수 | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT_MS` |
+| DB 테이블·컬럼 | snake_case | `trial_events`, `created_at` |
+| Flyway Migration | `V{번호}__{설명}.sql` | `V1__create_demo_schema.sql` |
+
+- Domain 기준 Package 아래에서 Controller, Service, Repository 책임을 분리합니다.
+- Controller는 요청·응답 변환, Service는 비즈니스 규칙, Repository는 영속성을 담당합니다.
+- Entity를 API 응답으로 직접 반환하지 않고 DTO 또는 API Model로 변환합니다.
+- REST Path, Status Code, STOMP Destination, Message Payload는 승인된 명세와 일치해야 합니다.
+- Database 구조는 승인된 ERD와 Flyway Migration을 기준으로 관리합니다.
+- Mock AI Provider 변경이나 Prompt/JSON Schema 변경은 승인된 AI 계약을 먼저 확인합니다.
+- 코드, 설정, 로그, 테스트 Fixture에 Secret, Prompt 원문 중 민감정보, 개인정보를 남기지 않습니다.
+
 ## 실행과 검증
 
 ### 전체 서비스 실행

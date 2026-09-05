@@ -7,28 +7,18 @@
 - Do not add optional application dependencies, Docker configuration, environment-variable files, or feature code unless the user explicitly requests the relevant Task.
 - Treat undecided product features and interfaces as `미정`; do not infer them from examples.
 
-## Sources of truth
+## Project resources and sources of truth
 
-- Use Notion for product planning, technical decisions, schedules, meetings, and R&R.
-- Use GitHub Project for assignees, priority, iteration, and status.
-- Use the Figma project linked in `README.md` for approved screen designs.
-- Use `README.md` for Git, naming, and collaboration conventions.
-- Use the closest nested `AGENTS.md` for directory-specific instructions.
-
-## Project resources
-
-- Repository: https://github.com/skala-msa-team/web-mini
-- GitHub Project: https://github.com/orgs/skala-msa-team/projects/3/views/1
-- Notion: https://confused-dietician-c17.notion.site/mini-Project-6-3cd7caa087bd808caf1bc28791f745e2?pvs=73
-- Google Stitch: https://stitch.withgoogle.com/projects/416001617538729018
-- Figma: https://www.figma.com/design/kcaV9To7uU5HQHXDcbssGL/Untitled?node-id=0-1
+- [Repository](https://github.com/skala-msa-team/web-mini): source code and versioned project configuration.
+- [GitHub Project execution board](https://github.com/orgs/skala-msa-team/projects/3/views/6): assignees, priority, iteration, and status.
+- [Notion](https://confused-dietician-c17.notion.site/mini-Project-6-3cd7caa087bd808caf1bc28791f745e2?pvs=73): product planning, technical decisions, schedules, meetings, and R&R.
+- [Google Stitch](https://stitch.withgoogle.com/projects/416001617538729018) and [Figma](https://www.figma.com/design/kcaV9To7uU5HQHXDcbssGL/Untitled?node-id=0-1): approved design sources.
+- Root `README.md`: Git, naming, execution, and collaboration conventions.
+- Closest nested `AGENTS.md`: directory-specific instructions; closer files override this file only within their directory.
 
 ## Tracking rules
 
 - Treat the links above as canonical resource locations, not copies of their live content.
-- Keep product requirements and decisions in Notion.
-- Keep Issue ownership, priority, iteration, and status in GitHub Project.
-- Keep approved screen designs in Google Stitch and Figma.
 - Do not duplicate live progress in `AGENTS.md`; update a link only when its canonical resource changes.
 
 ## Repository boundaries

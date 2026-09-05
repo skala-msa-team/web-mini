@@ -4,6 +4,11 @@
     "source.fixAll.eslint": "explicit"
   },
   "eslint.validate": ["javascript", "vue"],
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
@@ -15,11 +20,15 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "[vue]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[java]": {
     "editor.defaultFormatter": "redhat.java",
+    "editor.insertSpaces": true,
     "editor.tabSize": 4
   }
 }

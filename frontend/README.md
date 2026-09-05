@@ -21,6 +21,25 @@ src/
 
 `assets/styles`는 Tailwind CSS 진입점, Justice & Empathy 디자인 토큰, 폰트와 전역 스타일을 담당합니다. `components/ui`에는 Tailwind CSS와 shadcn-vue 구조를 사용하는 재사용 기본 UI를 두고, 도메인 조합 UI는 `components/{domain}`에 둡니다. `pages`는 화면 조합과 라우팅에 집중합니다. REST 요청은 `apis`의 개별 함수가 `lib/http.js`를 통해 호출합니다. STOMP 연결·구독·복구는 `lib/realtime.js`에서 관리합니다.
 
+## Frontend 컨벤션
+
+| 대상 | 규칙 | 예시 |
+| --- | --- | --- |
+| Vue 컴포넌트 | PascalCase | `TrialStage.vue` |
+| JavaScript 함수·변수 | camelCase | `fetchTrialSnapshot` |
+| JavaScript 상수 | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT_MS` |
+| Composable | `use` Prefix + camelCase | `useLiveTrialSession` |
+| Page 컴포넌트 | 화면명 + `Page.vue` | `TrialResultPage.vue` |
+| Mock 데이터 파일 | 도메인명 + 목적 | `liveTrialMock.js` |
+
+- Vue Composition API와 `<script setup>`을 기본으로 사용합니다.
+- 화면 단위 컴포넌트는 `pages/`, 재사용 조합 컴포넌트는 `components/{domain}/`, 기본 UI Primitive는 `components/ui/`에 둡니다.
+- Tailwind CSS Utility Class와 Justice & Empathy Token을 우선 사용하고, 임의 Hex 색상이나 간격을 컴포넌트에 직접 추가하지 않습니다.
+- REST 요청은 `src/apis/`의 도메인 함수로 만들고, Axios Instance는 `src/lib/http.js`만 사용합니다.
+- STOMP 연결, 구독, 재연결 처리는 `src/lib/realtime.js`와 관련 Composable을 통해 사용합니다.
+- 상태 관리 Library는 미정이므로 새 전역 상태 Library를 추가하지 않습니다.
+- 브라우저에 노출되는 설정, Console, Mock 데이터에 Secret이나 민감정보를 넣지 않습니다.
+
 ## 실행과 검증
 
 ### 전체 서비스 실행
@@ -43,6 +62,8 @@ docker compose down
 
 Frontend 환경 파일을 준비합니다. 실제 `.env`는 Git에서 제외되므로 팀원별 주소를 안전하게 설정할 수 있습니다.
 
+#### 최초 실행
+
 ```bash
 cp .env.example .env
 npm install
@@ -58,6 +79,7 @@ PostgreSQL만 Docker로 실행하고 Backend는 로컬에서 실행하려면 프
 docker compose up -d postgres
 
 # backend 디렉터리
+cd backend
 cp .env.example .env
 set -a
 source .env
