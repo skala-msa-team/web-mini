@@ -5,6 +5,7 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 ## Current state
 
 - A Vue 3 and Vite JavaScript project with the approved design-system foundation and Vue Router structure exists.
+- Tailwind CSS is the primary styling system. Justice & Empathy tokens are defined under `src/assets/styles/`, and shadcn-vue-style UI primitives are kept under `src/components/ui/`.
 - Shared live-trial STOMP connection, subscription, and recovery helpers are implemented under `src/lib/realtime.js`.
 - Axios is the approved REST client. Use the shared instance in `src/lib/http.js` and keep API request functions under `src/apis/`.
 - Do not choose or install state-management, test, or other optional libraries without an explicit decision or Issue.
@@ -12,6 +13,7 @@ These instructions apply to `frontend/` in addition to the repository-level `AGE
 ## Change boundaries
 
 - Do not implement screens before the user flow and Google Stitch/Figma design are approved.
+- Do not bypass the established Tailwind CSS tokens or add ad hoc component-level colors and spacing unless the approved design requires it.
 - Do not define REST payloads or add STOMP destinations outside the approved shared interface.
 - Keep Backend files out of Frontend Tasks and PRs.
 - Create Frontend work branches from the latest `frontend` branch and open Frontend PRs back into `frontend`.
