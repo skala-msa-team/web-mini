@@ -49,6 +49,7 @@
 - Open Frontend work PRs into `frontend` and Backend work PRs into `backend`.
 - Promote verified `frontend` and `backend` changes into `dev`; use `dev` to `main` only for final integration.
 - Require at least one approving review before merging a PR into `frontend`, `backend`, or `dev`.
+- Request review from a teammate in the same R&R area by default, then merge after the author and reviewer check the changed scope and verification results together.
 - `main` has no required-approval protection rule, but team convention allows only final promotion from `dev`, not direct work-branch merges.
 - Do not commit, push, merge, or edit Notion unless the user explicitly asks.
 

@@ -4,7 +4,7 @@ SKALA Full-Stack Engineering 과정의 6조 AI-Ready 웹 서비스 설계 프로
 
 연인 간 갈등 당사자가 각자의 입장을 정리하고, Mock AI 변호사와 Mock AI 판사의 의견 및 관전자 투표를 참고해 해결 방향을 탐색하는 서비스입니다. 실제 법률 판결이나 법률 상담을 제공하지 않습니다.
 
-현재 저장소에는 팀 개발을 시작하기 위한 문서, 협업 규칙, 편집기 설정과 최소 Frontend·Backend 프로젝트가 구성되어 있습니다. Frontend에는 확정된 디자인 시스템과 shadcn-vue 사용 기반이 설정되어 있으며, 화면과 개별 UI 컴포넌트는 담당 Issue에서 추가합니다. Database, Docker 및 기능 코드는 아직 추가하지 않았습니다.
+현재 저장소에는 팀 개발을 위한 문서, 협업 규칙, 편집기 설정, Justice & Empathy 디자인 시스템, Frontend·Backend 프로젝트, PostgreSQL Schema, Docker Compose와 Local Live Demo 기능 코드가 구성되어 있습니다.
 
 ## 범위와 구현 상태
 
@@ -45,39 +45,170 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 - 관계 유형·갈등 사유 필터와 페이지 선택
 - 댓글·답글·좋아요·신고 화면 및 로컬 상호작용
 
-### 설계 완료·추후 개발
+## 디렉토리 구조
 
-다음 기능은 전체 서비스 설계에는 포함되지만 이번 Demo에서는 구현하지 않습니다.
+빌드 산출물인 `frontend/dist/`, `backend/build/`, `backend/.gradle/`, 의존성 디렉토리인 `node_modules/`는 구조 설명에서 제외합니다.
 
-## 로컬 실행 (권장)
+```text
+.
+├── frontend/                         # Vue 3 + Vite Frontend 애플리케이션
+│   ├── public/                       # 정적 공개 파일
+│   │   └── images/                   # 화면에서 직접 사용하는 이미지 자산
+│   └── src/
+│       ├── apis/                     # REST API 요청 함수
+│       ├── app/                      # 앱 진입점, 최상위 App, Router
+│       │   └── router/               # Vue Router 설정
+│       ├── assets/                   # Frontend 전용 스타일 자산
+│       │   └── styles/               # Justice & Empathy 토큰, 폰트, Global CSS
+│       ├── components/               # 재사용 UI 컴포넌트
+│       │   ├── chat/                 # 재판 채팅 UI
+│       │   ├── common/               # Header, Footer 등 공통 레이아웃
+│       │   ├── community/            # 커뮤니티 목록·게시글 UI
+│       │   ├── trial/                # 재판 준비·진행 UI
+│       │   ├── ui/                   # Tailwind CSS + shadcn-vue UI Primitive
+│       │   ├── verdict/              # AI 판결 결과 UI
+│       │   └── vote/                 # 관전자 투표 UI
+│       ├── composables/              # Vue Composition API 기반 상태·흐름 로직
+│       ├── consts/                   # API, 상태, 메시지, STOMP 상수
+│       ├── lib/                      # HTTP Client, Realtime Client, 공통 유틸
+│       ├── mock/                     # Frontend-only 화면 검증용 Mock 데이터
+│       │   ├── community/
+│       │   ├── trial/
+│       │   ├── verdict/
+│       │   └── vote/
+│       ├── pages/                    # Router 단위 화면
+│       │   ├── community/
+│       │   ├── integration/
+│       │   ├── live-trial/
+│       │   ├── trial-preparation/
+│       │   └── trial-result/
+│       ├── stores/                   # 화면 상태 Store
+│       └── utils/                    # 순수 유틸 함수
+├── backend/                          # Java 21 + Spring Boot Backend 애플리케이션
+│   ├── config/
+│   │   └── checkstyle/               # Java Code Style 검증 규칙
+│   ├── gradle/
+│   │   └── wrapper/                  # Gradle Wrapper
+│   └── src/
+│       ├── main/
+│       │   ├── java/com/skala/team6/webmini/
+│       │   │   ├── ai/               # Mock AI Client, 변론·판결 Service, AI API
+│       │   │   ├── common/           # 공통 응답, 설정, 예외, Enum
+│       │   │   │   ├── api/
+│       │   │   │   ├── config/
+│       │   │   │   ├── exception/
+│       │   │   │   └── model/
+│       │   │   ├── database/         # JPA Entity와 Repository
+│       │   │   │   ├── entity/
+│       │   │   │   └── repository/
+│       │   │   ├── demo/             # Demo 사용자 식별과 저장
+│       │   │   ├── post/             # 게시글 REST API와 Service
+│       │   │   ├── trial/            # 재판 생성, 진행, 채팅, 투표, 결과, STOMP
+│       │   │   └── websocket/        # STOMP 인증·오류·Presence 처리
+│       │   └── resources/
+│       │       ├── db/
+│       │       │   └── migration/    # Flyway Database Migration
+│       │       └── static/           # 로컬 STOMP 테스트 페이지
+│       └── test/
+│           └── java/com/skala/team6/webmini/
+│               ├── ai/               # AI Service·Controller Test
+│               ├── database/         # Migration·Persistence Test
+│               ├── post/             # 게시글 Acceptance Test
+│               ├── trial/            # 재판 흐름·채팅·투표 Test
+│               └── websocket/        # STOMP Interceptor·Error Test
+├── docs/                             # 승인된 설계 문서와 정적 가이드 자산
+│   ├── ai/
+│   │   └── prompts/                  # Mock AI Prompt 계약
+│   └── assets/
+│       └── github-guide/             # Notion에서 참조하는 GitHub 가이드 이미지
+└── .vscode/                          # 팀 공통 VS Code 설정
+```
 
-권장 실행 방식 — Docker Compose(통합 실행)
+### 디자인 시스템
+
+Justice & Empathy 디자인 시스템은 공정한 재판장 이미지와 커뮤니티의 따뜻함을 함께 주기 위한 Frontend 시각 기준입니다. Frontend 스타일링은 Tailwind CSS를 중심으로 구성하며, 색상, Typography, Radius, Spacing Token은 `frontend/src/assets/styles/tokens.css`에 정의합니다. Tailwind Theme 연결과 전역 스타일은 `frontend/src/assets/styles/global.css`에서 관리합니다.
+
+기본 컴포넌트는 Tailwind CSS Utility Class와 shadcn-vue 구조를 함께 사용합니다. `frontend/components.json`에서 `new-york` 스타일, JavaScript, CSS Variables, `@/components/ui` Alias와 `lucide` Icon Library를 설정합니다. 실제 UI Primitive는 `frontend/src/components/ui/`에 두고, 화면별 컴포넌트는 이 Primitive와 Token을 조합합니다.
+
+디자인 기준은 색상, 폰트, 간격, 카드, 버튼, 입력창, LIVE Badge, 투표 Progress Bar를 포함합니다. Variant 관리는 `class-variance-authority`, Class 병합은 `clsx`와 `tailwind-merge`를 사용합니다.
+
+### 역할 경계
+
+| 영역         | 책임                                                  | 변경 기준 Branch |
+| ------------ | ----------------------------------------------------- | ---------------- |
+| `frontend/`  | 화면, Router, REST 호출, STOMP Client, 화면 상태 관리 | `frontend`       |
+| `frontend/src/assets/styles/` | Justice & Empathy 디자인 토큰과 전역 스타일           | `frontend`       |
+| `frontend/src/components/ui/` | Tailwind CSS와 shadcn-vue 기반 UI Primitive           | `frontend`       |
+| `backend/`   | REST API, STOMP, Domain Service, DB, Mock AI Adapter   | `backend`        |
+| `docs/`      | 승인된 API, ERD, Database, STOMP, AI 계약 문서         | 작업 성격에 따름 |
+| `.vscode/`   | 팀 공통 편집기 설정                                   | `dev` 기준 협의  |
+| 루트 설정 파일 | Git, Docker Compose, Repository 협업 규칙             | `dev` 기준 협의  |
+
+## 실행 방법
 
 사전 준비: Docker와 Docker Compose 설치
 
-루트 Compose로 Frontend(Nginx), Backend(Spring Boot), PostgreSQL을 한 번에 빌드·실행합니다. 이 방식은 팀 공유(같은 LAN) 시 가장 간단하고 안정적입니다.
+### 일반 실행
+
+루트 `compose.yaml`로 Frontend(Nginx), Backend(Spring Boot), PostgreSQL을 한 번에 빌드·실행합니다.
 
 ```bash
 docker compose up -d --build
 ```
 
-접속: Frontend가 호스트의 `8081`로 매핑되어 있으므로 팀원들은 `http://<HOST_LAN_IP>:8081`로 접속하면 됩니다.
+접속 주소:
 
-간단 확인(호스트 LAN IP 확인, macOS 예시):
-
-```bash
-ipconfig getifaddr en0
+```text
+http://localhost:8081
 ```
-
-주의사항:
-
-- 백엔드의 CORS 설정(`APP_CORS_ALLOWED_ORIGINS`)이 기본값으로 localhost만 허용되어 있을 수 있습니다. LAN에서 접속할 경우 필요한 origin(예: `http://<HOST_LAN_IP>:8081`)을 환경변수에 추가하세요.
-- 회사/학교 네트워크의 클라이언트 분리(guest isolation) 또는 방화벽 설정에 따라 같은 SSID에서도 접속이 차단될 수 있습니다.
 
 종료:
 
 ```bash
 docker compose down
+```
+
+### 데모용 실행
+
+데모용 실행도 같은 Docker Compose를 사용합니다. 차이는 실행 명령이 아니라 접속 주소입니다. 발표자 PC에서 Compose를 실행한 뒤, 같은 네트워크의 팀원이나 시연 기기는 발표자 PC의 LAN IP로 접속합니다.
+
+```bash
+docker compose up -d --build
+```
+
+발표자 PC의 LAN IP 확인(macOS 예시):
+
+```bash
+ipconfig getifaddr en0
+```
+
+데모 접속 주소:
+
+```text
+http://<HOST_LAN_IP>:8081
+```
+
+예시:
+
+```text
+http://192.168.0.15:8081
+```
+
+루트 Compose 실행에서는 Frontend가 호스트의 `8081`로 매핑되고, Nginx가 `/api`와 `/ws` 요청을 내부 Backend Service로 프록시합니다. `compose.yaml`의 Backend CORS는 로컬 LAN 데모 접속을 위해 모든 Origin을 허용하도록 설정되어 있습니다.
+
+종료:
+
+```bash
+docker compose down
+```
+
+주의사항:
+
+- 같은 Wi-Fi여도 회사/학교 네트워크의 클라이언트 분리 또는 방화벽 설정에 따라 접속이 차단될 수 있습니다.
+- `8081` Port가 이미 사용 중이면 `FRONTEND_PORT` 환경변수로 호스트 Port를 바꿔 실행합니다.
+
+```bash
+FRONTEND_PORT=8082 docker compose up -d --build
 ```
 
 현재 환경변수:
@@ -212,6 +343,7 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - `dev`는 최종 통합 Branch이며, GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
 - `main`은 최종 완성본 Branch이며, GitHub의 필수 승인 규칙은 적용하지 않습니다.
 - 작업 Branch에서 `main`으로 직접 병합하지 않고 최종 완료 시점에 `dev`의 검증된 내용을 `main`에 반영합니다.
+- 기본적으로 같은 R&R 영역의 동료에게 Review를 요청하고, 승인 후 작성자와 Reviewer가 함께 변경 범위와 검증 결과를 확인한 뒤 병합합니다.
 - `Closes #이슈번호`를 작성합니다.
 - Frontend와 Backend PR을 각각 영역 Branch에 병합한 뒤 별도 Integration Task와 PR로 `dev` 반영을 진행합니다.
 - Review와 필요한 검증을 통과한 뒤 Squash and merge합니다.
@@ -240,14 +372,6 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - Entity를 API 응답으로 직접 반환하지 않습니다.
 - 코드와 로그에 Secret 및 민감정보를 남기지 않습니다.
 
-### 작업 완료 기준
-
-- Issue의 요구사항과 완료 조건을 충족합니다.
-- 해당 작업의 Format, Lint, Test와 Build를 실행합니다.
-- API, Database, WebSocket/STOMP, AI JSON 계약 변경 시 관련 문서를 함께 갱신합니다.
-- 실제 실행한 검증 결과와 아직 확인하지 않은 항목을 구분합니다.
-- 다른 팀원이 README만 보고 프로젝트를 실행할 수 있도록 실행 방법을 갱신합니다.
-
 ## 현재 완료 범위
 
 - [x] 루트 및 영역별 `AGENTS.md`
@@ -268,4 +392,4 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - [x] 재판 상태·STOMP Message 계약 확정
 - [x] Mock AI 입출력 JSON 계약 확정
 - [x] PostgreSQL Schema, Flyway와 로컬 Docker Compose 구성
-- [ ] API, WebSocket/STOMP, Mock AI와 기능 구현
+- [x] API, WebSocket/STOMP, Mock AI와 기능 구현

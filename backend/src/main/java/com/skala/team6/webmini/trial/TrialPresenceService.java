@@ -27,8 +27,9 @@ public class TrialPresenceService {
 
     public int removeSubscriber(Long trialId, String sessionId) {
         var set = presence.get(trialId);
-        if (set == null)
+        if (set == null) {
             return 0;
+        }
         set.remove(sessionId);
         int count = set.size();
         broadcast(trialId, count);
