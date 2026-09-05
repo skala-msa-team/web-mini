@@ -36,6 +36,8 @@ docker compose up -d --build
 
 일반 접속 주소는 `http://localhost:8081`입니다. 데모에서는 같은 네트워크의 기기에서 `http://<HOST_LAN_IP>:8081`로 접속합니다. Frontend Nginx가 `/api`와 `/ws` 요청을 Backend Container로 프록시합니다.
 
+루트 `compose.yaml`은 로컬 LAN 데모를 위해 `APP_CORS_ALLOWED_ORIGINS=*`를 사용합니다. 운영 또는 외부 배포 환경에서는 모든 Origin 허용을 절대 사용하지 않고 실제 Frontend Origin만 명시합니다.
+
 종료:
 
 ```bash
