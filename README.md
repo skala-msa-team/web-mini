@@ -182,6 +182,13 @@ docker compose up -d --build
 ipconfig getifaddr en0
 ```
 
+Mac의 네트워크 인터페이스는 환경에 따라 `en0`이 아닐 수 있습니다. 값이 나오지 않으면 `en1`을 확인하거나 `networksetup -listallhardwareports`로 Wi-Fi 장치명을 먼저 확인합니다.
+
+```bash
+ipconfig getifaddr en1
+networksetup -listallhardwareports
+```
+
 데모 접속 주소:
 
 ```text
@@ -195,6 +202,8 @@ http://192.168.0.15:8081
 ```
 
 루트 Compose 실행에서는 Frontend가 호스트의 `8081`로 매핑되고, Nginx가 `/api`와 `/ws` 요청을 내부 Backend Service로 프록시합니다. `compose.yaml`의 Backend CORS는 로컬 LAN 데모 접속을 위해 모든 Origin을 허용하도록 설정되어 있습니다.
+
+운영 또는 외부 배포 환경에서는 `APP_CORS_ALLOWED_ORIGINS=*`를 절대 사용하지 않습니다. 배포 환경에서는 실제 Frontend Origin만 명시적으로 허용해야 합니다.
 
 종료:
 

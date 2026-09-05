@@ -23,8 +23,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-webmini}
       DB_USERNAME: ${DB_USERNAME:-webmini}
       DB_PASSWORD: ${DB_PASSWORD:-webmini}
-      # Allow all origins for local LAN demo so team members can access via host LAN IP.
-      # For production or stricter local policies, restrict this value appropriately.
+      # Local LAN demo only. Never use "*" for production or external deployments.
+      # Restrict this to the exact Frontend origin outside the local demo.
       APP_CORS_ALLOWED_ORIGINS: "*"
     depends_on:
       postgres:
