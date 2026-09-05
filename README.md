@@ -58,7 +58,11 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 | AI | Mock AI Client, Mock AI Lawyer, Mock AI Judge |
 | API Docs | springdoc-openapi, Swagger UI |
 | Infra | Docker Compose, Nginx Reverse Proxy |
+| External Ops (미검증) | AWS, Amazon API Gateway, Amazon EC2, Amazon RDS, GitHub Actions |
+| Future AI (추후 예정) | Amazon Bedrock Agents, Bedrock Knowledge Base, Amazon S3, OpenSearch Serverless |
 | Collaboration | Notion, GitHub Project, GitHub Issues, Pull Requests |
+
+`External Ops`와 `Future AI`는 현재 저장소의 로컬 실행 코드와 분리해 관리합니다. 운영 한계와 Bedrock 기반 AI 결합 계획은 [프로젝트 한계점 및 추후 AI 실제 결합 로드맵](docs/ai-roadmap.md)을 기준으로 확인합니다.
 
 ## 디렉토리 구조
 
@@ -132,10 +136,12 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 │               ├── trial/            # 재판 흐름·채팅·투표 Test
 │               └── websocket/        # STOMP Interceptor·Error Test
 ├── docs/                             # 승인된 설계 문서와 정적 가이드 자산
+│   ├── ai-roadmap.md                 # 운영 한계와 Bedrock 기반 AI 결합 로드맵
 │   ├── ai/
 │   │   └── prompts/                  # Mock AI Prompt 계약
-│   └── assets/
-│       └── github-guide/             # Notion에서 참조하는 GitHub 가이드 이미지
+│   ├── assets/
+│   │   └── github-guide/             # Notion에서 참조하는 GitHub 가이드 이미지
+│   └── user-flow.md                  # Actor, Use Case, 유저플로우 노드·엣지
 └── .vscode/                          # 팀 공통 VS Code 설정
 ```
 
