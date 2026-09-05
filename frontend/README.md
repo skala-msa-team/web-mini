@@ -31,7 +31,7 @@ src/
 docker compose up -d --build
 ```
 
-일반 접속 주소는 `http://localhost:8081`입니다. 데모에서는 같은 네트워크의 기기에서 `http://<HOST_LAN_IP>:8081`로 접속합니다. Frontend Container의 Nginx가 `/api`와 `/ws` 요청을 Backend Container로 프록시합니다.
+일반 접속 주소는 `http://localhost:8081`입니다. 데모에서는 같은 네트워크의 기기에서 `http://<HOST_LAN_IP>:8081`로 접속합니다. Frontend Container의 Nginx가 `/api`와 `/ws` 요청을 Backend Container로 프록시합니다. LAN IP가 `ipconfig getifaddr en0`에서 나오지 않으면 `en1` 또는 `networksetup -listallhardwareports`로 실제 Wi-Fi 인터페이스를 확인합니다.
 
 종료:
 
@@ -171,8 +171,9 @@ BACKEND_WS_ORIGIN=ws://localhost:8080
 
 - `src/lib/http.js`의 Axios Instance만 사용합니다.
 - 공통 timeout은 15초이며 자동 재시도하지 않습니다.
-- 요청 인터셉터가 Browser Local Storage의 UUID를 `X-Demo-User-Id`에 자동으로 추가합니다.
-- 응답 변환은 `src/utils/apiResponse.js`의 순수 함수가 담당합니다.
+- Request Interceptor가 Browser Local Storage의 UUID를 `X-Demo-User-Id`에 자동으로 추가해 공용 요청 Header를 처리합니다.
+- Response Interceptor가 Backend 오류 응답, timeout, 네트워크 오류를 가로채 `ApiError`로 정규화합니다.
+- 정상 응답 Envelope 변환은 `src/utils/apiResponse.js`의 순수 함수가 담당합니다.
 - 도메인 API는 성공 Envelope의 `data`를 반환합니다.
 - Backend 오류는 `ApiError`로 변환하며 `status`, `code`, `message`, `fieldErrors`, `timestamp`, `path`를 제공합니다.
 - 서버 응답이 없는 timeout과 네트워크 오류는 각각 `REQUEST_TIMEOUT`, `NETWORK_ERROR` Code를 사용합니다.
