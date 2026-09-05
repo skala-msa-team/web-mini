@@ -45,6 +45,21 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 - 관계 유형·갈등 사유 필터와 페이지 선택
 - 댓글·답글·좋아요·신고 화면 및 로컬 상호작용
 
+## 기술 스택
+
+| 영역 | 기술 |
+| --- | --- |
+| Design | Google Stitch, Figma, Justice & Empathy Design System |
+| Frontend | Vue 3, Vite, JavaScript, Vue Router, Tailwind CSS 4, shadcn-vue, lucide-vue |
+| Frontend API | Axios, REST API Client, STOMP Client |
+| Backend | Java 21, Spring Boot 4, Gradle, Spring Web, Bean Validation |
+| Backend Realtime | Spring WebSocket/STOMP, Topic Broker, User Queue |
+| Database | PostgreSQL 17, Spring Data JPA, Flyway |
+| AI | Mock AI Client, Mock AI Lawyer, Mock AI Judge |
+| API Docs | springdoc-openapi, Swagger UI |
+| Infra | Docker Compose, Nginx Reverse Proxy |
+| Collaboration | Notion, GitHub Project, GitHub Issues, Pull Requests |
+
 ## 디렉토리 구조
 
 빌드 산출물인 `frontend/dist/`, `backend/build/`, `backend/.gradle/`, 의존성 디렉토리인 `node_modules/`는 구조 설명에서 제외합니다.
@@ -297,6 +312,12 @@ export APP_WEBSOCKET_ENDPOINT=/ws
 
 ## 협업 컨벤션
 
+공용 협업 규칙은 이 문서를 기준으로 합니다. Frontend와 Backend의 세부 코드 작성 규칙, 디렉토리 역할, 실행·검증 방법은 각 파트 README를 따릅니다.
+
+- Frontend 세부 규칙: [frontend/README.md](frontend/README.md)
+- Backend 세부 규칙: [backend/README.md](backend/README.md)
+- 문서 관리 규칙: [docs/README.md](docs/README.md)
+
 ### Issue
 
 - 제목: `[영역] type: 한국어 작업명`
@@ -357,29 +378,16 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - Frontend와 Backend PR을 각각 영역 Branch에 병합한 뒤 별도 Integration Task와 PR로 `dev` 반영을 진행합니다.
 - Review와 필요한 검증을 통과한 뒤 Squash and merge합니다.
 
-### 네이밍
+### 공용 네이밍
 
 | 대상                 | 규칙                         | 예시                         |
 | -------------------- | ---------------------------- | ---------------------------- |
 | 디렉터리             | kebab-case                   | `task-result`                |
-| Vue 컴포넌트         | PascalCase                   | `TaskResultCard.vue`         |
-| JavaScript 함수·변수 | camelCase                    | `fetchTaskResult`            |
-| Java Package         | lowercase                    | `com.skala.team6.webmini`    |
-| Java Class           | PascalCase                   | `TaskService`                |
-| Java 함수·변수       | camelCase                    | `createTask`                 |
-| 상수                 | UPPER_SNAKE_CASE             | `DEFAULT_TIMEOUT_MS`         |
 | API Path             | 소문자 kebab-case, 복수 명사 | `/api/task-results`          |
 | JSON 필드            | camelCase                    | `createdAt`                  |
-| DB 테이블·컬럼       | snake_case                   | `task_results`, `created_at` |
 | 환경변수             | UPPER_SNAKE_CASE             | `DB_PASSWORD`                |
 
-### 코드 작성
-
-- Frontend는 Vue Composition API와 `<script setup>`을 기본으로 사용합니다.
-- Backend는 Domain 기준 Package 아래에서 Controller, Service, Repository 책임을 분리합니다.
-- Controller는 요청·응답 변환, Service는 비즈니스 규칙, Repository는 영속성을 담당합니다.
-- Entity를 API 응답으로 직접 반환하지 않습니다.
-- 코드와 로그에 Secret 및 민감정보를 남기지 않습니다.
+파트별 네이밍과 코드 작성 규칙은 각 파트 README를 따릅니다.
 
 ## 현재 완료 범위
 
