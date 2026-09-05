@@ -2,7 +2,7 @@
 
 ## 문서 목적
 
-현재 프로젝트의 운영·AI 기능 한계를 정리하고, 향후 Amazon Bedrock 기반 AI 서비스를 실제 업무에 결합하기 위한 단계별 방향을 제시합니다.
+현재 프로젝트의 운영·AI 기능 한계를 정리하고, 향후 개발 범위로 Amazon Bedrock 기반 AI 서비스를 실제 업무에 결합하기 위한 단계별 방향을 제시합니다.
 
 현재 구현된 내용과 추후 계획을 구분하며, 아직 구현 또는 검증되지 않은 항목은 `추후 예정`, `추가 필요`, `미검증`으로 표시합니다.
 
@@ -15,16 +15,17 @@
 | Frontend | Vue 3, Vite | 현재 구현 |
 | Backend | Java 21, Spring Boot | 현재 구현 |
 | Database | PostgreSQL | 현재 구현 |
-| 운영 환경 | AWS | 미검증 |
-| API 진입점 | Amazon API Gateway | 미검증 |
-| Backend 실행 환경 | Amazon EC2 Single Instance | 미검증 |
-| 운영 Database | Amazon RDS for PostgreSQL | 미검증 |
-| CI/CD | GitHub Actions | 추가 필요 |
+| 실행 환경 | Docker Compose | 현재 구현 |
 
-## 추후 AI 구성
+## 추후 운영·AI 구성
 
 | 영역 | 구성 | 상태 |
 | --- | --- | --- |
+| 운영 환경 | AWS | 추후 개발 |
+| API 진입점 | Amazon API Gateway | 추후 개발 |
+| Backend 실행 환경 | Amazon EC2 Single Instance | 추후 개발 |
+| 운영 Database | Amazon RDS for PostgreSQL | 추후 개발 |
+| CI/CD | GitHub Actions | 추후 개발 |
 | Agent Runtime | Amazon Bedrock Agents | 추후 예정 |
 | Knowledge Base | Amazon Bedrock Knowledge Base | 추후 예정 |
 | RAG 문서 저장소 | Amazon S3 | 추후 예정 |
@@ -36,10 +37,10 @@
 
 | 구분 | 현재 상태 | 한계점 | 서비스 영향 | 개선 방향 | 상태 |
 | --- | --- | --- | --- | --- | --- |
-| 인프라 | EC2 1대 운영 | 서버 장애를 대체할 인스턴스가 없음 | EC2 장애 시 서비스 중단 가능 | Auto Scaling Group과 다중 인스턴스 구성 | 추가 필요 |
-| 가용성 | 단일 가용 영역 중심 | AZ 장애 대응이 어려움 | 장애 범위가 서비스 전체로 확대될 수 있음 | Multi-AZ와 RDS Multi-AZ 검토 | 추가 필요 |
-| 확장성 | 수동 확장 | 트래픽 증가에 자동 대응하기 어려움 | 응답 지연과 접속 실패 가능 | ALB와 Auto Scaling 도입 | 추후 예정 |
-| 배포 | GitHub Actions 기반 배포 | 배포 중 서비스 중단과 Rollback 한계 | 배포 시 일시적인 사용 불가 가능 | Blue-Green 또는 Rolling 배포 | 추가 필요 |
+| 인프라 | 로컬 Docker Compose 중심 | 운영 장애를 대체할 인스턴스 구성이 없음 | 실제 운영 환경으로 바로 사용하기 어려움 | AWS 운영 구성 별도 설계 | 추후 개발 |
+| 가용성 | 단일 실행 환경 중심 | AZ 장애 대응 구조가 없음 | 운영 장애 대응 범위가 제한됨 | Multi-AZ와 RDS Multi-AZ 검토 | 추후 개발 |
+| 확장성 | 수동 실행 | 트래픽 증가에 자동 대응하기 어려움 | 응답 지연과 접속 실패 가능 | ALB와 Auto Scaling 도입 | 추후 예정 |
+| 배포 | 자동 배포 미구성 | 배포 자동화와 Rollback 기준이 없음 | 운영 배포 반복성이 낮음 | GitHub Actions와 Blue-Green 또는 Rolling 배포 | 추후 개발 |
 | AI 연동 | 실제 업무 데이터와의 AI 연동 전 단계 | Mock 또는 제한된 시나리오 중심으로 동작할 수 있음 | 실제 서비스 품질을 보장하기 어려움 | Bedrock Agent Runtime 연동 및 실제 데이터 검증 | 추후 예정 |
 | RAG 데이터 | 문서 파이프라인 미확정 | 문서 최신성·버전·신뢰성 관리 부족 | 오래되거나 부정확한 근거로 답변할 수 있음 | 문서 수집, 버전, Metadata, 폐기 정책 정의 | 추가 필요 |
 | 검색 품질 | Vector Store 검색 기준 미확정 | 관련 문서를 검색하지 못하거나 잘못 검색할 수 있음 | AI 답변의 정확도 저하 | 문서 분할, Embedding, 유사도, 재검색 기준 검증 | 미검증 |
@@ -214,13 +215,12 @@ AI 응답 지연, 외부 서비스 오류, 과도한 호출량에 대응할 수 
 ```text
 사용자 브라우저
   -> Vue Frontend
-  -> API Gateway
-  -> EC2 Single Instance
-     -> Spring Boot
-     -> RDS PostgreSQL
+  -> Nginx Reverse Proxy
+  -> Spring Boot
+  -> PostgreSQL
 ```
 
-AI 결합 후 목표 구조:
+운영·AI 결합 후 목표 구조:
 
 ```text
 사용자 브라우저
@@ -235,7 +235,7 @@ AI 결합 후 목표 구조:
 
 ## 발표용 핵심 메시지
 
-1. 현재 프로젝트는 AWS 기반의 실제 서비스 운영 구조를 준비했지만, EC2 싱글 인스턴스와 제한적인 AI 연동으로 인해 고가용성과 AI 품질 검증은 추가로 필요합니다.
+1. 현재 프로젝트는 로컬 데모와 Mock AI 중심으로 구현되어 있으며, 실제 운영 환경과 AI 품질 검증은 추후 개발 범위입니다.
 2. AI 결합은 단순히 Agent API를 호출하는 것이 아니라, 신뢰할 수 있는 문서 구축과 RAG 검색 품질, Agent 역할, 근거 제공, 안전성 검증을 함께 구현하는 과정입니다.
 3. 향후에는 AI 호출과 품질을 운영 데이터로 검증한 뒤, Auto Scaling, Multi-AZ, 무중단 배포를 적용해 안정적인 실제 서비스로 확장합니다.
 

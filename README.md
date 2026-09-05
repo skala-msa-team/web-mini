@@ -8,18 +8,7 @@ SKALA Full-Stack Engineering 과정의 6조 AI-Ready 웹 서비스 설계 프로
 
 ## 범위와 구현 상태
 
-이 문서에서는 기능의 범위와 현재 구현 여부를 다음 상태로 구분합니다.
-
-| 상태                  | 의미                                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------------------- |
-| `현재 구현`           | 현재 Repository에 실행 가능한 코드나 설정이 존재함                                                |
-| `Demo 개발 대상`      | 이번 Local Live Demo에서 구현할 기능이며, 완료 여부는 아래 체크리스트와 GitHub Project에서 확인함 |
-| `Frontend만 개발`     | 화면과 로컬 Mock 데이터만 구현하며 Backend·Database에는 연결하지 않음                             |
-| `설계 완료·추후 개발` | 화면·ERD·API·권한 등 계약만 설계되었고 이번 Demo에서는 코드로 구현하지 않음                       |
-
-Notion에 기능이 작성되어 있거나 관련 Issue가 닫혀 있어도 실제 코드가 존재한다는 뜻은 아닙니다. GitHub Issue의 `Completed`와 `Not planned`도 구분하며, 실제 구현 완료 여부는 Repository 코드와 검증 결과를 기준으로 판단합니다.
-
-자료가 서로 다를 때는 제품 범위·정책·인터페이스는 Notion, 담당자·Priority·Iteration·작업 상태는 GitHub Project, 실제 구현 여부는 Repository 코드와 실행된 검증 결과를 각각 기준으로 판단합니다.
+실제 구현 완료 여부는 Repository 코드와 실행된 검증 결과를 기준으로 판단합니다. 제품 범위와 정책은 Notion, 담당자와 작업 상태는 GitHub Project를 따릅니다.
 
 ### Demo 개발 대상
 
@@ -58,11 +47,10 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 | AI | Mock AI Client, Mock AI Lawyer, Mock AI Judge |
 | API Docs | springdoc-openapi, Swagger UI |
 | Infra | Docker Compose, Nginx Reverse Proxy |
-| External Ops (미검증) | AWS, Amazon API Gateway, Amazon EC2, Amazon RDS, GitHub Actions |
-| Future AI (추후 예정) | Amazon Bedrock Agents, Bedrock Knowledge Base, Amazon S3, OpenSearch Serverless |
+| Future Ops/AI (추후 개발) | AWS, Amazon API Gateway, Amazon EC2, Amazon RDS, GitHub Actions, Amazon Bedrock Agents, Bedrock Knowledge Base, Amazon S3, OpenSearch Serverless |
 | Collaboration | Notion, GitHub Project, GitHub Issues, Pull Requests |
 
-`External Ops`와 `Future AI`는 현재 저장소의 로컬 실행 코드와 분리해 관리합니다. 운영 한계와 Bedrock 기반 AI 결합 계획은 [프로젝트 한계점 및 추후 AI 실제 결합 로드맵](docs/ai-roadmap.md)을 기준으로 확인합니다.
+`Future Ops/AI`는 현재 구현 범위가 아니라 추후 개발 계획입니다. 세부 내용은 [프로젝트 한계점 및 추후 AI 실제 결합 로드맵](docs/ai-roadmap.md)을 기준으로 확인합니다.
 
 ## 디렉토리 구조
 
@@ -147,11 +135,12 @@ Demo에서는 실제 로그인 대신 Browser별 Demo 사용자 식별값을 사
 
 ### 디자인 시스템
 
-Justice & Empathy 디자인 시스템은 공정한 재판장 이미지와 커뮤니티의 따뜻함을 함께 주기 위한 Frontend 시각 기준입니다. Frontend 스타일링은 Tailwind CSS를 중심으로 구성하며, 색상, Typography, Radius, Spacing Token은 `frontend/src/assets/styles/tokens.css`에 정의합니다. Tailwind Theme 연결과 전역 스타일은 `frontend/src/assets/styles/global.css`에서 관리합니다.
+Justice & Empathy 디자인 시스템은 Frontend 시각 기준입니다.
 
-기본 컴포넌트는 Tailwind CSS Utility Class와 shadcn-vue 구조를 함께 사용합니다. `frontend/components.json`에서 `new-york` 스타일, JavaScript, CSS Variables, `@/components/ui` Alias와 `lucide` Icon Library를 설정합니다. 실제 UI Primitive는 `frontend/src/components/ui/`에 두고, 화면별 컴포넌트는 이 Primitive와 Token을 조합합니다.
-
-디자인 기준은 색상, 폰트, 간격, 카드, 버튼, 입력창, LIVE Badge, 투표 Progress Bar를 포함합니다. Variant 관리는 `class-variance-authority`, Class 병합은 `clsx`와 `tailwind-merge`를 사용합니다.
+- Tailwind CSS를 중심으로 색상, Typography, Radius, Spacing Token을 관리합니다.
+- Token과 전역 스타일은 `frontend/src/assets/styles/`에 둡니다.
+- UI Primitive는 Tailwind CSS와 shadcn-vue 구조를 사용하며 `frontend/src/components/ui/`에 둡니다.
+- Variant 관리는 `class-variance-authority`, Class 병합은 `clsx`, `tailwind-merge`를 사용합니다.
 
 ### 역할 경계
 
@@ -241,59 +230,7 @@ docker compose down
 FRONTEND_PORT=8082 docker compose up -d --build
 ```
 
-현재 환경변수:
-
-| 영역     | 변수                                   | 예시                                          | 용도                                                    |
-| -------- | -------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
-| Frontend | `VITE_API_BASE_URL`                    | `/api/v1` 또는 `http://localhost:8080/api/v1` | Docker 통합 실행 또는 Backend 개별 실행용 REST Base URL |
-| Backend  | `SERVER_PORT`                          | `8080`                                        | Spring Boot 실행 Port                                   |
-| Backend  | `APP_CORS_ALLOWED_ORIGINS`             | `http://localhost:5173,http://localhost:8081` | REST API와 STOMP Endpoint 허용 Origin                   |
-| Backend  | `APP_DEMO_USER_HEADER_NAME`            | `X-Demo-User-Id`                              | Demo 사용자 식별 Header 이름                            |
-| Backend  | `APP_WEBSOCKET_ENDPOINT`               | `/ws`                                         | STOMP Handshake Endpoint                                |
-| Backend  | `APP_WEBSOCKET_HEARTBEAT`              | `10000,10000`                                 | STOMP Heartbeat 송수신 간격                             |
-| Backend  | `APP_WEBSOCKET_MESSAGE_SIZE_LIMIT`     | `65536`                                       | 수신 메시지 최대 크기                                   |
-| Backend  | `APP_WEBSOCKET_SEND_BUFFER_SIZE_LIMIT` | `131072`                                      | 송신 버퍼 최대 크기                                     |
-| Backend  | `APP_WEBSOCKET_SEND_TIME_LIMIT`        | `20000`                                       | 송신 시간 제한                                          |
-| Backend  | `APP_AI_PROVIDER`                      | `mock`                                        | 현재 AI Adapter 선택                                    |
-| Backend  | `APP_AI_PROMPT_VERSION`                | `judge-v1`                                    | AI 요청 Prompt Version                                  |
-| Backend  | `DB_NAME`                              | `webmini`                                     | Docker PostgreSQL Database 이름                         |
-| Backend  | `DB_PORT`                              | `5432`                                        | Docker PostgreSQL 호스트 Port                           |
-| Backend  | `DB_URL`                               | `jdbc:postgresql://localhost:5432/webmini`    | Backend Database JDBC URL                               |
-| Backend  | `DB_USERNAME`                          | `webmini`                                     | 로컬 개발 Database 사용자                               |
-| Backend  | `DB_PASSWORD`                          | `webmini`                                     | 로컬 개발 Database 비밀번호 예시                        |
-
-실제 비밀값은 `.env` 또는 로컬 실행 환경에만 저장합니다. 새로운 환경변수가 확정되면 영역별 `.env.example`에는 변수명과 비밀값이 아닌 예시만 추가합니다. Spring Boot는 `.env` 파일을 자동으로 읽지 않으므로 Backend 값은 실행 환경변수로 전달합니다.
-
-Backend에는 [backend/.env.example](backend/.env.example)에 실행 예시를 두었습니다. 이 파일은 참고용이며 자동 로드되지 않습니다. 아무 환경변수를 주지 않아도 기본값으로 실행되지만, 팀원별 또는 환경별 차이는 실행 환경변수로 override합니다.
-
-### Backend WebSocket/STOMP 기본값
-
-현재 Backend에는 Demo 재판 실시간 연결과 재판 진행을 위한 WebSocket/STOMP 구현이 포함되어 있습니다.
-
-- Handshake Endpoint: `/ws`
-- Application Prefix: `/app`
-- Broker Prefix: `/topic`
-- User Destination Prefix: `/user`
-- 개인 오류 Queue: `/user/queue/errors`
-- Demo 사용자 식별: `CONNECT` 프레임의 `X-Demo-User-Id`
-
-현재 구현은 Demo 사용자 식별, 기본 Broker 설정, 개인 오류 Queue, 채팅 `@MessageMapping`, 재판 상태 전이, 채팅·Event 저장, Commit 이후 Broadcast를 포함합니다.
-
-간단한 로컬 확인 예시:
-
-```bash
-cd backend
-export APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
-export APP_WEBSOCKET_ENDPOINT=/ws
-./gradlew bootRun
-```
-
-이후 STOMP Client에서 `/ws` 로 연결하고 다음 경로를 확인합니다.
-
-- `SEND /app/trials/{trialId}/chat`
-- `SUBSCRIBE /topic/trials/{trialId}/chat`
-- `SUBSCRIBE /topic/trials/{trialId}/events`
-- `SUBSCRIBE /user/queue/errors`
+환경변수와 STOMP 상세는 [frontend/README.md](frontend/README.md), [backend/README.md](backend/README.md)를 따릅니다. 실제 비밀값은 Repository에 Commit하지 않습니다.
 
 기본 검증:
 
@@ -312,7 +249,7 @@ export APP_WEBSOCKET_ENDPOINT=/ws
 5. Frontend 작업 PR은 `frontend`로, Backend 작업 PR은 `backend`로 생성합니다.
 6. `frontend`와 `backend`에서 검증된 변경을 `dev`로 반영합니다.
 7. 최종 완료 후 `dev`에서 `main`으로 반영합니다.
-8. Review와 검증 후 Squash and merge합니다.
+8. 보호된 Branch에는 Review와 검증 후 Squash and merge합니다.
 
 초기 Repository 부트스트랩 Issue는 위 협업 규칙 확정 전에 직접 반영되었습니다. 이후 기능 작업부터 Issue·Branch·PR 연결과 Review 규칙을 적용합니다.
 
@@ -376,8 +313,8 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 - Backend 작업은 작업 Branch에서 `backend`로 PR을 생성합니다.
 - `frontend`와 `backend`는 영역 통합 Branch이며, 각 영역의 검증된 작업을 먼저 모읍니다.
 - `frontend`와 `backend`에서 검증된 변경만 `dev`로 반영합니다.
-- `dev`는 최종 통합 Branch이며, GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
-- `main`은 최종 완성본 Branch이며, GitHub의 필수 승인 규칙은 적용하지 않습니다.
+- `main`, `dev`, `frontend`, `backend`는 GitHub 보호 규칙으로 최소 1명의 승인 Review를 요구합니다.
+- 보호된 Branch는 강제 Push와 Branch 삭제를 허용하지 않습니다.
 - 작업 Branch에서 `main`으로 직접 병합하지 않고 최종 완료 시점에 `dev`의 검증된 내용을 `main`에 반영합니다.
 - 기본적으로 같은 R&R 영역의 동료에게 Review를 요청하고, 승인 후 작성자와 Reviewer가 함께 변경 범위와 검증 결과를 확인한 뒤 병합합니다.
 - `Closes #이슈번호`를 작성합니다.
@@ -397,22 +334,8 @@ scope는 `frontend`, `backend`, `database`, `ai`, `design`, `docs`, `qa`, `integ
 
 ## 현재 완료 범위
 
-- [x] 루트 및 영역별 `AGENTS.md`
-- [x] `.gitignore`, `.editorconfig`, `.gitattributes`
-- [x] VS Code 공통 설정과 추천 Extension
-- [x] GitHub Feature·Task·Bug·Refactor Issue 템플릿
-- [x] Pull Request 템플릿
-- [x] 과제용 README와 협업 컨벤션
-- [x] Notion에서 사용하는 기존 가이드 이미지 보존
-- [x] Vue 3 + Vite 최소 Frontend 프로젝트 생성
-- [x] Java 21 + Spring Boot 최소 Backend 프로젝트 생성
-- [x] 확정된 Frontend·Backend 필수 Library 의존성 추가
-- [x] Justice & Empathy 디자인 토큰과 shadcn-vue 사용 기반 구성
-- [x] Frontend·Backend 환경변수 예시 작성
-- [x] ESLint·Checkstyle 설정
-- [x] REST API·공통 응답·오류 계약 확정
-- [x] Demo ERD와 Database 제약조건 확정
-- [x] 재판 상태·STOMP Message 계약 확정
-- [x] Mock AI 입출력 JSON 계약 확정
-- [x] PostgreSQL Schema, Flyway와 로컬 Docker Compose 구성
-- [x] API, WebSocket/STOMP, Mock AI와 기능 구현
+- Repository 협업 문서, Issue/PR 템플릿, VS Code 공통 설정
+- Vue 3 + Vite Frontend, Java 21 + Spring Boot Backend
+- Tailwind CSS, shadcn-vue, Justice & Empathy 디자인 시스템
+- PostgreSQL Schema, Flyway, Docker Compose
+- REST API, STOMP, Demo 사용자 식별, Mock AI 변론·판결 흐름
